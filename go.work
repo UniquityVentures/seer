@@ -1,0 +1,14 @@
+go 1.26.1
+
+use (
+	.
+	./plugins/p_seer_aisstream
+	./plugins/p_seer_assistant
+	./plugins/p_seer_deepsearch
+	./plugins/p_seer_gdelt
+	./plugins/p_seer_intel
+	./plugins/p_seer_opensky
+	./plugins/p_seer_reddit
+	./plugins/p_seer_runners
+	./plugins/p_seer_websites
+)
