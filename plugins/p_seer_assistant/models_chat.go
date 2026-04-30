@@ -47,6 +47,66 @@ type SeerAssistantSessionMessage struct {
 	Role                   string               `gorm:"notnull;default:'user'"`
 }
 
+// genaiPartIsEmpty is true for a non-nil Part whose only “content” would still be ignored
+// by the API — e.g. streaming placeholders. These are stored as empty text parts.
+func genaiPartIsEmpty(part *genai.Part) bool {
+	if part == nil {
+		return false
+	}
+	return part.MediaResolution == nil &&
+		part.CodeExecutionResult == nil &&
+		part.ExecutableCode == nil &&
+		part.FileData == nil &&
+		part.FunctionCall == nil &&
+		part.FunctionResponse == nil &&
+		part.InlineData == nil &&
+		part.Text == "" &&
+		!part.Thought &&
+		len(part.ThoughtSignature) == 0 &&
+		part.VideoMetadata == nil &&
+		part.ToolCall == nil &&
+		part.ToolResponse == nil &&
+		len(part.PartMetadata) == 0
+}
+
+// genaiPartPassesChatValidateContent mirrors google.golang.org/genai.validateContent's
+// per-part logic: non-empty Text or one of the payload pointers it checks. Thought,
+// ThoughtSignature, ToolCall, MediaResolution, etc. do not count — so a row stored as
+// kind "text" with empty Text but signatures must be rehydrated with placeholder Text
+// or Chats curated history drops the model turn and breaks FC/FR ordering (API 400).
+func genaiPartPassesChatValidateContent(p *genai.Part) bool {
+	if p == nil {
+		return false
+	}
+	if p.Text != "" {
+		return true
+	}
+	return p.InlineData != nil ||
+		p.FileData != nil ||
+		p.FunctionCall != nil ||
+		p.FunctionResponse != nil ||
+		p.ExecutableCode != nil ||
+		p.CodeExecutionResult != nil
+}
+
+// sanitizeContentPartsForGenaiChat ensures every part passes Chat.validateContent in
+// google.golang.org/genai (Text or the six payload pointers it checks). ToolCall,
+// ToolResponse, MediaResolution, VideoMetadata, Thought, ThoughtSignature alone do not
+// count — without this, extractCuratedHistory can drop model turns and break FC/FR order.
+func sanitizeContentPartsForGenaiChat(c *genai.Content) {
+	if c == nil {
+		return
+	}
+	for _, p := range c.Parts {
+		if p == nil {
+			continue
+		}
+		if !genaiPartPassesChatValidateContent(p) {
+			p.Text = "\u200b"
+		}
+	}
+}
+
 func (m SeerAssistantSessionMessage) SaveParts(ctx context.Context, parts []*genai.Part) error {
 	db, err := getters.DBFromContext(ctx)
 	if err != nil {
@@ -589,11 +649,18 @@ func (m SeerAssistantSessionMessageText) IsPartType(part *genai.Part) bool {
 		part.MediaResolution != nil || part.ToolCall != nil || part.ToolResponse != nil {
 		return false
 	}
-	return part.Text != "" || part.Thought || len(part.ThoughtSignature) > 0
+	return part.Text != "" || part.Thought || len(part.ThoughtSignature) > 0 || genaiPartIsEmpty(part)
 }
 
 func (m SeerAssistantSessionMessageText) Part(_ context.Context) (*genai.Part, error) {
-	return m.ApplyToPart(&genai.Part{Text: m.Text})
+	part, err := m.ApplyToPart(&genai.Part{Text: m.Text})
+	if err != nil {
+		return nil, err
+	}
+	if !genaiPartPassesChatValidateContent(part) {
+		part.Text = "\u200b"
+	}
+	return part, nil
 }
 
 func (m SeerAssistantSessionMessageText) Save(ctx context.Context, part *genai.Part) error {

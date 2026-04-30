@@ -30,6 +30,7 @@ func LoadSessionContents(ctx context.Context, db *gorm.DB, sessionID uint) ([]*g
 		if err != nil {
 			return nil, err
 		}
+		sanitizeContentPartsForGenaiChat(content)
 		contents = append(contents, content)
 	}
 	return contents, nil
