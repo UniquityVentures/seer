@@ -308,16 +308,22 @@ func mergeAssistantContent(dst, src *genai.Content) *genai.Content {
 		return dst
 	}
 	if dst == nil {
-		clone := &genai.Content{
-			Role:  src.Role,
-			Parts: append([]*genai.Part(nil), src.Parts...),
+		var parts []*genai.Part
+		for _, p := range src.Parts {
+			if !genaiPartIsEmpty(p) {
+				parts = append(parts, p)
+			}
 		}
-		return clone
+		return &genai.Content{Role: src.Role, Parts: parts}
 	}
 	if strings.TrimSpace(dst.Role) == "" {
 		dst.Role = src.Role
 	}
-	dst.Parts = append(dst.Parts, src.Parts...)
+	for _, p := range src.Parts {
+		if !genaiPartIsEmpty(p) {
+			dst.Parts = append(dst.Parts, p)
+		}
+	}
 	return dst
 }
 

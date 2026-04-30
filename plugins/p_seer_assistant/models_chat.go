@@ -47,13 +47,40 @@ type SeerAssistantSessionMessage struct {
 	Role                   string               `gorm:"notnull;default:'user'"`
 }
 
+// genaiPartIsEmpty reports whether p is nil or a zero-valued Part (no field the API uses
+// for payload). Streaming chunks sometimes include such placeholders.
+func genaiPartIsEmpty(p *genai.Part) bool {
+	if p == nil {
+		return true
+	}
+	return p.MediaResolution == nil &&
+		p.CodeExecutionResult == nil &&
+		p.ExecutableCode == nil &&
+		p.FileData == nil &&
+		p.FunctionCall == nil &&
+		p.FunctionResponse == nil &&
+		p.InlineData == nil &&
+		p.Text == "" &&
+		!p.Thought &&
+		len(p.ThoughtSignature) == 0 &&
+		p.VideoMetadata == nil &&
+		p.ToolCall == nil &&
+		p.ToolResponse == nil &&
+		len(p.PartMetadata) == 0
+}
+
 func (m SeerAssistantSessionMessage) SaveParts(ctx context.Context, parts []*genai.Part) error {
 	db, err := getters.DBFromContext(ctx)
 	if err != nil {
 		return err
 	}
 	messageKinds := SeerAssistantSessionMessageTypes.All()
+	saved := 0
 	for _, part := range parts {
+		if genaiPartIsEmpty(part) {
+			continue
+		}
+		saved++
 		messageKind := ""
 		for kind, kindModel := range messageKinds {
 			if kindModel.IsPartType(part) {
@@ -100,6 +127,9 @@ func (m SeerAssistantSessionMessage) SaveParts(ctx context.Context, parts []*gen
 		if err != nil {
 			return err
 		}
+	}
+	if len(parts) > 0 && saved == 0 {
+		return fmt.Errorf("p_seer_assistant: model returned only empty parts (no storable content)")
 	}
 	return nil
 }
