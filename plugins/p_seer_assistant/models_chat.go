@@ -47,40 +47,13 @@ type SeerAssistantSessionMessage struct {
 	Role                   string               `gorm:"notnull;default:'user'"`
 }
 
-// genaiPartIsEmpty reports whether p is nil or a zero-valued Part (no field the API uses
-// for payload). Streaming chunks sometimes include such placeholders.
-func genaiPartIsEmpty(p *genai.Part) bool {
-	if p == nil {
-		return true
-	}
-	return p.MediaResolution == nil &&
-		p.CodeExecutionResult == nil &&
-		p.ExecutableCode == nil &&
-		p.FileData == nil &&
-		p.FunctionCall == nil &&
-		p.FunctionResponse == nil &&
-		p.InlineData == nil &&
-		p.Text == "" &&
-		!p.Thought &&
-		len(p.ThoughtSignature) == 0 &&
-		p.VideoMetadata == nil &&
-		p.ToolCall == nil &&
-		p.ToolResponse == nil &&
-		len(p.PartMetadata) == 0
-}
-
 func (m SeerAssistantSessionMessage) SaveParts(ctx context.Context, parts []*genai.Part) error {
 	db, err := getters.DBFromContext(ctx)
 	if err != nil {
 		return err
 	}
 	messageKinds := SeerAssistantSessionMessageTypes.All()
-	saved := 0
 	for _, part := range parts {
-		if genaiPartIsEmpty(part) {
-			continue
-		}
-		saved++
 		messageKind := ""
 		for kind, kindModel := range messageKinds {
 			if kindModel.IsPartType(part) {
@@ -127,9 +100,6 @@ func (m SeerAssistantSessionMessage) SaveParts(ctx context.Context, parts []*gen
 		if err != nil {
 			return err
 		}
-	}
-	if len(parts) > 0 && saved == 0 {
-		return fmt.Errorf("p_seer_assistant: model returned only empty parts (no storable content)")
 	}
 	return nil
 }
@@ -608,7 +578,18 @@ func (m SeerAssistantSessionMessageText) withMessagePart(part SeerAssistantSessi
 }
 
 func (m SeerAssistantSessionMessageText) IsPartType(part *genai.Part) bool {
-	return part != nil && part.Text != ""
+	if part == nil {
+		return false
+	}
+	// Gemini may emit parts with empty Text that only carry thought / thought-signature
+	// metadata for multi-turn reasoning. Those must not fall through as "unknown".
+	if part.InlineData != nil || part.FileData != nil ||
+		part.FunctionCall != nil || part.FunctionResponse != nil ||
+		part.CodeExecutionResult != nil || part.ExecutableCode != nil ||
+		part.MediaResolution != nil || part.ToolCall != nil || part.ToolResponse != nil {
+		return false
+	}
+	return part.Text != "" || part.Thought || len(part.ThoughtSignature) > 0
 }
 
 func (m SeerAssistantSessionMessageText) Part(_ context.Context) (*genai.Part, error) {
@@ -625,60 +606,6 @@ func (m SeerAssistantSessionMessageText) Save(ctx context.Context, part *genai.P
 	}
 	m.Text = part.Text
 	return gorm.G[SeerAssistantSessionMessageText](db).Create(ctx, &m)
-}
-
-// SeerAssistantSessionMessageThoughtSignature stores Gemini parts that carry only
-// Thought / ThoughtSignature (empty Text, no other payload) for multi-turn reasoning.
-type SeerAssistantSessionMessageThoughtSignature struct {
-	SeerAssistantSessionMessagePartModel
-}
-
-func (m SeerAssistantSessionMessageThoughtSignature) GenaiType() string {
-	return "thoughtSignature"
-}
-
-func (m SeerAssistantSessionMessageThoughtSignature) withMessagePart(part SeerAssistantSessionMessagePart) SeerAssistantSessionMessageType {
-	m.SeerAssistantSessionMessagePartModel = SeerAssistantSessionMessagePartModel{
-		SeerAssistantSessionMessagePartID: part.ID,
-		SeerAssistantSessionMessagePart:   part,
-	}
-	return m
-}
-
-func (m SeerAssistantSessionMessageThoughtSignature) IsPartType(part *genai.Part) bool {
-	if part == nil {
-		return false
-	}
-	if part.InlineData != nil || part.FileData != nil ||
-		part.FunctionCall != nil || part.FunctionResponse != nil ||
-		part.CodeExecutionResult != nil || part.ExecutableCode != nil ||
-		part.MediaResolution != nil || part.ToolCall != nil || part.ToolResponse != nil {
-		return false
-	}
-	if part.Text != "" {
-		return false
-	}
-	return part.Thought || len(part.ThoughtSignature) > 0
-}
-
-func (m SeerAssistantSessionMessageThoughtSignature) Part(_ context.Context) (*genai.Part, error) {
-	// google.golang.org/genai Chat.validateContent treats a part as invalid unless Text is
-	// non-empty or a classic payload pointer is set; it ignores Thought/ThoughtSignature.
-	// Invalid model turns are omitted from curated history (and the prior user turn can be
-	// stripped), which orphans function calls and yields API 400s on the next request.
-	// A zero-width space satisfies validation without affecting visible transcript meaningfully.
-	return m.ApplyToPart(&genai.Part{Text: "\u200b"})
-}
-
-func (m SeerAssistantSessionMessageThoughtSignature) Save(ctx context.Context, part *genai.Part) error {
-	if !m.IsPartType(part) {
-		return fmt.Errorf("part is not thoughtSignature")
-	}
-	db, err := getters.DBFromContext(ctx)
-	if err != nil {
-		return err
-	}
-	return gorm.G[SeerAssistantSessionMessageThoughtSignature](db).Create(ctx, &m)
 }
 
 type SeerAssistantSessionMessageMediaResolution struct {
@@ -1107,7 +1034,6 @@ func init() {
 	RegisterMessageType[SeerAssistantSessionMessageInlineData]()
 	RegisterMessageType[SeerAssistantSessionMessageFunctionResponse]()
 	RegisterMessageType[SeerAssistantSessionMessageText]()
-	RegisterMessageType[SeerAssistantSessionMessageThoughtSignature]()
 	RegisterMessageType[SeerAssistantSessionMessageMediaResolution]()
 	RegisterMessageType[SeerAssistantSessionMessageCodeExecutionResult]()
 	RegisterMessageType[SeerAssistantSessionExecutableCode]()
@@ -1131,7 +1057,6 @@ func init() {
 		lago.RegisterModel[SeerAssistantSessionMessageFunctionResponseBlob](db)
 		lago.RegisterModel[SeerAssistantSessionMessageFunctionResponseFileData](db)
 		lago.RegisterModel[SeerAssistantSessionMessageText](db)
-		lago.RegisterModel[SeerAssistantSessionMessageThoughtSignature](db)
 		lago.RegisterModel[SeerAssistantSessionMessageMediaResolution](db)
 		lago.RegisterModel[SeerAssistantSessionMessageCodeExecutionResult](db)
 		lago.RegisterModel[SeerAssistantSessionMessageToolCall](db)
