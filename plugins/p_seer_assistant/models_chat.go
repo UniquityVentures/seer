@@ -597,6 +597,55 @@ func (m SeerAssistantSessionMessageText) Save(ctx context.Context, part *genai.P
 	return gorm.G[SeerAssistantSessionMessageText](db).Create(ctx, &m)
 }
 
+// SeerAssistantSessionMessageThoughtSignature stores Gemini parts that carry only
+// Thought / ThoughtSignature (empty Text, no other payload) for multi-turn reasoning.
+type SeerAssistantSessionMessageThoughtSignature struct {
+	SeerAssistantSessionMessagePartModel
+}
+
+func (m SeerAssistantSessionMessageThoughtSignature) GenaiType() string {
+	return "thoughtSignature"
+}
+
+func (m SeerAssistantSessionMessageThoughtSignature) withMessagePart(part SeerAssistantSessionMessagePart) SeerAssistantSessionMessageType {
+	m.SeerAssistantSessionMessagePartModel = SeerAssistantSessionMessagePartModel{
+		SeerAssistantSessionMessagePartID: part.ID,
+		SeerAssistantSessionMessagePart:   part,
+	}
+	return m
+}
+
+func (m SeerAssistantSessionMessageThoughtSignature) IsPartType(part *genai.Part) bool {
+	if part == nil {
+		return false
+	}
+	if part.InlineData != nil || part.FileData != nil ||
+		part.FunctionCall != nil || part.FunctionResponse != nil ||
+		part.CodeExecutionResult != nil || part.ExecutableCode != nil ||
+		part.MediaResolution != nil || part.ToolCall != nil || part.ToolResponse != nil {
+		return false
+	}
+	if part.Text != "" {
+		return false
+	}
+	return part.Thought || len(part.ThoughtSignature) > 0
+}
+
+func (m SeerAssistantSessionMessageThoughtSignature) Part(_ context.Context) (*genai.Part, error) {
+	return m.ApplyToPart(&genai.Part{})
+}
+
+func (m SeerAssistantSessionMessageThoughtSignature) Save(ctx context.Context, part *genai.Part) error {
+	if !m.IsPartType(part) {
+		return fmt.Errorf("part is not thoughtSignature")
+	}
+	db, err := getters.DBFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	return gorm.G[SeerAssistantSessionMessageThoughtSignature](db).Create(ctx, &m)
+}
+
 type SeerAssistantSessionMessageMediaResolution struct {
 	SeerAssistantSessionMessagePartModel
 
@@ -1023,6 +1072,7 @@ func init() {
 	RegisterMessageType[SeerAssistantSessionMessageInlineData]()
 	RegisterMessageType[SeerAssistantSessionMessageFunctionResponse]()
 	RegisterMessageType[SeerAssistantSessionMessageText]()
+	RegisterMessageType[SeerAssistantSessionMessageThoughtSignature]()
 	RegisterMessageType[SeerAssistantSessionMessageMediaResolution]()
 	RegisterMessageType[SeerAssistantSessionMessageCodeExecutionResult]()
 	RegisterMessageType[SeerAssistantSessionExecutableCode]()
@@ -1046,6 +1096,7 @@ func init() {
 		lago.RegisterModel[SeerAssistantSessionMessageFunctionResponseBlob](db)
 		lago.RegisterModel[SeerAssistantSessionMessageFunctionResponseFileData](db)
 		lago.RegisterModel[SeerAssistantSessionMessageText](db)
+		lago.RegisterModel[SeerAssistantSessionMessageThoughtSignature](db)
 		lago.RegisterModel[SeerAssistantSessionMessageMediaResolution](db)
 		lago.RegisterModel[SeerAssistantSessionMessageCodeExecutionResult](db)
 		lago.RegisterModel[SeerAssistantSessionMessageToolCall](db)
