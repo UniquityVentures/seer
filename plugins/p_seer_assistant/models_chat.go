@@ -662,7 +662,12 @@ func (m SeerAssistantSessionMessageThoughtSignature) IsPartType(part *genai.Part
 }
 
 func (m SeerAssistantSessionMessageThoughtSignature) Part(_ context.Context) (*genai.Part, error) {
-	return m.ApplyToPart(&genai.Part{})
+	// google.golang.org/genai Chat.validateContent treats a part as invalid unless Text is
+	// non-empty or a classic payload pointer is set; it ignores Thought/ThoughtSignature.
+	// Invalid model turns are omitted from curated history (and the prior user turn can be
+	// stripped), which orphans function calls and yields API 400s on the next request.
+	// A zero-width space satisfies validation without affecting visible transcript meaningfully.
+	return m.ApplyToPart(&genai.Part{Text: "\u200b"})
 }
 
 func (m SeerAssistantSessionMessageThoughtSignature) Save(ctx context.Context, part *genai.Part) error {
