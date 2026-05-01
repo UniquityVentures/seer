@@ -10,8 +10,8 @@ import (
 // Tiny same-origin SVG markers for MapDisplay (directed symbols rotate with bearing).
 // Both use the same upward arrow; white stroke layer reads as a border on map tiles.
 var (
-	mapMarkerOpenSkySVG   = []byte(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="none" stroke="#fff" stroke-width="2.25" stroke-linejoin="round" d="M12 3l9 14h-6l-3-5-3 5H3L12 3z"/><path fill="#0369a1" d="M12 3l9 14h-6l-3-5-3 5H3L12 3z"/></svg>`)
-	mapMarkerAISStreamSVG = []byte(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="none" stroke="#fff" stroke-width="2.25" stroke-linejoin="round" d="M12 3l9 14h-6l-3-5-3 5H3L12 3z"/><path fill="#0f766e" d="M12 3l9 14h-6l-3-5-3 5H3L12 3z"/></svg>`)
+	mapMarkerOpenSkySVG   = []byte(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="none" stroke="#000" stroke-width="2.25" stroke-linejoin="round" d="M12 3l9 14h-6l-3-5-3 5H3L12 3z"/><path fill="#fff" d="M12 3l9 14h-6l-3-5-3 5H3L12 3z"/></svg>`)
+	mapMarkerAISStreamSVG = []byte(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="none" stroke="#fff" stroke-width="2.25" stroke-linejoin="round" d="M12 3l9 14h-6l-3-5-3 5H3L12 3z"/><path fill="#0f6e76" d="M12 3l9 14h-6l-3-5-3 5H3L12 3z"/></svg>`)
 )
 
 func registerDashboardMarkerIconRoutes() {

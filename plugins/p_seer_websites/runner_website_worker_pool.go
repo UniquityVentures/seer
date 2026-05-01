@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/UniquityVentures/lago/syncmap"
+	"github.com/UniquityVentures/seer/plugins/p_seer_workerregistry"
 	"gorm.io/gorm"
 )
 
@@ -85,8 +86,17 @@ func runWebsiteRunnerWorkerPool(db *gorm.DB, runnerID uint, ctx context.Context)
 			loggedRunnerMeta = true
 		}
 
+		var runLog *p_seer_workerregistry.WorkerRunLog
+		if row, err := p_seer_workerregistry.StartWorkerRunLog(db, p_seer_workerregistry.WorkerRunnerKindWebsite, runnerID, runner.Name); err != nil {
+			slog.Error("p_seer_websites: worker run log start", "error", err, "runner_id", runnerID)
+		} else {
+			runLog = row
+		}
+
 		var sources []WebsiteSource
+		var runErr error
 		if err := db.Where("website_runner_id = ?", runnerID).Find(&sources).Error; err != nil {
+			runErr = err
 			slog.Error("p_seer_websites: worker pool list sources", "error", err, "runner_id", runnerID)
 		} else {
 			slog.Info("p_seer_websites: worker pool pass",
@@ -105,6 +115,7 @@ func runWebsiteRunnerWorkerPool(db *gorm.DB, runnerID uint, ctx context.Context)
 					"depth", src.Depth,
 				)
 				if err := src.Fetch(ctx, db); err != nil {
+					runErr = errors.Join(runErr, err)
 					slog.Error("p_seer_websites: worker fetch",
 						"error", err,
 						"runner_id", runnerID,
@@ -118,6 +129,11 @@ func runWebsiteRunnerWorkerPool(db *gorm.DB, runnerID uint, ctx context.Context)
 						"elapsed", time.Since(start),
 					)
 				}
+			}
+		}
+		if runLog != nil {
+			if err := p_seer_workerregistry.FinishWorkerRunLog(db, runLog, runErr); err != nil {
+				slog.Error("p_seer_websites: worker run log finish", "error", err, "runner_id", runnerID)
 			}
 		}
 

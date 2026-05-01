@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/UniquityVentures/lago/syncmap"
+	"github.com/UniquityVentures/seer/plugins/p_seer_workerregistry"
 	"gorm.io/gorm"
 )
 
@@ -76,19 +77,34 @@ func runRedditRunnerWorkerPool(db *gorm.DB, runnerID uint, ctx context.Context) 
 			return
 		}
 
+		var runLog *p_seer_workerregistry.WorkerRunLog
+		if row, err := p_seer_workerregistry.StartWorkerRunLog(db, p_seer_workerregistry.WorkerRunnerKindReddit, runnerID, runner.Name); err != nil {
+			slog.Error("p_seer_reddit: worker run log start", "error", err, "runner_id", runnerID)
+		} else {
+			runLog = row
+		}
+
 		var sources []RedditSource
+		var runErr error
 		if err := db.Where("reddit_runner_id = ?", runnerID).Find(&sources).Error; err != nil {
+			runErr = err
 			slog.Error("p_seer_reddit: worker pool list sources", "error", err, "runner_id", runnerID)
 		} else {
 			for i := range sources {
 				src := sources[i]
 				if err := FetchNewRedditPosts(ctx, db, &src); err != nil {
+					runErr = errors.Join(runErr, err)
 					slog.Error("p_seer_reddit: worker pool fetch",
 						"error", err,
 						"runner_id", runnerID,
 						"reddit_source_id", src.ID,
 					)
 				}
+			}
+		}
+		if runLog != nil {
+			if err := p_seer_workerregistry.FinishWorkerRunLog(db, runLog, runErr); err != nil {
+				slog.Error("p_seer_reddit: worker run log finish", "error", err, "runner_id", runnerID)
 			}
 		}
 

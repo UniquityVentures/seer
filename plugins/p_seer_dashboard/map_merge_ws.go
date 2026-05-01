@@ -28,7 +28,7 @@ const (
 	dashboardMapMaxFrameBytes     = 1 << 20
 	dashboardMapMaxMergedObjects  = 5000
 	// dashboardMergedMapIconSize is MapLibre symbol icon-size for merged OpenSky / AISStream markers.
-	dashboardMergedMapIconSize = 0.08
+	dashboardMergedMapIconSize = 0.1
 )
 
 type dashboardMapViewportMessage struct {
