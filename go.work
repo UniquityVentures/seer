@@ -12,4 +12,5 @@ use (
 	./plugins/p_seer_reddit
 	./plugins/p_seer_runners
 	./plugins/p_seer_websites
+	./plugins/p_seer_workerregistry
 )

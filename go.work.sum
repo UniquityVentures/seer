@@ -163,6 +163,10 @@ github.com/MakeNowJust/heredoc v1.0.0/go.mod h1:mG5amYoWBHf8vpLOuehzbGGw0EHxpZZ6
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
 github.com/UniquityVentures/lago/components v0.3.8 h1:HhcBzRL7e4CWA6VjJXzhaoshJ6J0pVVFR38JtfE92JI=
 github.com/UniquityVentures/lago/components v0.3.8/go.mod h1:q9/CJd1JahXQFIscDWFWlHBjSUsIQ9w+mH40njxVYVQ=
+github.com/UniquityVentures/lago/components v0.3.9 h1:7jtIreyiqg/YnkdhnO72BZdNRWJM1luNSd2S03uKygQ=
+github.com/UniquityVentures/lago/components v0.3.9/go.mod h1:q9/CJd1JahXQFIscDWFWlHBjSUsIQ9w+mH40njxVYVQ=
+github.com/UniquityVentures/lago/components v0.3.10 h1:+JGUznH2714wugOw5kPc8imebrLvhjd4XP6iEkKBK4U=
+github.com/UniquityVentures/lago/components v0.3.10/go.mod h1:q9/CJd1JahXQFIscDWFWlHBjSUsIQ9w+mH40njxVYVQ=
 github.com/UniquityVentures/lago/getters v0.2.0 h1:ATx/GpqbNNGMUNz1CqbIwmO6UD+4xUuILNBBbdmYWMc=
 github.com/UniquityVentures/lago/getters v0.2.0/go.mod h1:+q06FtrNnVwPYHxdALDMo0HACWFq4W71VHWtj7yIgMA=
 github.com/UniquityVentures/lago/lago v0.2.0 h1:/yVsM/iheY7PhH0sJgAM1WjbMx6GC8JsVyTf96l4EWg=

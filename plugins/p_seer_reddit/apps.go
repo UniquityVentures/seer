@@ -5,6 +5,7 @@ import (
 	"net/url"
 
 	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/seer/plugins/p_seer_workerregistry"
 )
 
 const AppUrl = "/seer-reddit/"
@@ -15,13 +16,15 @@ func init() {
 		log.Panic(err)
 	}
 
-	err = lago.RegistryPlugin.Register("p_seer_reddit", lago.Plugin{
+	p := lago.Plugin{
 		Type:        lago.PluginTypeApp,
 		Icon:        "chat-bubble-left-right",
 		URL:         u,
 		VerboseName: "Reddit",
-	})
+	}
+	err = lago.RegistryPlugin.Register("p_seer_reddit", p)
 	if err != nil {
 		log.Panic(err)
 	}
+	p_seer_workerregistry.RegisterPluginInCategory("Sources", p)
 }
