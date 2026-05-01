@@ -78,7 +78,8 @@ type RedditSource struct {
 	// Filter is optional text (e.g. one pattern per line) interpreted as whitelist or blacklist per [IsFilterWhitelist].
 	Filter            string `gorm:"type:text;not null;default:''"`
 	IsFilterWhitelist bool   `gorm:"not null;default:false"`
-	MaxFreshPosts     uint   `gorm:"not null;default:25"`
+	// MaxFreshPosts caps new inserts per subreddit per [FetchNewRedditPosts] run (not across all subreddits).
+	MaxFreshPosts uint `gorm:"not null;default:25"`
 	// LoadWebsites when true: discovered http(s) URLs from fetched posts are sent to [p_seer_websites.WebsiteScrapeURLQueue].
 	LoadWebsites bool `gorm:"not null;default:false"`
 
@@ -89,9 +90,9 @@ func (RedditSource) TableName() string {
 	return "seer_reddit_sources"
 }
 
-// RedditPost stores raw Reddit listing data from Reddit JSON.
+// RedditPost stores Reddit listing fields (from Atom/RSS ingest or historical JSON-era rows).
 //
-// [PostID] is Reddit’s t3 id and is unique in this table; sources link through join table [RedditSourcePostsJoinTable] (see [RedditSource.RedditPosts]).
+// [PostID] is Reddit’s short post id (same as Atom t3 id without prefix) and is unique in this table; sources link through join table [RedditSourcePostsJoinTable] (see [RedditSource.RedditPosts]).
 type RedditPost struct {
 	gorm.Model
 
