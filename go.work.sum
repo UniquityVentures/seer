@@ -165,6 +165,8 @@ github.com/UniquityVentures/lago/components v0.3.5 h1:0QUe4UJwQtA6SHQBru01SAYKYw
 github.com/UniquityVentures/lago/components v0.3.5/go.mod h1:q9/CJd1JahXQFIscDWFWlHBjSUsIQ9w+mH40njxVYVQ=
 github.com/UniquityVentures/lago/components v0.3.6 h1:32uTrQ4rKEz02/It4Cuc16OkGov27Q6NUqMkFrVa620=
 github.com/UniquityVentures/lago/components v0.3.6/go.mod h1:q9/CJd1JahXQFIscDWFWlHBjSUsIQ9w+mH40njxVYVQ=
+github.com/UniquityVentures/lago/components v0.3.7 h1:m8kvLdmN5k1TW/dyboaHeeTVj9gb08aE8fHwrFyuLT0=
+github.com/UniquityVentures/lago/components v0.3.7/go.mod h1:q9/CJd1JahXQFIscDWFWlHBjSUsIQ9w+mH40njxVYVQ=
 github.com/UniquityVentures/lago/getters v0.2.0 h1:ATx/GpqbNNGMUNz1CqbIwmO6UD+4xUuILNBBbdmYWMc=
 github.com/UniquityVentures/lago/getters v0.2.0/go.mod h1:+q06FtrNnVwPYHxdALDMo0HACWFq4W71VHWtj7yIgMA=
 github.com/UniquityVentures/lago/lago v0.2.0 h1:/yVsM/iheY7PhH0sJgAM1WjbMx6GC8JsVyTf96l4EWg=
