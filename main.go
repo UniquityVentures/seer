@@ -4,6 +4,7 @@ import (
 	"log/slog"
 
 	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/seer/plugins/p_seer_workerregistry"
 
 	_ "github.com/UniquityVentures/lago/plugins/p_dashboard"
 	_ "github.com/UniquityVentures/lago/plugins/p_filesystem"
@@ -27,6 +28,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	p_seer_workerregistry.BuildAllRegistries()
 	if err := lago.Start(config); err != nil {
 		slog.Error(err.Error())
 	}
