@@ -50,14 +50,14 @@ type openSkyMapRow struct {
 
 type openSkyMapLayer struct{}
 
-type openSkyViewportBounds struct {
+type OpenSkyViewportBounds struct {
 	West  float64
 	South float64
 	East  float64
 	North float64
 }
 
-func (b *openSkyViewportBounds) IsValid() bool {
+func (b *OpenSkyViewportBounds) IsValid() bool {
 	if b == nil {
 		return false
 	}
@@ -100,7 +100,7 @@ func (openSkyMapLayer) Next(_ views.View, next http.Handler) http.Handler {
 
 // buildOpenSkyMapAircraft returns one entry per icao (latest point), ordered by that row's last_contact desc.
 // PostgreSQL only; other dialects return nil, nil.
-func buildOpenSkyMapAircraft(ctx context.Context, db *gorm.DB, bounds *openSkyViewportBounds) ([]openSkyMapAircraft, error) {
+func buildOpenSkyMapAircraft(ctx context.Context, db *gorm.DB, bounds *OpenSkyViewportBounds) ([]openSkyMapAircraft, error) {
 	if db == nil {
 		return nil, nil
 	}
@@ -241,7 +241,7 @@ ORDER BY icao24, last_contact ASC, id ASC`
 	return out, nil
 }
 
-func openSkyBoundsWhereSQL(bounds *openSkyViewportBounds, lngExpr, latExpr string) (string, []any) {
+func openSkyBoundsWhereSQL(bounds *OpenSkyViewportBounds, lngExpr, latExpr string) (string, []any) {
 	if !bounds.IsValid() {
 		return "", nil
 	}

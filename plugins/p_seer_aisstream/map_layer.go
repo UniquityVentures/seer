@@ -33,14 +33,14 @@ type aisStreamMapVessel struct {
 
 type aisStreamMapLayer struct{}
 
-type aisStreamViewportBounds struct {
+type AisstreamViewportBounds struct {
 	West  float64
 	South float64
 	East  float64
 	North float64
 }
 
-func (b *aisStreamViewportBounds) IsValid() bool {
+func (b *AisstreamViewportBounds) IsValid() bool {
 	if b == nil {
 		return false
 	}
@@ -73,7 +73,7 @@ func (aisStreamMapLayer) Next(_ views.View, next http.Handler) http.Handler {
 	})
 }
 
-func buildAISStreamMapVessels(ctx context.Context, db *gorm.DB, bounds *aisStreamViewportBounds) ([]aisStreamMapVessel, error) {
+func buildAISStreamMapVessels(ctx context.Context, db *gorm.DB, bounds *AisstreamViewportBounds) ([]aisStreamMapVessel, error) {
 	if db == nil {
 		return nil, nil
 	}
