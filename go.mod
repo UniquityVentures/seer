@@ -30,7 +30,7 @@ require (
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.32.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.56.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.56.0 // indirect
-	github.com/UniquityVentures/lago/components v0.3.0 // indirect
+	github.com/UniquityVentures/lago/components v0.3.7 // indirect
 	github.com/UniquityVentures/lago/getters v0.2.0 // indirect
 	github.com/UniquityVentures/lago/registry v0.2.0 // indirect
 	github.com/UniquityVentures/lago/views v0.2.0 // indirect

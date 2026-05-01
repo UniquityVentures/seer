@@ -10,6 +10,7 @@ import (
 
 func init() {
 	registerDashboardMapRoutes()
+	registerDashboardMarkerIconRoutes()
 	registerDashboardAppsPagePatch()
 	registerDashboardPlugin()
 }

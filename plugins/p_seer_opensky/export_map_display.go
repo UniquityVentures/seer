@@ -15,6 +15,8 @@ type MapDisplayPointWire struct {
 	Time      int64                     `json:"time,omitempty" cbor:"time,omitempty"`
 	Link      string                    `json:"link,omitempty" cbor:"link,omitempty"`
 	Layer     string                    `json:"layer,omitempty" cbor:"layer,omitempty"`
+	Icon      string                    `json:"icon,omitempty" cbor:"icon,omitempty"`
+	IconSize  float64                   `json:"iconSize,omitempty" cbor:"iconSize,omitempty"`
 }
 
 // MapDisplayPointsForBounds returns OpenSky-derived markers for the given viewport (degrees).

@@ -16,6 +16,7 @@ import (
 	"sync"
 
 	"github.com/UniquityVentures/lago/getters"
+	"github.com/UniquityVentures/lago/lago"
 	"github.com/UniquityVentures/seer/plugins/p_seer_aisstream"
 	"github.com/UniquityVentures/seer/plugins/p_seer_gdelt"
 	"github.com/UniquityVentures/seer/plugins/p_seer_opensky"
@@ -25,6 +26,8 @@ import (
 const (
 	dashboardMapViewportMarginDeg = 0.25
 	dashboardMapMaxFrameBytes     = 1 << 20
+	// dashboardMergedMapIconSize is MapLibre symbol icon-size for merged OpenSky / AISStream markers.
+	dashboardMergedMapIconSize = 0.08
 )
 
 type dashboardMapViewportMessage struct {
@@ -162,6 +165,13 @@ func sendDashboardMergedMapPoints(ctx context.Context, ws *dashboardMapWSConn, w
 	if err != nil {
 		slog.Warn("p_seer_dashboard: opensky map points", "error", err)
 	} else {
+		osIcon, osIconErr := lago.RoutePath("seer_dashboard.MapMarkerOpenSkyRoute", nil)(ctx)
+		for i := range osPts {
+			if osIconErr == nil && osIcon != "" {
+				osPts[i].Icon = osIcon
+			}
+			osPts[i].IconSize = dashboardMergedMapIconSize
+		}
 		for i := range osPts {
 			merged = append(merged, osPts[i])
 		}
@@ -171,6 +181,13 @@ func sendDashboardMergedMapPoints(ctx context.Context, ws *dashboardMapWSConn, w
 	if err != nil {
 		slog.Warn("p_seer_dashboard: aisstream map points", "error", err)
 	} else {
+		aiIcon, aiIconErr := lago.RoutePath("seer_dashboard.MapMarkerAISStreamRoute", nil)(ctx)
+		for i := range aiPts {
+			if aiIconErr == nil && aiIcon != "" {
+				aiPts[i].Icon = aiIcon
+			}
+			aiPts[i].IconSize = dashboardMergedMapIconSize
+		}
 		for i := range aiPts {
 			merged = append(merged, aiPts[i])
 		}

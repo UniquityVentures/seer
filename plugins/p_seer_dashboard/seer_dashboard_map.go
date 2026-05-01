@@ -96,12 +96,13 @@ func (e *SeerDashboardMap) Build(ctx context.Context) Node {
 	selectZoomBytes, _ := json.Marshal(selectZoom)
 
 	mapDisplay := &components.MapDisplay{
-		Page:              components.Page{Key: innerKey},
-		DataURL:           e.DataURL,
-		RefreshMS:         e.RefreshMS,
-		Classes:           classes,
-		DeferStart:        getters.Static(true),
-		SkipAutoFitBounds: getters.Static(true),
+		Page:                   components.Page{Key: innerKey},
+		DataURL:                e.DataURL,
+		RefreshMS:              e.RefreshMS,
+		Classes:                classes,
+		DeferStart:             getters.Static(true),
+		SkipAutoFitBounds:      getters.Static(true),
+		MarkerIconSizeDefault:  getters.Static(0.08),
 	}
 
 	initJS := `(function(){
