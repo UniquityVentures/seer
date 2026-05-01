@@ -13,7 +13,7 @@
 
 = 1. Technical Architecture and Approach
 
-Seer is proposed as a Golang-based, plugin-driven OSINT analysis and monitoring platform. The system is designed to collect large volumes of public and user-provided information, process it through AI-assisted analysis pipelines, store it in a common intelligence layer, and present actionable outputs through a managed role-based application. It directly addresses the problem statement by reducing manual collection effort, enabling real-time monitoring of user-defined subjects, and improving the reliability and usability of intelligence outputs.
+Seer is proposed as a Golang-based, plugin-driven OSINT analysis and monitoring platform. The system is designed to collect large volumes of public and user-provided information through source plugins, store it in a common Intel layer, process it through AI-assisted analysis plugins, and present actionable outputs through a managed role-based application. It directly addresses the problem statement by reducing manual collection effort, enabling real-time monitoring of user-defined subjects, and improving the reliability and usability of intelligence outputs.
 
 Seer follows a modular architecture. Each source type, such as websites, social media, public event datasets, aviation feeds, maritime feeds, image analysis, or future custom sources, can be implemented as an independent plugin. These plugins feed a shared Intel layer, where extracted data is standardised, tokenized and stored into a vector database. Consequently, this data is used by plugins for summarisation, search, analysis, correlation, reporting, geospatial visualisation, and any other user-defined workflows. 
 
@@ -32,10 +32,11 @@ Seer follows a modular architecture. Each source type, such as websites, social 
 
     node((1.5, 1.5), align(center)[
       *Intel Datastore* \
-      Standardised records \
+      Standardised data \
+      from all sources \
       Metadata,\
-      summaries,\
-      embeddings \
+      Summaries,\
+      Embeddings \
     ], width: 40mm),
 
     edge((0, 0), (1.5, 1.5), "-|>"),
@@ -56,15 +57,15 @@ Seer follows a modular architecture. Each source type, such as websites, social 
   caption: [Seer data flow from OSINT sources to the common Intel layer and output applications],
 )
 
-All the nodes in the above diagram are plugins, the arrows show the flow of data Seer then uses configured source plugins and workers to collect data from relevant sources. The collected information is cleaned, converted into a common representation, enriched using AI, and stored as Intel records. Analysts can then use semantic search, similarity search, custom workflows, reports, and maps to identify patterns and produce actionable intelligence.
+All the nodes in the above diagram are plugins, the arrows show the flow of data. Seer uses configured source plugins and workers to collect data from relevant sources. The collected information is cleaned, converted into a common representation, enriched using AI, and stored as Intel records. Analysts can then use semantic search, similarity search, custom workflows, reports, and maps to identify patterns and produce actionable intelligence.
 
-== 1.2 Collection and Monitoring Layer
+== 1.2 Source Plugins
 
-The collection layer is responsible for gathering data from multiple OSINT sources. Current source categories include website scraping, social media collection, public datasets such as GDELT, aviation tracking feeds such as OpenSky, and deep research workflows that discover and scrape relevant web pages from user queries. The same architecture can support additional custom sources without changing the core platform.
+Source Plugins are plugins responsible for obtaining data. They can be configured to fetch data from any source, be it scraping from websites, open source databases. Source Plugins define their own custom collection logic, model, post-processing logic, and worker behaviour. This can be better explained via an example
 
-Seer is built primarily in Golang, which makes it suitable for high-throughput collection workloads. Golang's lightweight goroutines allow the system to run multiple scrapers, monitors, data processors, and AI analysis jobs in parallel at low operational cost. This is important for OSINT systems because many independent sources must be checked, refreshed, and processed continuously.
+Seer is built primarily in Golang, which makes this plugin-owned model efficient to run. Each plugin can use lightweight goroutines for its own scrapers, monitors, queues, and AI processing jobs. *This allows multiple source-specific workers to run in parallel at a large scale at low operational cost*, which is important for OSINT workloads where many independent sources must be checked, refreshed, and processed continuously.
 
-User-defined real-time monitoring is handled through configurable workers. These workers can periodically scrape or ingest sources-of-interest based on parameters such as subject, source, keyword, domain, geography, cadence, or operational focus area. This makes the platform useful not only for one-time research but also for continuous monitoring of evolving situations.
+User-defined real-time monitoring is therefore implemented through configurable workers owned by the relevant plugins. These workers can periodically scrape or ingest sources-of-interest based on parameters such as subject, source, keyword, domain, geography, cadence, or operational focus area. This makes the platform useful not only for one-time research but also for continuous monitoring of evolving situations.
 
 == Plugin Architecture
 
@@ -78,15 +79,15 @@ All collected material is normalised into a common Intel layer. This layer acts 
 
 The Intel layer also separates raw collection from intelligence analysis. A source plugin may focus only on collecting and cleaning data, while the Intel layer provides the common structure needed for AI processing, search, reports, maps, and analyst review. This keeps the platform modular and makes it easier to add new data sources over time.
 
-== AI Analysis and RAG Layer
+== AI Analysis and RAG Plugins
 
-The AI analysis layer uses NLP, LLM-based processing, embeddings, and Retrieval Augmented Generation (RAG) to convert collected data into insights. AI workflows can generate titles, summaries, classifications, extracted entities, timelines, report sections, and analyst-facing explanations. RAG allows the system to retrieve relevant Intel records before generating outputs, reducing the risk of generic or unsupported analysis.
+AI analysis plugins use NLP, LLM-based processing, embeddings, and Retrieval Augmented Generation (RAG) to convert Intel records into insights. These plugins can generate titles, summaries, classifications, extracted entities, timelines, report sections, and analyst-facing explanations. RAG allows the system to retrieve relevant Intel records before generating outputs, reducing the risk of generic or unsupported analysis.
 
 Vector embeddings enable semantic search over the Intel datastore. Instead of relying only on keyword matching, analysts can search by meaning and discover related intelligence even when different sources use different wording. This is useful in OSINT use cases where the same entity, event, or narrative may appear across multiple platforms, languages, or time periods.
 
 == Misinformation and Trust Scoring
 
-Seer will include built-in workflows for misinformation identification and credibility assessment. This layer will use AI analysis, source behaviour, cross-source comparison, content similarity, and user-defined metrics to flag potentially unreliable, misleading, artificially generated, or suspicious content.
+Seer will include built-in workflows for misinformation identification and credibility assessment. These workflows will use AI analysis, source behaviour, cross-source comparison, content similarity, and user-defined metrics to flag potentially unreliable, misleading, artificially generated, or suspicious content.
 
 The trust model will be configurable because credibility criteria can vary by mission, organisation, and information domain. Users will be able to define factors such as source reputation, recurrence across independent sources, historical reliability, content consistency, freshness, and analyst feedback. These factors can be used to calculate trust scores for both sources and individual Intel records, helping analysts separate high-confidence intelligence from low-confidence noise.
 
@@ -94,7 +95,7 @@ The trust model will be configurable because credibility criteria can vary by mi
 
 A major analytical capability of Seer is cross-source intelligence correlation. By using embeddings and similarity search, the platform can identify related Intel across different sources and time periods. This allows analysts to discover recurring entities, narratives, locations, behaviours, and events that may not be obvious when each source is reviewed independently.
 
-This correlation layer helps transform scattered OSINT data into a coherent intelligence picture. It can support use cases such as identifying coordinated narratives, linking reports across multiple sources, tracing the evolution of an incident, finding related objects of interest, or locating earlier references to a current event.
+This correlation capability helps transform scattered OSINT data into a coherent intelligence picture. It can support use cases such as identifying coordinated narratives, linking reports across multiple sources, tracing the evolution of an incident, finding related objects of interest, or locating earlier references to a current event.
 
 == Custom Workflows
 
@@ -104,7 +105,7 @@ The workflow system is important because OSINT analysis is not a single fixed pr
 
 == Managed Role-Based Application
 
-The final layer is a managed web application that makes the system usable for different types of users. Intel gatherers can configure sources, workers, and collection parameters. Analysts can review Intel records, run searches, compare related items, generate reports, and apply credibility checks. Senior decision-makers can access dashboards, maps, summaries, and high-level reports without needing to operate the underlying scraping or analysis tools.
+The final user-facing component is a managed web application that makes the system usable for different types of users. Intel gatherers can configure sources, workers, and collection parameters. Analysts can review Intel records, run searches, compare related items, generate reports, and apply credibility checks. Senior decision-makers can access dashboards, maps, summaries, and high-level reports without needing to operate the underlying scraping or analysis tools.
 
 Role-based access will help ensure that each user type sees the workflows relevant to their responsibility. This makes Seer suitable as a packaged intelligence platform rather than a collection of separate technical tools.
 
