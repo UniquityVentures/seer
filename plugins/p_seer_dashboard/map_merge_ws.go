@@ -26,6 +26,7 @@ import (
 const (
 	dashboardMapViewportMarginDeg = 0.25
 	dashboardMapMaxFrameBytes     = 1 << 20
+	dashboardMapMaxMergedObjects  = 5000
 	// dashboardMergedMapIconSize is MapLibre symbol icon-size for merged OpenSky / AISStream markers.
 	dashboardMergedMapIconSize = 0.08
 )
@@ -173,6 +174,9 @@ func sendDashboardMergedMapPoints(ctx context.Context, ws *dashboardMapWSConn, w
 			osPts[i].IconSize = dashboardMergedMapIconSize
 		}
 		for i := range osPts {
+			if len(merged) >= dashboardMapMaxMergedObjects {
+				break
+			}
 			merged = append(merged, osPts[i])
 		}
 	}
@@ -189,6 +193,9 @@ func sendDashboardMergedMapPoints(ctx context.Context, ws *dashboardMapWSConn, w
 			aiPts[i].IconSize = dashboardMergedMapIconSize
 		}
 		for i := range aiPts {
+			if len(merged) >= dashboardMapMaxMergedObjects {
+				break
+			}
 			merged = append(merged, aiPts[i])
 		}
 	}
@@ -203,6 +210,9 @@ func sendDashboardMergedMapPoints(ctx context.Context, ws *dashboardMapWSConn, w
 		slog.Warn("p_seer_dashboard: gdelt map points", "error", err)
 	} else {
 		for i := range gdPts {
+			if len(merged) >= dashboardMapMaxMergedObjects {
+				break
+			}
 			merged = append(merged, gdPts[i])
 		}
 	}
