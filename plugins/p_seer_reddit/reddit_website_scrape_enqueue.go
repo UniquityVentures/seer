@@ -1,6 +1,7 @@
 package p_seer_reddit
 
 import (
+	"html"
 	"net/url"
 	"regexp"
 	"strings"
@@ -45,36 +46,48 @@ func tryEnqueueWebsiteScrapeURL(raw string) {
 	p_seer_websites.WebsiteScrapeURLQueue <- toSend
 }
 
-func dedupeStrings(in []string) []string {
-	seen := make(map[string]struct{}, len(in))
+// allHTTPURLsInHTML returns every http(s) URL found in HTML (valid parse, deduped, document order).
+func allHTTPURLsInHTML(htmlSrc string) []string {
+	s := html.UnescapeString(htmlSrc)
+	seen := make(map[string]struct{})
 	var out []string
-	for _, s := range in {
-		s = strings.TrimSpace(s)
-		if s == "" {
+	for _, m := range redditPostHTTPURLRe.FindAllString(s, -1) {
+		u := strings.TrimRight(m, ".,;:!?)")
+		parsed, err := url.Parse(u)
+		if err != nil || parsed.Host == "" {
 			continue
 		}
-		if _, ok := seen[s]; ok {
+		switch strings.ToLower(parsed.Scheme) {
+		case "http", "https":
+		default:
 			continue
 		}
-		seen[s] = struct{}{}
-		out = append(out, s)
+		if _, dup := seen[u]; dup {
+			continue
+		}
+		seen[u] = struct{}{}
+		out = append(out, u)
 	}
 	return out
 }
 
-// enqueueURLsFromRedditPost pushes external http(s) URLs from link-post [RedditPostData.URL]
-// and from http(s) matches in title/selftext to [p_seer_websites.WebsiteScrapeURLQueue].
-// Call only when [RedditSource.LoadWebsites] is true ([persistPostIfNew] gate).
-func enqueueURLsFromRedditPost(post RedditPostData) {
-	var raw []string
-	if u := strings.TrimSpace(post.URL); u != "" {
-		raw = append(raw, u)
+// firstOutboundHTTPURLInHTML returns the first URL whose host is not a Reddit scrape-skip host (outbound link for stored post URL).
+func firstOutboundHTTPURLInHTML(htmlSrc string) string {
+	for _, u := range allHTTPURLsInHTML(htmlSrc) {
+		parsed, err := url.Parse(u)
+		if err != nil || parsed.Host == "" {
+			continue
+		}
+		if !websiteScrapeHostSkipped(parsed.Hostname()) {
+			return u
+		}
 	}
-	scan := post.Title + "\n" + post.Selftext
-	for _, m := range redditPostHTTPURLRe.FindAllString(scan, -1) {
-		raw = append(raw, strings.TrimRight(m, ".,;:!?)"))
-	}
-	for _, s := range dedupeStrings(raw) {
-		tryEnqueueWebsiteScrapeURL(s)
+	return ""
+}
+
+// enqueueWebsiteURLFromRSSContent enqueues every http(s) URL from Reddit Atom entry content; tryEnqueueWebsiteScrapeURL skips unsuitable hosts.
+func enqueueWebsiteURLFromRSSContent(html string) {
+	for _, u := range allHTTPURLsInHTML(html) {
+		tryEnqueueWebsiteScrapeURL(u)
 	}
 }

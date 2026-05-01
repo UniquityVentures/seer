@@ -40,7 +40,7 @@ type aisStreamMapDisplayPoint struct {
 
 type aisStreamMapViewportMessage struct {
 	Type   string                   `json:"type" cbor:"type"`
-	Bounds *aisStreamViewportBounds `json:"bounds" cbor:"bounds"`
+	Bounds *AisstreamViewportBounds `json:"bounds" cbor:"bounds"`
 	Zoom   float64                  `json:"zoom" cbor:"zoom"`
 }
 
@@ -93,7 +93,7 @@ func (h aisStreamMapDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 	}
 
 	var writeMu sync.Mutex
-	var lastViewport *aisStreamViewportBounds
+	var lastViewport *AisstreamViewportBounds
 
 	stopTicker := make(chan struct{})
 	defer close(stopTicker)
@@ -143,7 +143,7 @@ func (h aisStreamMapDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 		}
 		vp := msg.Bounds
 		if vp != nil {
-			vp = &aisStreamViewportBounds{
+			vp = &AisstreamViewportBounds{
 				West:  vp.West - aisStreamViewportMarginDeg,
 				South: vp.South - aisStreamViewportMarginDeg,
 				East:  vp.East + aisStreamViewportMarginDeg,
@@ -160,7 +160,7 @@ func (h aisStreamMapDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-func sendAISStreamMapDisplayPoints(ctx context.Context, ws *aisStreamMapWebSocketConn, writeMu *sync.Mutex, bounds *aisStreamViewportBounds) error {
+func sendAISStreamMapDisplayPoints(ctx context.Context, ws *aisStreamMapWebSocketConn, writeMu *sync.Mutex, bounds *AisstreamViewportBounds) error {
 	db, err := getters.DBFromContext(ctx)
 	if err != nil {
 		return err

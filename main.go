@@ -12,6 +12,7 @@ import (
 	_ "github.com/UniquityVentures/lago/plugins/p_users"
 	_ "github.com/UniquityVentures/seer/plugins/p_seer_aisstream"
 	_ "github.com/UniquityVentures/seer/plugins/p_seer_assistant"
+	_ "github.com/UniquityVentures/seer/plugins/p_seer_dashboard"
 	_ "github.com/UniquityVentures/seer/plugins/p_seer_deepsearch"
 	_ "github.com/UniquityVentures/seer/plugins/p_seer_gdelt"
 	_ "github.com/UniquityVentures/seer/plugins/p_seer_intel"

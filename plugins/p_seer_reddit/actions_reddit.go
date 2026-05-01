@@ -22,7 +22,8 @@ const defaultMaxFreshPosts = 25
 // redditFetchPostsActive is true while a source "Load" ([FetchNewRedditPosts]) runs in the background.
 var redditFetchPostsActive atomic.Bool
 
-// FetchNewRedditPosts loads Reddit JSON listings and inserts or links [RedditPost] rows only.
+// FetchNewRedditPosts loads Reddit Atom/RSS feeds and inserts or links [RedditPost] rows only.
+// Each subreddit is capped independently by [RedditSource.MaxFreshPosts] (default [defaultMaxFreshPosts]).
 // Call this from HTTP handlers, jobs, or orchestration outside Runnable/worker wiring.
 func FetchNewRedditPosts(ctx context.Context, db *gorm.DB, src *RedditSource) error {
 	if src == nil || src.ID == 0 {
@@ -53,83 +54,64 @@ func FetchNewRedditPosts(ctx context.Context, db *gorm.DB, src *RedditSource) er
 	}
 
 	var mu sync.Mutex
-	var freshTotal int
 	var wg sync.WaitGroup
 	var firstErr error
 	for _, name := range names {
 		wg.Add(1)
-		go func() {
+		go func(sub string) {
 			defer wg.Done()
-			if err := src.fetchSubredditListings(ctx, db, name, query, maxFresh, &mu, &freshTotal); err != nil {
+			if err := src.fetchSubredditListings(ctx, db, sub, query, maxFresh); err != nil {
 				mu.Lock()
 				if firstErr == nil {
 					firstErr = err
 				}
 				mu.Unlock()
 			}
-		}()
+		}(name)
 	}
 	wg.Wait()
 	return firstErr
 }
 
-func (r *RedditSource) fetchSubredditListings(ctx context.Context, db *gorm.DB, subredditName, searchQuery string, maxFresh int, mu *sync.Mutex, freshTotal *int) error {
-	afterStr := ""
-	for range redditListingMaxPages {
+func (r *RedditSource) fetchSubredditListings(ctx context.Context, db *gorm.DB, subredditName, searchQuery string, maxFresh int) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	var posts []RedditPostData
+	var err error
+	if strings.TrimSpace(searchQuery) != "" {
+		posts, err = fetchSubredditRSSSearch(ctx, subredditName, searchQuery)
+	} else {
+		posts, err = fetchSubredditRSS(ctx, subredditName)
+	}
+	if err != nil {
+		return err
+	}
+	var freshThis int
+	for _, post := range posts {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
-		mu.Lock()
-		atCap := *freshTotal >= maxFresh
-		mu.Unlock()
-		if atCap {
+		id := strings.TrimSpace(post.ID)
+		if id == "" {
+			slog.Warn("p_seer_reddit: post missing id, skip", "subreddit", subredditName)
+			continue
+		}
+		if post.CreatedUTC <= 0 {
+			err := fmt.Errorf("reddit post %q missing datetime", post.ID)
+			slog.Error("p_seer_reddit: post datetime", "error", err, "reddit_source_id", r.ID)
+			return err
+		}
+		if freshThis >= maxFresh {
 			return nil
 		}
-		var afterPtr *string
-		if afterStr != "" {
-			afterPtr = &afterStr
-		}
-		var listing *redditObject[redditListing[RedditPostData]]
-		var err error
-		if searchQuery != "" {
-			listing, err = fetchSubredditPostsSearch(ctx, subredditName, searchQuery, afterPtr)
-		} else {
-			listing, err = fetchSubredditPosts(ctx, subredditName, afterPtr)
-		}
+		inserted, err := r.persistPostIfNew(ctx, db, post)
 		if err != nil {
 			return err
 		}
-		for _, child := range listing.Data.Children {
-			post := child.Data
-			id := strings.TrimSpace(post.ID)
-			if id == "" {
-				slog.Warn("p_seer_reddit: post missing id, skip", "subreddit", subredditName)
-				continue
-			}
-			if post.CreatedUTC <= 0 {
-				err := fmt.Errorf("reddit post %q missing datetime", post.ID)
-				slog.Error("p_seer_reddit: post datetime", "error", err, "reddit_source_id", r.ID)
-				return err
-			}
-			mu.Lock()
-			if *freshTotal >= maxFresh {
-				mu.Unlock()
-				return nil
-			}
-			inserted, err := r.persistPostIfNew(ctx, db, post)
-			if err != nil {
-				mu.Unlock()
-				return err
-			}
-			if inserted {
-				*freshTotal++
-			}
-			mu.Unlock()
+		if inserted {
+			freshThis++
 		}
-		if listing.Data.After == nil {
-			break
-		}
-		afterStr = *listing.Data.After
 	}
 	return nil
 }
@@ -202,7 +184,7 @@ func (r *RedditSource) persistPostIfNew(ctx context.Context, db *gorm.DB, post R
 	}
 	if linked {
 		if r.LoadWebsites {
-			enqueueURLsFromRedditPost(post)
+			enqueueWebsiteURLFromRSSContent(post.AtomContentHTML)
 		}
 		return false, nil
 	}
@@ -211,7 +193,7 @@ func (r *RedditSource) persistPostIfNew(ctx context.Context, db *gorm.DB, post R
 	err = db.WithContext(ctx).Where("post_id = ?", pid).First(&existing).Error
 	if err == nil {
 		if r.LoadWebsites {
-			enqueueURLsFromRedditPost(post)
+			enqueueWebsiteURLFromRSSContent(post.AtomContentHTML)
 		}
 		if err := db.Model(r).Association("RedditPosts").Append(&existing); err != nil {
 			slog.Error("p_seer_reddit: append existing post to source", "error", err, "reddit_source_id", r.ID, "post_id", pid)
@@ -283,7 +265,7 @@ func (r *RedditSource) persistPostIfNew(ctx context.Context, db *gorm.DB, post R
 			return false, nil
 		}
 		if r.LoadWebsites {
-			enqueueURLsFromRedditPost(post)
+			enqueueWebsiteURLFromRSSContent(post.AtomContentHTML)
 		}
 		if err := db.Model(r).Association("RedditPosts").Append(&existing); err != nil {
 			slog.Error("p_seer_reddit: append after duplicate create", "error", err, "reddit_source_id", r.ID, "post_id", pid)
@@ -292,7 +274,7 @@ func (r *RedditSource) persistPostIfNew(ctx context.Context, db *gorm.DB, post R
 		return true, nil
 	}
 	if r.LoadWebsites {
-		enqueueURLsFromRedditPost(post)
+		enqueueWebsiteURLFromRSSContent(post.AtomContentHTML)
 	}
 	if err := db.Model(r).Association("RedditPosts").Append(&rp); err != nil {
 		slog.Error("p_seer_reddit: append new post to source", "error", err, "reddit_source_id", r.ID, "post_id", pid)

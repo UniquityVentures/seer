@@ -41,7 +41,7 @@ type openSkyMapDisplayPoint struct {
 
 type openSkyMapViewportMessage struct {
 	Type   string                 `json:"type" cbor:"type"`
-	Bounds *openSkyViewportBounds `json:"bounds" cbor:"bounds"`
+	Bounds *OpenSkyViewportBounds `json:"bounds" cbor:"bounds"`
 	Zoom   float64                `json:"zoom" cbor:"zoom"`
 }
 
@@ -148,7 +148,7 @@ func (h openSkyMapDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 		}
 		vp := msg.Bounds
 		if vp != nil {
-			vp = &openSkyViewportBounds{
+			vp = &OpenSkyViewportBounds{
 				West:  vp.West - openSkyViewportMarginDeg,
 				South: vp.South - openSkyViewportMarginDeg,
 				East:  vp.East + openSkyViewportMarginDeg,
@@ -164,7 +164,7 @@ func (h openSkyMapDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func sendOpenSkyMapDisplayPoints(ctx context.Context, ws *openSkyMapWebSocketConn, writeMu *sync.Mutex, bounds *openSkyViewportBounds) error {
+func sendOpenSkyMapDisplayPoints(ctx context.Context, ws *openSkyMapWebSocketConn, writeMu *sync.Mutex, bounds *OpenSkyViewportBounds) error {
 	db, err := getters.DBFromContext(ctx)
 	if err != nil {
 		return err
