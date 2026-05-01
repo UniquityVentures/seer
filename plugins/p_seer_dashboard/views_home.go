@@ -11,7 +11,7 @@ func init() {
 	lago.RegistryView.Patch("dashboard.AppsView", func(v *views.View) *views.View {
 		return v.WithLayer("seer_dashboard.intel_latest", views.LayerList[p_seer_intel.Intel]{
 			Key:      getters.Static("seerDashboardIntelLatest"),
-			PageSize: getters.Static(uint(20)),
+			PageSize: getters.Static(uint(4)),
 			QueryPatchers: views.QueryPatchers[p_seer_intel.Intel]{
 				{Key: "seer_dashboard.intel_order", Value: views.QueryPatcherOrderBy[p_seer_intel.Intel]{Order: "datetime DESC, id DESC"}},
 			},
