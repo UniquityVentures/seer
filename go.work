@@ -5,6 +5,7 @@ use (
 	./plugins/p_seer_aisstream
 	./plugins/p_seer_assistant
 	./plugins/p_seer_deepsearch
+	./plugins/p_seer_dashboard
 	./plugins/p_seer_gdelt
 	./plugins/p_seer_intel
 	./plugins/p_seer_opensky

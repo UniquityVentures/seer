@@ -111,7 +111,7 @@ func redditSourceCreateFormFields() components.PageInterface {
 				Error: getters.Key[error]("$error.MaxFreshPosts"),
 				Children: []components.PageInterface{
 					&components.InputNumber[uint]{
-						Label: "Max fresh posts per fetch",
+						Label: "Max fresh posts per subreddit per fetch",
 						Name:  "MaxFreshPosts",
 						Getter: getters.Map(getters.Key[uint]("$in.MaxFreshPosts"), func(_ context.Context, n uint) (uint, error) {
 							if n == 0 {

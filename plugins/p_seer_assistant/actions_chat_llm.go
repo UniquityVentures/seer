@@ -179,22 +179,6 @@ func RunAssistant(r *http.Request, sessionID uint) (chan *genai.Content, chan er
 		if maxOut <= 0 {
 			maxOut = 1024
 		}
-		contents, err := LoadSessionContents(ctx, db, sessionID)
-		if err != nil {
-			errChan <- err
-			return
-		}
-		history, triggerParts, err := assistantSplitLastUserContent(contents)
-		if err != nil {
-			errChan <- err
-			return
-		}
-		chat, err := client.Chats.Create(ctx, model, assistantChatGenConfig(maxOut), history)
-		if err != nil {
-			errChan <- fmt.Errorf("p_seer_assistant: chats create: %w", err)
-			return
-		}
-		nextParts := triggerParts
 
 		for round := 0; round < maxRounds; round++ {
 			if err = ctx.Err(); err != nil {
@@ -202,7 +186,26 @@ func RunAssistant(r *http.Request, sessionID uint) (chan *genai.Content, chan er
 				return
 			}
 
-			streamChan, streamErrChan := runAssistantChatStream(ctx, chat, nextParts)
+			// Rebuild Chat from DB every round so genai.Chat.curatedHistory never carries a
+			// model turn dropped by the SDK's incomplete stream validateContent (which would
+			// orphan the next function-response SendStream and trigger API 400).
+			contents, err := LoadSessionContents(ctx, db, sessionID)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			history, triggerParts, err := assistantSplitLastUserContent(contents)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			chat, err := client.Chats.Create(ctx, model, assistantChatGenConfig(maxOut), history)
+			if err != nil {
+				errChan <- fmt.Errorf("p_seer_assistant: chats create: %w", err)
+				return
+			}
+
+			streamChan, streamErrChan := runAssistantChatStream(ctx, chat, triggerParts)
 			var full *genai.Content
 			for streamChan != nil || streamErrChan != nil {
 				select {
@@ -275,7 +278,6 @@ func RunAssistant(r *http.Request, sessionID uint) (chan *genai.Content, chan er
 					errChan <- ctx.Err()
 					return
 				}
-				nextParts = respParts
 				continue
 			}
 
@@ -308,16 +310,22 @@ func mergeAssistantContent(dst, src *genai.Content) *genai.Content {
 		return dst
 	}
 	if dst == nil {
-		clone := &genai.Content{
-			Role:  src.Role,
-			Parts: append([]*genai.Part(nil), src.Parts...),
+		var parts []*genai.Part
+		for _, p := range src.Parts {
+			if !genaiPartIsEmpty(p) {
+				parts = append(parts, p)
+			}
 		}
-		return clone
+		return &genai.Content{Role: src.Role, Parts: parts}
 	}
 	if strings.TrimSpace(dst.Role) == "" {
 		dst.Role = src.Role
 	}
-	dst.Parts = append(dst.Parts, src.Parts...)
+	for _, p := range src.Parts {
+		if !genaiPartIsEmpty(p) {
+			dst.Parts = append(dst.Parts, p)
+		}
+	}
 	return dst
 }
 
