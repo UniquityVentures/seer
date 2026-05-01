@@ -33,7 +33,7 @@ presentation of actionable intelligence is vital which is also
 proposed to be addressed through an interactive application as the 
 foundation. 
 6. Broad plan is to develop a 5 module application. 
-6.1 Module 1- Source credibility check definition of     credibility 
+6.1 Module 1- Source credibility check definition of credibility 
 based on user defined factors/ criterion. 
 6.2 Module 2- Open-Source content analysis. 
 6.3 Module 3- Social media content analysis. 
