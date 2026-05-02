@@ -1,6 +1,6 @@
-#set page(margin: 1in)
+#set page(margin: 0.69in)
 #set text(size: 12pt)
-#set par(justify: true, leading: 0.65em)
+#set par(justify: true, leading: 0.69em)
 #show heading: it => block(above: 1em, below: 0.69em, it)
 
 #align(center)[

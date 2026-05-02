@@ -1,6 +1,6 @@
 #import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge
 
-#set page(margin: 1in)
+#set page(margin: 0.69in)
 #set text(size: 12pt)
 #set par(justify: true, leading: 0.65em)
 #show heading: it => block(above: 1em, below: 0.69em, it)
@@ -22,15 +22,14 @@ The current prototype proves the central product direction, while the proposed w
 
 == 1.1 High-Level Overview
 
+Seer follows a modular architecture. Each source type, such as websites, social media, public event datasets, aviation feeds, maritime feeds, image analysis, or future custom sources, can be implemented as an independent plugin. These plugins feed a shared Intel layer, where extracted data is standardised, tokenized and stored into a vector database. Consequently, this data is used by plugins for summarisation, search, analysis, correlation, reporting, geospatial visualisation, and any other user-defined workflows.
+
+Seer uses configured plugins and workers to collect data from relevant sources. The collected information is cleaned, deduplicated, converted into a common representation, enriched using AI, and stored as Intel records. Analysts can then use semantic search, similarity search, custom workflows, reports, and maps to identify patterns and produce actionable intelligence. Every downstream output remains linked to the underlying Intel records and, where available, the raw source material from which those records were generated.
 
 #figure(
   image("Seer Architecture.svg", height: 69%),
   caption: [Seer high-level system architecture],
 )
-
-Seer follows a modular architecture. Each source type, such as websites, social media, public event datasets, aviation feeds, maritime feeds, image analysis, or future custom sources, can be implemented as an independent plugin. These plugins feed a shared Intel layer, where extracted data is standardised, tokenized and stored into a vector database. Consequently, this data is used by plugins for summarisation, search, analysis, correlation, reporting, geospatial visualisation, and any other user-defined workflows.
-
-Seer uses configured plugins and workers to collect data from relevant sources. The collected information is cleaned, deduplicated, converted into a common representation, enriched using AI, and stored as Intel records. Analysts can then use semantic search, similarity search, custom workflows, reports, and maps to identify patterns and produce actionable intelligence. Every downstream output remains linked to the underlying Intel records and, where available, the raw source material from which those records were generated.
 
 == 1.2 Plugin Architecture
 
