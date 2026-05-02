@@ -126,4 +126,8 @@ func init() {
 		lago.RegisterModel[RedditPost](db)
 		return db
 	})
+	lago.OnDBInit("p_seer_reddit.runner_pools_autostart", func(db *gorm.DB) *gorm.DB {
+		StartAllRedditRunnerWorkerPools(db)
+		return db
+	})
 }

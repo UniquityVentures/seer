@@ -7,6 +7,7 @@ import (
 	"github.com/UniquityVentures/lago/components"
 	"github.com/UniquityVentures/lago/getters"
 	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/seer/plugins/p_seer_workerregistry"
 	"gorm.io/gorm"
 )
 
@@ -213,6 +214,7 @@ func registerRedditRunnerPages() {
 								},
 							},
 							&components.GetterPage{Getter: redditRunnerDetailWorkerPoolActionsGetter()},
+							p_seer_workerregistry.WorkerRunLogsBlock("seer-reddit-runner-run-logs"),
 						},
 					},
 				},

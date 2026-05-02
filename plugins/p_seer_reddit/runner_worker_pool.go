@@ -37,6 +37,26 @@ func StopRedditRunnerWorkerPool(runnerID uint) {
 	}
 }
 
+// StartAllRedditRunnerWorkerPools schedules a worker pool goroutine for every [RedditRunner] row.
+// It is invoked from [lago.OnDBInit] after models register so the process autostarts pools on boot.
+func StartAllRedditRunnerWorkerPools(db *gorm.DB) {
+	if db == nil {
+		return
+	}
+	var ids []uint
+	if err := db.Model(&RedditRunner{}).Order("id ASC").Pluck("id", &ids).Error; err != nil {
+		slog.Error("p_seer_reddit: autostart list runners", "error", err)
+		return
+	}
+	for _, id := range ids {
+		if id == 0 {
+			continue
+		}
+		ScheduleRedditRunnerWorkerPoolStart(db, id)
+	}
+	slog.Info("p_seer_reddit: runner worker pools autostart scheduled", "count", len(ids))
+}
+
 // ScheduleRedditRunnerWorkerPoolStart starts the pool in a new goroutine if not already running.
 // db must be a pooled *gorm.DB (not an open transaction).
 func ScheduleRedditRunnerWorkerPoolStart(db *gorm.DB, runnerID uint) {

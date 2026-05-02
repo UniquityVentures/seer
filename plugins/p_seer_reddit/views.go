@@ -14,6 +14,7 @@ import (
 	"github.com/UniquityVentures/lago/plugins/p_users"
 	"github.com/UniquityVentures/lago/views"
 	"github.com/UniquityVentures/seer/plugins/p_seer_intel"
+	"github.com/UniquityVentures/seer/plugins/p_seer_workerregistry"
 	"gorm.io/gorm"
 )
 
@@ -293,7 +294,11 @@ func init() {
 				Key:          getters.Static("redditRunner"),
 				PathParamKey: getters.Static("id"),
 			}).
-			WithLayer("seer_reddit.reddit_runner.worker_pool_state", redditRunnerWorkerPoolStateLayer{}))
+			WithLayer("seer_reddit.reddit_runner.worker_pool_state", redditRunnerWorkerPoolStateLayer{}).
+			WithLayer("seer_reddit.reddit_runner.run_logs", p_seer_workerregistry.RunnerRunLogsLayer{
+				RunnerContextKey: "redditRunner",
+				Kind:             p_seer_workerregistry.WorkerRunnerKindReddit,
+			}))
 
 	lago.RegistryView.Register("seer_reddit.RedditRunnerCreateView",
 		lago.GetPageView("seer_reddit.RedditRunnerCreateForm").

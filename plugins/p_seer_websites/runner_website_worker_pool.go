@@ -35,6 +35,26 @@ func StopWebsiteRunnerWorkerPool(runnerID uint) {
 	}
 }
 
+// StartAllWebsiteRunnerWorkerPools schedules a worker pool goroutine for every [WebsiteRunner] row.
+// It is invoked from [lago.OnDBInit] after models register so the process autostarts pools on boot.
+func StartAllWebsiteRunnerWorkerPools(db *gorm.DB) {
+	if db == nil {
+		return
+	}
+	var ids []uint
+	if err := db.Model(&WebsiteRunner{}).Order("id ASC").Pluck("id", &ids).Error; err != nil {
+		slog.Error("p_seer_websites: autostart list runners", "error", err)
+		return
+	}
+	for _, id := range ids {
+		if id == 0 {
+			continue
+		}
+		ScheduleWebsiteRunnerWorkerPoolStart(db, id)
+	}
+	slog.Info("p_seer_websites: runner worker pools autostart scheduled", "count", len(ids))
+}
+
 // ScheduleWebsiteRunnerWorkerPoolStart starts the pool in a new goroutine if not already running.
 func ScheduleWebsiteRunnerWorkerPoolStart(db *gorm.DB, runnerID uint) {
 	if db == nil || runnerID == 0 {

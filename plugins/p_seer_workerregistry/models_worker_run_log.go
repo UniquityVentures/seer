@@ -99,15 +99,39 @@ func LatestWorkerRunLog(db *gorm.DB, kind string, runnerID uint) (*WorkerRunLog,
 	if db == nil {
 		return nil, errors.New("p_seer_workerregistry: LatestWorkerRunLog: nil db")
 	}
-	var row WorkerRunLog
+	var rows []WorkerRunLog
 	err := db.Where("runner_kind = ? AND runner_id = ? AND finished_at IS NOT NULL", kind, runnerID).
 		Order("finished_at DESC, id DESC").
-		First(&row).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil
-	}
+		Limit(1).
+		Find(&rows).Error
 	if err != nil {
 		return nil, err
 	}
-	return &row, nil
+	if len(rows) == 0 {
+		return nil, nil
+	}
+	return &rows[0], nil
+}
+
+// ListWorkerRunLogs returns recent run rows for a runner (newest StartedAt first), including
+// in-progress rows (FinishedAt nil). limit is clamped to 1..500; zero defaults to 100.
+func ListWorkerRunLogs(db *gorm.DB, kind string, runnerID uint, limit int) ([]WorkerRunLog, error) {
+	if db == nil {
+		return nil, errors.New("p_seer_workerregistry: ListWorkerRunLogs: nil db")
+	}
+	if limit <= 0 {
+		limit = 100
+	}
+	if limit > 500 {
+		limit = 500
+	}
+	var rows []WorkerRunLog
+	err := db.Where("runner_kind = ? AND runner_id = ?", kind, runnerID).
+		Order("started_at DESC, id DESC").
+		Limit(limit).
+		Find(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	return rows, nil
 }

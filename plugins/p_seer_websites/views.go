@@ -14,6 +14,7 @@ import (
 	"github.com/UniquityVentures/lago/plugins/p_users"
 	"github.com/UniquityVentures/lago/views"
 	"github.com/UniquityVentures/seer/plugins/p_seer_intel"
+	"github.com/UniquityVentures/seer/plugins/p_seer_workerregistry"
 )
 
 // websiteIntelContextLayer loads intel flags and detail href into context after [views.LayerDetail] for [Website].
@@ -249,7 +250,11 @@ func init() {
 				Key:          getters.Static("websiteRunner"),
 				PathParamKey: getters.Static("id"),
 			}).
-			WithLayer("seer_websites.website_runner.worker_pool_state", websiteRunnerWorkerPoolStateLayer{}))
+			WithLayer("seer_websites.website_runner.worker_pool_state", websiteRunnerWorkerPoolStateLayer{}).
+			WithLayer("seer_websites.website_runner.run_logs", p_seer_workerregistry.RunnerRunLogsLayer{
+				RunnerContextKey: "websiteRunner",
+				Kind:             p_seer_workerregistry.WorkerRunnerKindWebsite,
+			}))
 
 	lago.RegistryView.Register("seer_websites.WebsiteRunnerCreateView",
 		lago.GetPageView("seer_websites.WebsiteRunnerCreateForm").

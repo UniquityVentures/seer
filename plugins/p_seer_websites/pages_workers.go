@@ -7,6 +7,7 @@ import (
 	"github.com/UniquityVentures/lago/components"
 	"github.com/UniquityVentures/lago/getters"
 	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/seer/plugins/p_seer_workerregistry"
 )
 
 func websiteRunnerFormFields() components.PageInterface {
@@ -175,6 +176,7 @@ func registerWebsiteRunnerPages() {
 									},
 								},
 							},
+							p_seer_workerregistry.WorkerRunLogsBlock("seer-website-runner-run-logs"),
 						},
 					},
 				},

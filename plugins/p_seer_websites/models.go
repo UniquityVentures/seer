@@ -63,4 +63,8 @@ func init() {
 		lago.RegisterModel[WebsiteSource](db)
 		return db
 	})
+	lago.OnDBInit("p_seer_websites.runner_pools_autostart", func(db *gorm.DB) *gorm.DB {
+		StartAllWebsiteRunnerWorkerPools(db)
+		return db
+	})
 }
