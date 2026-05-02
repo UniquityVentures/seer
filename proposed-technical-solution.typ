@@ -49,52 +49,6 @@ Seer is built primarily in Go, which makes it efficient to run. Each plugin can 
 
 Source Plugins typically follow a common structure. A user defines a source inside a plugin by specifying which part of the internet to monitor, what information to look for, and how often the source should be scraped. Source workers then collect data on the requested schedule and pre-process it. The fetched data is passed through a filtering and deduplication layer that determines whether it is new and relevant, helping discard ads, noise, and unrelated content from otherwise useful sources. Accepted source material may also be retained in a raw source store as a backup, along with source-specific metadata, so that original evidence remains available for audit, review, or later reprocessing. Relevant data is then restructured and fed into the Intel Datastore.
 
-#figure(
-  diagram(
-    node-stroke: 0.5pt,
-    node-fill: luma(245),
-    spacing: 4.2mm,
-
-    node((0, 0), align(center)[
-      *User-defined Source* \
-      Target, topic, filters, geography, cadence, trust score
-    ], width: 52mm),
-
-    node((0, 1), align(center)[
-      *Workers* \
-      Scrape, ingest, monitor, queue jobs
-    ], width: 52mm),
-
-    node((0, 2), align(center)[
-      *Filtering and Processing* \
-      Remove noise, check relevance, summarise and restructure
-    ], width: 52mm),
-
-    node((-1.1, 3), align(center)[
-      *Raw Source Store* \
-      Preserve accepted source material and metadata
-    ], width: 44mm),
-
-    node((1.1, 3), align(center)[
-      *Quality Signals* \
-      Reliability, relevance, analyst feedback, misinformation checks
-    ], width: 44mm),
-
-    node((0, 4), align(center)[
-      *Intel Datastore* \
-      Standardised records, metadata, embeddings
-    ], width: 44mm),
-
-    edge((0, 0), (0, 1), "-|>"),
-    edge((0, 1), (0, 2), "-|>"),
-    edge((0, 2), (-1.1, 3), "-|>"),
-    edge((0, 2), (0, 4), "-|>"),
-    edge((0, 4), (1.1, 3), "-|>"),
-    edge((1.1, 3), (0, 0), "-|>"),
-  ),
-  caption: [General flow of a Source Plugin, from source configuration to standardised Intel records],
-)
-
 For example, in the Reddit Source Plugin, a user can define a source that monitors specific subreddits such as r/news and r/worldnews, looks for information about the Russia-Ukraine conflict, and refreshes every 25 minutes. The Reddit workers query those subreddits on that cadence, inspect new posts, and keep only posts related to the configured topic. Because comments can also contain valuable OSINT signals, the plugin includes logic to parse posts together with their comments. The raw Reddit data is retained as a backup and then transformed into the structured format used by the Intel Datastore.
 
 Sources can also be assigned a "trust score". This score may be set manually or updated automatically based on the historical quality, reliability, and relevance of information provided by the source. This helps the system track source credibility over time and identify sources that may be compromised, noisy, or intentionally feeding misinformation.
