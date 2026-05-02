@@ -9,119 +9,195 @@
   #text(size: 22pt, weight: "bold")[Proposed Technical Solution]
 ]
 
-#text(style: "italic")[You can preview a demo of the proposed solution - Seer at https://seer.lariv.in/.]
+#text(style: "italic")[You can preview a prototype of the proposed solution - Seer at https://seer.lariv.in/.]
 
 Seer is proposed as a distributed, large scale OSINT analysis and monitoring platform. The system is designed to collect large volumes of public and user-provided information through source plugins, store it in a common Intel layer, process it through AI-assisted analysis plugins, and present actionable outputs through a managed role-based application. It directly addresses the problem statement by reducing manual collection effort, enabling real-time monitoring of user-defined subjects, and improving the reliability, traceability, and usability of intelligence outputs.
 
 The proposed system is not starting from a purely theoretical design. A working prototype of Seer already exists and demonstrates the core architecture: a Reddit source, website scraper, deep research AI agent, AI chat interface, Intel layer, multimodal embedding support, Retrieval Augmented Generation (RAG), scheduled scraping workers, and a GIS map. The grant would therefore be used to harden and scale an existing architecture rather than to begin exploratory development from zero.
 
-The current prototype proves the central product direction, while the proposed work focuses on operational hardening: scaling source ingestion, improving source-specific collectors, strengthening the Intel schema for military use, adding richer reliability and misinformation checks, and preparing the system for larger deployments where rate limits, source instability, distributed workers, access control, and auditability become critical.
+The current prototype validates the core direction of the platform. The proposed work will focus on preparing it for larger and more demanding use: scaling collection across more sources, improving source-specific plugins, strengthening the Intel layer for military requirements, adding stronger reliability and misinformation checks, and preparing for deployment needs such as rate limits, unstable sources, distributed workers, access control, and audit logs.
 
 
 = 1. Technical Architecture and Approach
 
-== 1.1 High-Level Overview
+Seer follows a layered, plugin-based architecture. A fleet of data-scraping microservices collects public web data. Other services, including public datasets, API-accessible sources, and proprietary services, can feed the platform through the same source-plugin interface. 
 
-Seer follows a modular architecture. Each source type, such as websites, social media, public event datasets, aviation feeds, maritime feeds, image analysis, or future custom sources, can be implemented as an independent plugin. These plugins feed a shared Intel layer, where extracted data is standardised, tokenized and stored into a vector database. Consequently, this data is used by plugins for summarisation, search, analysis, correlation, reporting, geospatial visualisation, and any other user-defined workflows.
+Each source is represented by an independent plugin, so new source types can be added without changing the rest of the system.
+Within each source plugin, collected material passes through a common pipeline for data fetching, pre-processing, filtering, raw data storage, and extraction of content suitable for intelligence generation. Source-specific stores preserve the original or source-native records.
 
-Seer uses configured plugins and workers to collect data from relevant sources. The collected information is cleaned, deduplicated, converted into a common representation, enriched using AI, and stored as Intel records. Analysts can then use semantic search, similarity search, custom workflows, reports, and maps to identify patterns and produce actionable intelligence. Every downstream output remains linked to the underlying Intel records and, where available, the raw source material from which those records were generated.
+The Intel layer processes the extracted content into a defined format and feeds it into a shared model before saving it to the database. Downstream applications then consume this Intel model for semantic search, AI chat, similarity search, report generation, interactive maps, and alerts and warnings, while retaining links back to the underlying source records where available.
 
 #figure(
   image("Seer Architecture.svg", height: 72%),
   caption: [Seer high-level system architecture],
 )
 
-== 1.2 Plugin Architecture
+== 1.1 Data Scraping Microservice Fleet
 
-The plugin architecture is the foundation of Seer's extensibility. Each plugin can define its own data model, collection logic, forms, pages, worker behaviour, and processing flow. For example, a website plugin may crawl pages and convert them into markdown, while a social media plugin may fetch posts using API-based filters, and an event-data plugin may query a structured dataset such as GDELT.
+The first layer of Seer is a fleet of independent data-scraping microservices. Instead of placing all scraping logic inside the main application, each major web source can have its own dedicated fetcher, such as a Reddit scraper, website scraper, Twitter scraper, or future source-specific scraper. This keeps the data collection layer operationally separate from the core Seer application. If one fetcher is rate-limited, blocked, banned, or broken because a website changes its layout, the rest of the platform continues to function.
 
-This design allows Seer to expand in two directions simultaneously. First, it can increase the breadth of information sources by adding new plugins for new platforms, databases, feeds, or private/custom datasets. Second, it can increase the depth of analysis by adding specialised processing workflows for a particular source type, such as image analysis, object tracking, credibility scoring, or source-specific filtering.
+This microservice architecture also allows Seer to implement redundancy at the correct level. Public web sources frequently use bot-detection systems, rate limits, suspicious traffic detection, fingerprinting, CAPTCHA checks, and behavioural analysis. Seer can respond to these constraints using proxy rotation, browser spoofing, fingerprint randomisation, CAPTCHA solving, and human-behaviour emulation. These capabilities can be shared across the fleet while still allowing source-specific handling. For example, the safeguards needed for a social media platform may be different from the safeguards needed for a news website, forum, or public search page.
 
-This is a key distinction from a generic OSINT dashboard with RAG added on top. In many OSINT tools, source collection, data processing, and user-facing analysis are tightly coupled. Seer separates them. Source plugins can be developed, tested, deployed, and maintained independently by different engineering teams. This matters because real OSINT collection is not a one-time integration task: websites change layouts, platforms modify APIs, feeds become unstable, rate limits change, and collectors require continual maintenance. A plugin can be updated or replaced without redesigning the rest of the platform.
+Separating scrapers into independent services also improves scale and maintainability. Large-scale fetching can run in parallel across many workers without overloading the main application. Scrapers can be deployed, restarted, scaled, or replaced independently. Different developer teams can maintain different fetchers without needing full access to the main application, unrelated source plugins, analyst workflows, or sensitive operational data. This reduces security and privacy risk while allowing the collection layer to evolve quickly as external websites and platforms change.
 
-The use of Go is also part of the architecture rather than an implementation detail. OSINT monitoring requires many independent workers to run concurrently: scraping, polling feeds, queueing jobs, embedding content, updating maps, and refreshing reports. In typical Python or JavaScript web stacks, each additional parallel worker can add significant memory overhead. In the current Go-based approach, the core service is lightweight and concurrent work can be handled through goroutines, allowing many independent jobs to run in parallel at much lower memory cost. This makes Seer better suited to continuous monitoring workloads where hundreds or thousands of small tasks may need to run frequently.
+== 1.2 Other Services
 
-== 1.3 Sources
+The architecture is not limited to web scraping. Seer can also ingest information from other programmatic services, including public datasets, API-accessible sources, proprietary services, and future private data feeds. These services enter the same source-plugin workflow as scraper-backed sources, which means the platform can treat a structured API, an open government dataset, an aviation feed, a maritime feed, or an internal proprietary source as another source of intelligence.
 
-Source Plugins are responsible for obtaining data from external sources, including websites, open-source databases, social media platforms, and other online feeds. Each Source Plugin defines its own collection logic, data model, post-processing pipeline, and worker behavior. Because Seer uses a plugin-based architecture, sources are fully decoupled from one another: if one source fails or changes, the rest of the system can continue operating normally.
+This design gives Seer a single ingestion model for many kinds of data. A source may be fetched by a scraper microservice, queried through an authenticated API, received from a public dataset, or connected through a proprietary integration, but once it reaches the source-plugin layer it can be processed, filtered, stored, and converted into Intel using the same architectural pattern. This makes it possible to add new sources without redesigning downstream search, reporting, maps, AI chat, or alerting features. It also allows Seer to run multiple data fetchers for a single source type, ensuring coverage for sources that require strict full-time monitoring even if one fetcher goes down, is rate-limited, or temporarily loses access.
 
-Seer is built primarily in Go, which makes it efficient to run. Each plugin can use lightweight goroutines for scrapers, monitors, queues, and AI processing jobs. *This allows multiple workers to run in parallel at large scale and low operational cost*, which is important for OSINT workloads where many independent sources must be checked, refreshed, and processed continuously.
+== 1.3 Source Plugins
 
-Source Plugins typically follow a common structure. A user defines a source inside a plugin by specifying which part of the internet to monitor, what information to look for, and how often the source should be scraped. Source workers then collect data on the requested schedule and pre-process it. The fetched data is passed through a filtering and deduplication layer that determines whether it is new and relevant, helping discard ads, noise, and unrelated content from otherwise useful sources. Accepted source material may also be retained in a raw source store as a backup, along with source-specific metadata, so that original evidence remains available for audit, review, or later reprocessing. Relevant data is then restructured and fed into the Intel Datastore.
+Source Plugins form the main integration layer between external information and Seer's Intel layer. Each plugin represents a specific type of source, such as Reddit, websites, Twitter, OpenSky, GDELT, BlueSky, or a future custom source. The plugin is responsible for knowing how that source should be fetched, pre-processed, filtered, stored, and converted into intelligence-ready content.
 
-For example, in the Reddit Source Plugin, a user can define a source that monitors specific subreddits such as r/news and r/worldnews, looks for information about the Russia-Ukraine conflict, and refreshes every 25 minutes. The Reddit workers query those subreddits on that cadence, inspect new posts, and keep only posts related to the configured topic. Because comments can also contain valuable OSINT signals, the plugin includes logic to parse posts together with their comments. The raw Reddit data is retained as a backup and then transformed into the structured format used by the Intel Datastore.
+=== Data Fetching and Cross-Plugin Processing
 
-Sources can also be assigned a "trust score". This score may be set manually or updated automatically based on the historical quality, reliability, and relevance of information provided by the source. This helps the system track source credibility over time and identify sources that may be compromised, noisy, or intentionally feeding misinformation.
+The first stage inside a Source Plugin is data fetching. A plugin may call one of the scraping microservices, query an external API, pull from a public dataset, or connect to a proprietary service. Plugins can also define workers that run on specified schedules. For example, a Reddit source may refresh selected subreddits every 25 minutes, a website source may crawl a list of news sites every hour, and a public dataset source may poll for new records on a fixed cadence.
 
-== 1.4 Common Intel Layer
+Seer also supports cross-plugin execution through a proprietary capability called *SourceWeave*. SourceWeave allows one plugin to invoke selected functions from another plugin when a source contains embedded or linked content. For example, if the Reddit Source Plugin finds a URL inside a post or comment, it can call the Website Source Plugin's fetcher to parse the linked webpage and feed that extracted content into the same intelligence pipeline. This enables real multi-source and multi-modal processing without forcing every plugin to reimplement every other plugin's logic.
 
-All collected material is normalised into a common Intel layer. This layer acts as the central intelligence datastore for the platform. Each Intel record can contain a title, summary, source type, source reference, timestamp, original content link, raw evidence reference, extracted entities, locations, media references, collection metadata, processing metadata, source trust score, analyst confidence, misinformation status, and vector embedding. This standardisation is important because it allows information from different sources and formats to be searched, compared, and analysed together.
+=== Pre-Processing and Filtering
 
-The Intel layer also separates raw collection from intelligence analysis. A source plugin may focus only on collecting and cleaning data, while the Intel layer provides the common structure needed for AI processing, search, reports, maps, and analyst review. This keeps the platform modular and makes it easier to add new data sources over time.
+After fetching, each plugin runs source-specific pre-processing. This is important because different sources do not produce data in the same shape. A Reddit post requires different handling from a website article, a public event record, an aviation feed, or a social media thread. Reddit may require post parsing, comment traversal, subreddit metadata, author identity, and vote or engagement signals. A website may require HTML cleanup, boilerplate removal, article extraction, title detection, canonical URL handling, and publication-date parsing. By separating Source Plugins from the rest of the system, Seer can handle these differences natively.
 
-The Intel layer is also the basis for evidence integrity. AI-generated outputs are treated as analyst aids, not as final intelligence conclusions. Summaries, correlations, alerts, and reports should remain traceable back to the Intel records used to generate them. Intel records can in turn point back to the original collected material, source URL or identifier, collection timestamp, plugin name, processing version, and any analyst annotations. This provides a practical chain of custody for OSINT: the platform can show not only what conclusion was generated, but also which records and source material led to that conclusion.
+Pre-processing also includes deduplication. When Seer monitors the same source repeatedly, it will naturally encounter data it has already fetched. The plugin can compare incoming records against its source-specific raw data store and keep only unique or updated material. This prevents repeated posts, unchanged pages, duplicate events, and already-processed records from polluting the Intel layer.
 
-For military use, the Intel schema can be extended with classification and access metadata. Even when the underlying source is public, the aggregation, analyst notes, mission context, or derived conclusions may need restricted access. Seer can support role-based and mission-based visibility by tagging Intel records, workflows, reports, and dashboards with access labels. This allows different user groups to work from the same platform while limiting what each role can view, edit, approve, or export.
+The filtering stage allows users to specify what information they are looking for inside a source. These filters can be written in natural language or implemented as scripts. Natural-language filters are useful for analyst workflows because users can describe the subject of interest directly, such as "military movement near a border region" or "reports related to a specific conflict". Seer can then apply LLM-based filtering logic to discard irrelevant material before it becomes Intel.
 
-== 1.5 AI Analysis and RAG Plugins
+Filtering also mitigates the weakness of generic search-engine results and broad source feeds. A news website may publish important defence reporting alongside entertainment news, celebrity articles, advertisements, sports updates, and unrelated opinion pieces. Relevant information can be buried among this noise. The Source Plugin's filtering logic helps keep only material that matches the user's objective. When users need more granular control, they can write custom filtering scripts to enforce precise rules.
 
-AI analysis plugins use NLP, LLM-based processing, embeddings, and Retrieval Augmented Generation (RAG) to convert Intel records into insights. These plugins can generate titles, summaries, classifications, extracted entities, timelines, report sections, and analyst-facing explanations. RAG allows the system to retrieve relevant Intel records before generating outputs, reducing the risk of generic or unsupported analysis.
+=== Raw Storage and Intel Extraction
 
-Vector embeddings enable semantic search over the Intel datastore. Instead of relying only on keyword matching, analysts can search by meaning and discover related intelligence even when different sources use different wording. This is useful in OSINT use cases where the same entity, event, or narrative may appear across multiple platforms, languages, or time periods.
+The raw data storage stage preserves source-native records in source-specific databases, such as RedditKind, WebsiteKind, or GDELTKind. This storage provides an audit log of what data was fetched, when it was fetched, where it came from, and how it was represented before Intel extraction. It also strengthens deduplication because each plugin can compare new records against its own historical store.
 
-Seer differs from a simple RAG chatbot because RAG is only one analysis method inside a larger intelligence workflow. The system first collects, cleans, normalises, scores, and preserves source material. RAG is then applied against structured Intel records, with source references and confidence indicators available to the analyst. This reduces the risk of producing fluent but unsupported answers and makes AI outputs more reviewable.
+Raw data storage is also important for traceability and misinformation handling. If Seer later identifies incorrect Intel, suspicious claims, or possible misinformation, analysts can trace that Intel back to the exact source record that produced it. This helps determine whether the issue came from a bad extraction, an unreliable source, a compromised feed, or deliberate misinformation. Over time, this source-level traceability can help identify compromised or low-quality sources earlier.
 
-== 1.6 Misinformation and Trust Scoring
+Finally, each plugin extracts content for Intel generation. The plugin reads the source-native record and produces the information needed by the Intel layer, including content, metadata, datetimes, poster or publisher identity, links, media references, and source-specific context. This logic remains source-specific because the useful metadata of a Reddit post is different from the useful metadata of a blog post, a LinkedIn profile, or a public event record. Plugins can also include custom extraction logic such as reading Reddit comments, following links, inspecting LinkedIn connections, parsing media metadata, or extracting structured fields from public datasets.
 
-Seer will include built-in workflows for misinformation identification and credibility assessment. These workflows will use AI analysis, source behaviour, cross-source comparison, content similarity, and user-defined metrics to flag potentially unreliable, misleading, artificially generated, or suspicious content.
+The result is a flexible source layer that can fetch data, remove noise, retain evidence, and produce intelligence-ready content while preserving the ability to evolve each source independently.
 
-The trust model will be configurable because credibility criteria can vary by mission, organisation, and information domain. Users will be able to define factors such as source reputation, recurrence across independent sources, historical reliability, content consistency, freshness, and analyst feedback. These factors can be used to calculate trust scores for both sources and individual Intel records, helping analysts separate high-confidence intelligence from low-confidence noise.
+== 1.4 Intel Layer
 
-Adversarial misinformation is handled at multiple points in the pipeline. At the plugin level, a source-specific preprocessing step can check incoming content for signals such as manipulated images, synthetic or deepfake video indicators, repeated narratives, abnormal posting patterns, or source-specific anomalies. At the Intel layer, cross-source comparison can identify when different sources contradict one another. Even when the platform cannot automatically determine which claim is false, surfacing the contradiction is operationally valuable because it alerts analysts that a disputed or contested information environment exists.
+The Intel Layer is responsible for converting the source-specific material produced by Source Plugins into a common intelligence model. Source Plugins may produce raw posts, webpages, comments, event records, API responses, media files, and other source-native objects. The Intel Layer extracts the most vital information from this material and reformats it into a standard Intel record that downstream applications can search, compare, analyse, and visualise.
 
-Analyst feedback also updates the reliability model. If an Intel record is confirmed as misinformation, it can be marked accordingly. The source that produced it can then have its trust score reduced, and future Intel from that source can be marked with lower confidence or flagged for additional review. Over time, this creates a feedback loop between source behaviour, analyst judgement, and automated scoring.
+This extraction process uses LLMs to identify and structure the important parts of the raw content. Depending on the source, the Intel Layer can extract a title, description, datetime, source kind, relevant entities, locations, events, summaries, claims, and other metadata needed for analysis. The goal is not merely to store raw content, but to convert it into a consistent intelligence object that can be used reliably across the platform.
 
-== 1.7 Correlation and Similarity Search
+Every Intel record preserves a link back to the original raw data stored by the Source Plugin. This creates a clear origin trail for each piece of intelligence: what source produced it, when it was fetched, what raw record it came from, and how it entered the Intel database. This traceability is essential for audit, verification, and analyst confidence.
 
-A major analytical capability of Seer is cross-source intelligence correlation. By using embeddings and similarity search, the platform can identify related Intel across different sources and time periods. This allows analysts to discover recurring entities, narratives, locations, behaviours, and events that may not be obvious when each source is reviewed independently.
+The same origin trail also supports misinformation and source-integrity analysis. If two sources feed Seer conflicting Intel, analysts can trace both claims back to their raw records and source histories. Over time, this helps identify unreliable, compromised, or deliberately misleading sources. Instead of treating Intel as isolated text, Seer can evaluate where it came from and whether the source has a pattern of producing conflicting or low-confidence information.
 
-This correlation capability helps transform scattered OSINT data into a coherent intelligence picture. It can support use cases such as identifying coordinated narratives, linking reports across multiple sources, tracing the evolution of an incident, finding related objects of interest, or locating earlier references to a current event.
+After the Intel record is structured, Seer generates vector embeddings for the content. For multimodal material, including text, images, and other media where available, Seer can use an open-source multimodal embedding model to represent the content in vector space. These embeddings power downstream applications such as semantic search, similarity search, retrieval for AI chat, clustering, correlation, and map or report workflows.
 
-== 1.8 Custom Mission Workflows
+== 1.5 Downstream Applications
 
-Seer will support configurable workflows for specialised intelligence tasks. Examples include DeepSearch for query-driven research, image analysis, object tracking, source-specific filtering, summarisation, similarity search, structured report generation, misinformation review, and GIS-based situational monitoring. These workflows can be tuned for different operational requirements and can be expanded as user feedback identifies new intelligence needs.
+The architecture above enables several downstream applications to operate on the same Intel model. Because content from different sources is normalised into a shared structure and embedded into a common vector space, Seer can search and analyse information across websites, social platforms, public datasets, APIs, and proprietary feeds at the same time.
 
-The workflow system is important because OSINT analysis is not a single fixed process. Different users may need different pipelines for security monitoring, strategic research, misinformation analysis, geospatial intelligence, operational reporting, or monitoring a specific theatre, topic, organisation, event, or asset class. Seer's architecture allows these workflows to be added as plugins without redesigning the whole system. This means a new mission workflow can be built, tested, and launched in days if the required data sources and processing logic are understood.
+Semantic search allows analysts to search the Intel database by meaning rather than only by exact keywords. Similarity search uses Intel embeddings to find records that are semantically or visually close to a selected item. This helps surface related posts, articles, events, images, or reports even when they use different wording or come from different source types.
 
-As an example, a mission workflow could monitor regional escalation indicators by combining public news, social media, aviation feeds, maritime feeds, and event datasets. The workflow could extract relevant Intel, identify entities and locations, correlate related reports, display them on a shared GIS map, and generate a traceable report for analyst review.
+The shared Intel structure also allows Seer to identify connections across sources and across time. For example, a social media post, a news article, a public event record, and an aviation or maritime signal may each describe part of the same activity. By analysing them together, Seer can help reveal patterns that would be difficult to detect inside a single feed. This is especially valuable for monitoring evolving situations where weak signals appear gradually across multiple sources.
 
-== 1.9 Managed Role-Based Application
+Seer also includes AI tools such as an analyst chatbot that can query the Intel database and answer questions using the collected evidence. The chatbot can be equipped to trigger new source fetches, inspect gaps in the available intelligence, and add newly discovered sources into the monitoring workflow. This turns the assistant from a passive question-answering tool into an active interface for expanding collection.
 
-The final user-facing component is a managed web application that makes the system usable for different types of users. Intel gatherers can configure sources, workers, and collection parameters. Analysts can review Intel records, run searches, compare related items, generate reports, and apply credibility checks. Senior decision-makers can access dashboards, maps, summaries, and high-level reports without needing to operate the underlying scraping or analysis tools.
+A report generator has also been implemented. It can query the Intel gathered about a requested topic and produce a detailed, comprehensive report suitable for review by officials. Because the report is generated from structured Intel records linked to raw source material, the output can retain evidence trails rather than becoming an untraceable narrative summary.
 
-Role-based access will help ensure that each user type sees the workflows relevant to their responsibility. This makes Seer suitable as a packaged intelligence platform rather than a collection of separate technical tools. The same access-control model can support audit logs, analyst notes, approval states, and export controls so that generated intelligence products can be reviewed and governed before dissemination.
+Seer can also support alert and warning systems. Analysts can define alert conditions in natural language, such as the appearance of a specific threat pattern, location, source combination, or operational signal. Whenever newly added Intel matches those conditions, the alert can trigger automatically. For users who require more control, the same alerting system can support scripted conditions.
 
-== 1.10 Scalability and Operational Feasibility
+Geospatial visualisation is another downstream application. Intel with location metadata can be plotted onto an interactive map to help analysts identify spatial patterns, clusters, movement, proximity, and regional changes over time. This can support situational awareness, field planning, and the discovery of geographic relationships between otherwise disconnected pieces of Intel.
 
-Seer is designed to scale both technically and organisationally. Technically, the Go-based worker model allows many concurrent collectors and processing jobs to run with low overhead. Organisationally, the plugin system allows separate engineering teams to own separate source connectors or mission workflows without creating a single monolithic codebase. This is important for long-running OSINT systems because collectors require continuous maintenance as public platforms, formats, feeds, and access constraints change.
+The same architecture can support additional applications such as person-of-interest tracking, knowledge graphs, source reliability dashboards, timeline reconstruction, entity correlation, and automated briefings. The important point is that Seer's architecture does not lock the system into a single dashboard or workflow. Once the military's requirements, operational procedures, and existing systems are studied in detail, the same source-plugin and Intel-layer foundation can be used to build the downstream tools that best fit the mission.
 
-The main scaling challenges are known. As ingestion volume increases, Seer will need stronger collection infrastructure, queue management, retry and backoff logic, source-specific rate management, distributed workers, and better coordination between systems querying shared datasets. The Intel layer will also need to evolve from the current prototype schema into a richer military-grade structure that supports provenance, analyst confidence, source reliability, geospatial attributes, media references, and mission-specific fields.
 
-Grant funding would directly address this scale-up phase. A system of this type becomes more valuable as more relevant information is ingested, normalised, and analysed. Funding would allow Seer to move from a functional prototype to a larger operational platform capable of periodically collecting from many sources, analysing that material at scale, and presenting timely, traceable intelligence through dashboards, maps, reports, and AI-assisted workflows.
 
-The technically difficult parts of this project are not limited to building a dashboard or connecting an LLM. The difficult work is maintaining reliable collection across many unstable sources, normalising heterogeneous data into a useful Intel model, preserving evidence traceability, correlating contradictory information, scaling concurrent workers, and giving analysts useful AI assistance without hiding the source basis of the output. The existing prototype demonstrates that the core architecture is already working; the proposed grant work would harden it for broader, mission-oriented use.
 
-= Innovation
-Highlight unique features and proprietary methods.
+= 2. Innovation
+
+Seer's innovation lies in how it combines resilient source collection, source-aware AI processing, provenance-based intelligence analysis, and agentic downstream workflows into one extensible OSINT architecture. The following capabilities distinguish it from a basic OSINT dashboard or a conventional scraping-and-search system.
+
+== 2.1 SourceWeave: Multi-modal and multi-source data processing
+
+SourceWeave is Seer's cross-plugin processing mechanism. It allows one Source Plugin to invoke selected functions from another Source Plugin when the incoming data contains linked, embedded, or dependent material. For example, if the Reddit Source Plugin encounters a URL inside a post or comment, it can call the Website Source Plugin to fetch, parse, and process that page before feeding both pieces of evidence into the Intel Layer.
+
+This is more powerful than treating each source as an isolated feed. Real OSINT data is often nested across platforms: a post links to a website, a website references a social account, a profile links to media, and a dataset points to external records. SourceWeave allows Seer to follow these relationships through controlled plugin-to-plugin calls, enabling multi-source and multi-modal intelligence extraction without duplicating parsing logic across plugins.
+
+== 2.2 Adaptive Fetcher Camouflage
+
+Different platforms use different anti-bot and abuse-detection systems. Seer therefore treats anti-blocking logic as a source-specific capability rather than a generic scraper setting. Fetchers can use proxy rotation, browser spoofing, fingerprint randomisation, CAPTCHA handling, and human-behaviour emulation in ways tailored to the source being monitored.
+
+This allows Seer to adapt to the defensive behaviour of each target platform. A news website, social media platform, forum, public search page, or structured dataset may each require a different collection strategy. By isolating these strategies inside fetcher microservices, Seer can harden collection without exposing or destabilising the rest of the system.
+
+== 2.3 Language based data fetching
+
+Seer allows users to define what they are looking for at the source level, before irrelevant material becomes Intel. Analysts can describe the desired information in natural language, while advanced users can provide scripts for stricter filtering requirements. This hybrid filtering model helps remove advertisements, unrelated articles, broad search noise, and irrelevant social media content before it enters the Intel database.
+
+The innovation is that filtering happens as part of the source pipeline, not only after data has already been collected and indexed. This reduces noise in downstream search, reports, alerts, and AI responses, while still giving technical users the ability to enforce precise rules when required.
+
+== 2.4 Source credibility tracking
+
+Every Intel record remains linked to the raw source record that produced it. Beyond auditability, this enables Seer to compare conflicting claims by tracing them back to their original sources. If multiple sources repeatedly produce contradictory or low-confidence Intel, Seer can help analysts identify unreliable feeds, compromised sources, or coordinated misinformation patterns.
+
+This turns provenance from simple record-keeping into an analytical capability. The system can support source credibility assessment by examining not only what was claimed, but where the claim originated and whether that source has a history of conflict with other evidence.
+
+== 2.5 Context-Aware Intel Extraction
+
+Seer's Intel extraction is not a one-size-fits-all summarisation step. Each source type can provide its own extraction context before the Intel Layer structures the record using LLMs. A Reddit post may require comments, author identity, subreddit context, and engagement metadata. A webpage may require canonical URL detection, article extraction, publication dates, and linked media. A professional-network profile may require connections and organisational context.
+
+This makes the resulting Intel model richer than a generic scraped text record. The system preserves source-specific meaning while still converting the output into a common intelligence format.
+
+== 2.6 Multimodal Intel Embedding
+
+Seer can represent text, images, and other supported media in a shared vector space using open-source multimodal embedding models. This allows downstream applications to search and compare intelligence by semantic and visual similarity, not just by keywords or source type.
+
+For OSINT workflows, this is useful when related evidence appears in different forms: an image, a short post, a long article, and a structured dataset may all refer to the same event. Multimodal embeddings allow these signals to be discovered together.
+
+== 2.7 Agentic Collection Interface
+
+Seer's AI chatbot is designed to be more than a passive question-answering interface. It can query the Intel database, answer analyst questions with evidence, identify gaps in available information, trigger new source fetches, and add newly discovered sources into the monitoring workflow.
+
+This creates a more active analyst workflow. Instead of manually moving between search, source configuration, collection, and reporting screens, users can ask the system to investigate, expand collection, and return evidence-backed answers through one interface.
+
+== 2.8 Natural-Language Alerting
+
+Seer can support alert and warning conditions written in natural language. Analysts can describe a condition of interest, such as a threat pattern, location-specific activity, source combination, or emerging operational signal. When newly added Intel matches that condition, the system can trigger an alert.
+
+This reduces the effort required to create monitoring rules for complex, evolving situations. The same alerting layer can also support scripted rules where strict deterministic behaviour is required.
+
+== 2.9 Mission-Adaptive Intelligence Applications
+
+The architecture is intentionally open-ended at the downstream layer. Because all sources feed into a common Intel model, Seer can support additional military-specific applications such as person-of-interest tracking, knowledge graphs, source reliability dashboards, timeline reconstruction, entity correlation, spatial pattern analysis, and automated briefings.
+
+This means the platform is not limited to a fixed set of dashboards. After studying the military's requirements, existing systems, and operational procedures, Seer can extend the same core architecture into the applications that provide the highest mission value.
 
 = Implementation and Feasibility
-Outline development, integration, scalability, 
-and deployment strategies.
+The proposed implementation is feasible because Seer is not a concept-only proposal. A *Working Prototype* is already available at https://seer.lariv.in/ and demonstrates the core platform capabilities needed for this solution: source plugins, Reddit and website collection, scheduled scraping workers, an Intel layer, multimodal embedding support, RAG-based AI chat, deep research workflows, report generation, and GIS visualisation. The implementation effort will therefore focus on hardening, scaling, extending, and operationalising a validated architecture.
+
+Implementation will proceed by strengthening the existing prototype while keeping the analyst-facing capabilities active from the beginning.
+
+In the first stage, the core platform will be stabilised. This includes improving worker reliability, formalising the Intel schema, strengthening logging and audit trails, and making the source-plugin framework more robust.
+
+In the second stage, the analyst workflows already demonstrated in the prototype will be hardened. This includes RAG-based AI chat, semantic search, similarity search, automated report generation, alerting, map-based visualisation, and cross-source correlation.
+
+In the third stage, the number and type of supported sources will be expanded using the already implemented Reddit and website plugins as proven reference implementations. New plugins can be added for public datasets, API-accessible feeds, social platforms, aviation or maritime sources, open government data, and future proprietary integrations. Because each plugin connects to the same Intel layer, these integrations do not require redesigning the downstream applications. This reduces delivery risk and allows the platform to grow source-by-source while preserving a consistent analyst experience.
+
+#figure(
+  image("implementation.svg", width: 69%),
+  caption: [Seer high-level system architecture],
+)
+
+Misinformation and credibility checks will be implemented through provenance tracking, source history, conflicting-claim detection, and analyst feedback. These features will be developed around the common Intel model so that improvements benefit all source types rather than only one data feed.
+
+From a scalability perspective, Seer is designed around independent fetcher microservices, scheduled workers, source-specific raw stores, and a shared Intel database. Collection workloads can therefore be distributed across multiple workers and scaled horizontally as the number of monitored sources grows. If one scraper is rate-limited, blocked, or broken due to a source-side change, the rest of the platform can continue operating. This architecture is well suited to OSINT workloads, where independent sources must be monitored continuously and where source availability can be unpredictable.
+
+Integration with existing military workflows can be handled through the same plugin-based and API-oriented design. Seer can expose outputs through the web application, generated reports, alerts, map views, and future APIs for integration with existing command, analysis, or data systems. Since raw source records remain linked to extracted Intel, analysts and reviewers can verify important claims instead of relying only on generated summaries.
+
+Overall, the feasibility of the project is high because the riskiest architectural assumptions have already been validated in the *Working Prototype*. The remaining work is primarily engineering maturation: increasing source coverage, improving reliability, strengthening security and access control, tuning AI workflows for operational needs, and preparing the platform for sustained deployment at larger scale.
 
 = Challenges & Mitigation (if any)
-Highlight potential technical risks and describe how they will be addressed.
+The main implementation challenges are source reliability, data quality, AI accuracy, scalability, and secure deployment. Public web sources may change layouts, restrict access, rate-limit traffic, or block automated collection. Seer mitigates this through independent source plugins, separate fetcher microservices, scheduled retries, source-specific handling, and the ability to update or replace one scraper without affecting the rest of the platform.
 
-= Visuals & Supporting Data 
-Use diagrams and data to enhance clarity (if available)
+OSINT data can also contain noise, duplication, misinformation, and conflicting claims. Seer addresses this through pre-processing, deduplication, source-level filtering, raw data preservation, provenance tracking, and cross-source comparison. Analysts will be able to trace extracted Intel back to the original source record before acting on important outputs.
 
-= Any other relevant details
+AI-generated analysis may occasionally produce incomplete or incorrect interpretations. This will be mitigated by using RAG over stored Intel, preserving evidence links, adding confidence and source-context indicators where appropriate, and keeping analyst review in the workflow for critical decisions.
+
+At larger scale, scraping, embedding generation, storage, and AI processing can become resource-intensive. The architecture mitigates this through distributed workers, horizontal scaling, queue-based processing, source-specific raw stores, and monitoring of job failures, queue depth, and service health.
+
+Security and access control are also important because the system may handle sensitive user-defined monitoring topics and operational outputs. The deployment plan will therefore include role-based access control, audit logs, encrypted transport, controlled user access, and separation between collection services, databases, and analyst-facing applications.
