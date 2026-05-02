@@ -11,55 +11,24 @@
 
 #text(style: "italic")[You can preview a demo of the proposed solution - Seer at https://seer.lariv.in/.]
 
-= 1. Technical Architecture and Approach
+Seer is proposed as a distributed, large scale OSINT analysis and monitoring platform. The system is designed to collect large volumes of public and user-provided information through source plugins, store it in a common Intel layer, process it through AI-assisted analysis plugins, and present actionable outputs through a managed role-based application. It directly addresses the problem statement by reducing manual collection effort, enabling real-time monitoring of user-defined subjects, and improving the reliability, traceability, and usability of intelligence outputs.
 
-Seer is proposed as a Golang-based, plugin-driven OSINT analysis and monitoring platform. The system is designed to collect large volumes of public and user-provided information through source plugins, store it in a common Intel layer, process it through AI-assisted analysis plugins, and present actionable outputs through a managed role-based application. It directly addresses the problem statement by reducing manual collection effort, enabling real-time monitoring of user-defined subjects, and improving the reliability, traceability, and usability of intelligence outputs.
-
-Seer follows a modular architecture. Each source type, such as websites, social media, public event datasets, aviation feeds, maritime feeds, image analysis, or future custom sources, can be implemented as an independent plugin. These plugins feed a shared Intel layer, where extracted data is standardised, tokenized and stored into a vector database. Consequently, this data is used by plugins for summarisation, search, analysis, correlation, reporting, geospatial visualisation, and any other user-defined workflows.
-
-The proposed system is not starting from a purely theoretical design. A working prototype of Seer already exists and demonstrates the core architecture: a Reddit source, website scraper, deep research AI agent, AI chat interface, Intel layer, multimodal embedding support, Retrieval Augmented Generation (RAG), scheduled scraping workers, and a GIS map with automatic refresh. The grant would therefore be used to harden and scale an existing architecture rather than to begin exploratory development from zero.
+The proposed system is not starting from a purely theoretical design. A working prototype of Seer already exists and demonstrates the core architecture: a Reddit source, website scraper, deep research AI agent, AI chat interface, Intel layer, multimodal embedding support, Retrieval Augmented Generation (RAG), scheduled scraping workers, and a GIS map. The grant would therefore be used to harden and scale an existing architecture rather than to begin exploratory development from zero.
 
 The current prototype proves the central product direction, while the proposed work focuses on operational hardening: scaling source ingestion, improving source-specific collectors, strengthening the Intel schema for military use, adding richer reliability and misinformation checks, and preparing the system for larger deployments where rate limits, source instability, distributed workers, access control, and auditability become critical.
 
-== 1.1 High-Level Workflow
+
+= 1. Technical Architecture and Approach
+
+== 1.1 High-Level Overview
+
 
 #figure(
-  diagram(
-    node-stroke: 0.5pt,
-    node-fill: luma(245),
-    spacing: 4.2mm,
-
-    node((0, 0), align(center)[*Websites* \ News websites, blogs]),
-    node((0, 1), align(center)[*Social Media Sources* \ Facebook, Reddit, X]),
-    node((0, 2), align(center)[*Open Source Data* \ GDELT, OpenSky, AIS]),
-    node((0, 3), align(center)[*Custom Sources* \ Other requested sources,\ Manual addition]),
-
-    node((1.5, 1.5), align(center)[
-      *Intel Datastore* \
-      Standardised data \
-      from all sources \
-      Metadata,\
-      Summaries,\
-      Embeddings \
-    ], width: 40mm),
-
-    edge((0, 0), (1.5, 1.5), "-|>"),
-    edge((0, 1), (1.5, 1.5), "-|>"),
-    edge((0, 2), (1.5, 1.5), "-|>"),
-    edge((0, 3), (1.5, 1.5), "-|>"),
-
-    node((4.2, 0), align(center)[*Insights* \ Reports,  Timelines, \ Asset Tracking]),
-    node((4.2, 1), align(center)[*AI Chatbot* \ ]),
-    node((4.2, 2), align(center)[*Interactive Dashboard* \ Alerts, Shared Map\ Overview]),
-    node((4.2, 3), align(center)[*Custom Workflows* \ ]),
-
-    edge((1.5, 1.5), (4.2, 0), "-|>"),
-    edge((1.5, 1.5), (4.2, 1), "-|>"),
-    edge((1.5, 1.5), (4.2, 2), "-|>"),
-    edge((1.5, 1.5), (4.2, 3), "-|>"),
-  ),
-  caption: [Seer data flow from OSINT sources to the common Intel layer and output applications],
+  image("Seer Architecture.svg", height: 69%),
+  caption: [Seer high-level system architecture],
 )
+
+Seer follows a modular architecture. Each source type, such as websites, social media, public event datasets, aviation feeds, maritime feeds, image analysis, or future custom sources, can be implemented as an independent plugin. These plugins feed a shared Intel layer, where extracted data is standardised, tokenized and stored into a vector database. Consequently, this data is used by plugins for summarisation, search, analysis, correlation, reporting, geospatial visualisation, and any other user-defined workflows.
 
 Seer uses configured plugins and workers to collect data from relevant sources. The collected information is cleaned, deduplicated, converted into a common representation, enriched using AI, and stored as Intel records. Analysts can then use semantic search, similarity search, custom workflows, reports, and maps to identify patterns and produce actionable intelligence. Every downstream output remains linked to the underlying Intel records and, where available, the raw source material from which those records were generated.
 

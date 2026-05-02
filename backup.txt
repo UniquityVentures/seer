@@ -1,0 +1,38 @@
+
+#figure(
+  diagram(
+    node-stroke: 0.5pt,
+    node-fill: luma(245),
+    spacing: 4.2mm,
+
+    node((0, 0), align(center)[*Websites* \ News websites, blogs]),
+    node((0, 1), align(center)[*Social Media Sources* \ Facebook, Reddit, X]),
+    node((0, 2), align(center)[*Open Source Data* \ GDELT, OpenSky, AIS]),
+    node((0, 3), align(center)[*Custom Sources* \ Other requested sources,\ Manual addition]),
+
+    node((1.5, 1.5), align(center)[
+      *Intel Datastore* \
+      Standardised data \
+      from all sources \
+      Metadata,\
+      Summaries,\
+      Embeddings \
+    ], width: 40mm),
+
+    edge((0, 0), (1.5, 1.5), "-|>"),
+    edge((0, 1), (1.5, 1.5), "-|>"),
+    edge((0, 2), (1.5, 1.5), "-|>"),
+    edge((0, 3), (1.5, 1.5), "-|>"),
+
+    node((4.2, 0), align(center)[*Insights* \ Reports,  Timelines, \ Asset Tracking]),
+    node((4.2, 1), align(center)[*AI Chatbot* \ ]),
+    node((4.2, 2), align(center)[*Interactive Dashboard* \ Alerts, Shared Map\ Overview]),
+    node((4.2, 3), align(center)[*Custom Workflows* \ ]),
+
+    edge((1.5, 1.5), (4.2, 0), "-|>"),
+    edge((1.5, 1.5), (4.2, 1), "-|>"),
+    edge((1.5, 1.5), (4.2, 2), "-|>"),
+    edge((1.5, 1.5), (4.2, 3), "-|>"),
+  ),
+  caption: [Seer data flow from OSINT sources to the common Intel layer and output applications],
+)
