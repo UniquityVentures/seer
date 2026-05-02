@@ -27,7 +27,7 @@ Seer follows a modular architecture. Each source type, such as websites, social 
 Seer uses configured plugins and workers to collect data from relevant sources. The collected information is cleaned, deduplicated, converted into a common representation, enriched using AI, and stored as Intel records. Analysts can then use semantic search, similarity search, custom workflows, reports, and maps to identify patterns and produce actionable intelligence. Every downstream output remains linked to the underlying Intel records and, where available, the raw source material from which those records were generated.
 
 #figure(
-  image("Seer Architecture.svg", height: 69%),
+  image("Seer Architecture.png", height: 69%),
   caption: [Seer high-level system architecture],
 )
 
