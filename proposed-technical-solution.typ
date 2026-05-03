@@ -5,6 +5,10 @@
 #set par(justify: true, leading: 0.65em)
 #show heading: it => block(above: 1em, below: 0.69em, it)
 
+#outline()
+
+#pagebreak()
+
 #align(center)[
   #text(size: 22pt, weight: "bold")[Proposed Technical Solution]
 ]
