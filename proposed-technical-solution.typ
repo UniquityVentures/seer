@@ -1,6 +1,20 @@
 #import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge
 
-#set page(margin: 0.69in)
+#set page(
+  margin: 0.69in,
+  header: [
+    #align(right)[
+      #image("logo.webp")
+    ]
+  ]
+  footer: [
+    #block(
+      width: 100%,
+      height: 100%,
+    )
+  ]
+)
+
 #set text(size: 12pt)
 #set par(justify: true, leading: 0.65em)
 #show heading: it => block(above: 1em, below: 0.69em, it)

@@ -17,6 +17,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/UniquityVentures/lago/components"
 	"github.com/UniquityVentures/lago/getters"
 	"github.com/fxamacker/cbor/v2"
 )
@@ -37,6 +38,7 @@ type openSkyMapDisplayPoint struct {
 	Velocity  openSkyMapDisplayVector   `json:"velocity,omitempty" cbor:"velocity,omitempty"`
 	Time      int64                     `json:"time,omitempty" cbor:"time,omitempty"`
 	Link      string                    `json:"link,omitempty" cbor:"link,omitempty"`
+	Title     string                    `json:"title,omitempty" cbor:"title,omitempty"`
 }
 
 type openSkyMapViewportMessage struct {
@@ -45,10 +47,7 @@ type openSkyMapViewportMessage struct {
 	Zoom   float64                `json:"zoom" cbor:"zoom"`
 }
 
-const (
-	openSkyViewportMarginDeg = 0.25
-	openSkyMaxFrameBytes     = 1 << 20
-)
+const openSkyViewportMarginDeg = 0.25
 
 type openSkyMapDataHandler struct{}
 
@@ -139,7 +138,12 @@ func (h openSkyMapDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 			continue
 		}
 		var msg openSkyMapViewportMessage
-		if err := cbor.Unmarshal(payload, &msg); err != nil {
+		dec, err := components.DecodeMapDisplayWire(payload, components.MapDisplayViewportDecodeMaxBytes)
+		if err != nil {
+			slog.Debug("p_seer_opensky: map websocket ignored malformed compressed message", "error", err)
+			continue
+		}
+		if err := cbor.Unmarshal(dec, &msg); err != nil {
 			slog.Debug("p_seer_opensky: map websocket ignored malformed message", "error", err)
 			continue
 		}
@@ -181,12 +185,13 @@ func sendOpenSkyMapDisplayPoints(ctx context.Context, ws *openSkyMapWebSocketCon
 	if err != nil {
 		return err
 	}
-	if len(b) > openSkyMaxFrameBytes {
-		return fmt.Errorf("opensky map payload exceeds 1 MiB: bytes=%d points=%d", len(b), len(payload))
+	wire, err := components.EncodeMapDisplayWire(b)
+	if err != nil {
+		return err
 	}
 	writeMu.Lock()
 	defer writeMu.Unlock()
-	return ws.writeBinary(b)
+	return ws.writeBinary(wire)
 }
 
 func headerContainsToken(header, token string) bool {
@@ -247,8 +252,8 @@ func (c *openSkyMapWebSocketConn) readFrame() (byte, []byte, error) {
 		if opcode >= 0x8 && length > 125 {
 			return 0, nil, fmt.Errorf("websocket control frame too large")
 		}
-		if length > 1<<20 {
-			return 0, nil, fmt.Errorf("websocket frame exceeds 1 MiB")
+		if length > uint64(components.MapDisplayWireMaxBytes) {
+			return 0, nil, fmt.Errorf("websocket frame exceeds protocol maximum (1048576 bytes)")
 		}
 
 		var mask [4]byte
@@ -292,8 +297,8 @@ func (c *openSkyMapWebSocketConn) writeFrame(opcode byte, payload []byte) error 
 	c.write.Lock()
 	defer c.write.Unlock()
 
-	if len(payload) > openSkyMaxFrameBytes {
-		return fmt.Errorf("websocket payload exceeds 1 MiB")
+	if len(payload) > components.MapDisplayWireMaxBytes {
+		return fmt.Errorf("websocket payload exceeds protocol maximum (1048576 bytes)")
 	}
 	header := []byte{0x80 | opcode}
 	switch {
@@ -337,6 +342,7 @@ func openSkyMapDisplayPoints(aircraft []openSkyMapAircraft) []openSkyMapDisplayP
 			Velocity: vel,
 			Time:     a.LastContact,
 			Link:     a.DetailPath,
+			Title:    a.Title,
 		})
 	}
 	return out

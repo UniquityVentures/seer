@@ -17,6 +17,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/UniquityVentures/lago/components"
 	"github.com/UniquityVentures/lago/getters"
 	"github.com/fxamacker/cbor/v2"
 )
@@ -36,6 +37,7 @@ type aisStreamMapDisplayPoint struct {
 	Direction aisStreamMapDisplayVector   `json:"direction,omitempty" cbor:"direction,omitempty"`
 	Time      int64                       `json:"time,omitempty" cbor:"time,omitempty"`
 	Link      string                      `json:"link,omitempty" cbor:"link,omitempty"`
+	Title     string                      `json:"title,omitempty" cbor:"title,omitempty"`
 }
 
 type aisStreamMapViewportMessage struct {
@@ -44,10 +46,7 @@ type aisStreamMapViewportMessage struct {
 	Zoom   float64                  `json:"zoom" cbor:"zoom"`
 }
 
-const (
-	aisStreamViewportMarginDeg = 0.25
-	aisStreamMaxFrameBytes     = 1 << 20
-)
+const aisStreamViewportMarginDeg = 0.25
 
 type aisStreamMapDataHandler struct{}
 
@@ -134,7 +133,12 @@ func (h aisStreamMapDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 			continue
 		}
 		var msg aisStreamMapViewportMessage
-		if err := cbor.Unmarshal(payload, &msg); err != nil {
+		dec, err := components.DecodeMapDisplayWire(payload, components.MapDisplayViewportDecodeMaxBytes)
+		if err != nil {
+			slog.Debug("p_seer_aisstream: map websocket ignored malformed compressed message", "error", err)
+			continue
+		}
+		if err := cbor.Unmarshal(dec, &msg); err != nil {
 			slog.Debug("p_seer_aisstream: map websocket ignored malformed message", "error", err)
 			continue
 		}
@@ -177,12 +181,13 @@ func sendAISStreamMapDisplayPoints(ctx context.Context, ws *aisStreamMapWebSocke
 	if err != nil {
 		return err
 	}
-	if len(b) > aisStreamMaxFrameBytes {
-		return fmt.Errorf("aisstream map payload exceeds 1 MiB: bytes=%d points=%d", len(b), len(payload))
+	wire, err := components.EncodeMapDisplayWire(b)
+	if err != nil {
+		return err
 	}
 	writeMu.Lock()
 	defer writeMu.Unlock()
-	return ws.writeBinary(b)
+	return ws.writeBinary(wire)
 }
 
 func aisStreamMapDisplayPoints(vessels []aisStreamMapVessel) []aisStreamMapDisplayPoint {
@@ -198,8 +203,9 @@ func aisStreamMapDisplayPoints(vessels []aisStreamMapVessel) []aisStreamMapDispl
 				X: math.Sin(headingRad),
 				Y: math.Cos(headingRad),
 			},
-			Time: v.TimeUTC,
-			Link: v.DetailPath,
+			Time:  v.TimeUTC,
+			Link:  v.DetailPath,
+			Title: v.Title,
 		})
 	}
 	return out
@@ -263,8 +269,8 @@ func (c *aisStreamMapWebSocketConn) readFrame() (byte, []byte, error) {
 		if opcode >= 0x8 && length > 125 {
 			return 0, nil, fmt.Errorf("websocket control frame too large")
 		}
-		if length > 1<<20 {
-			return 0, nil, fmt.Errorf("websocket frame exceeds 1 MiB")
+		if length > uint64(components.MapDisplayWireMaxBytes) {
+			return 0, nil, fmt.Errorf("websocket frame exceeds protocol maximum (1048576 bytes)")
 		}
 
 		var mask [4]byte
@@ -308,8 +314,8 @@ func (c *aisStreamMapWebSocketConn) writeFrame(opcode byte, payload []byte) erro
 	c.write.Lock()
 	defer c.write.Unlock()
 
-	if len(payload) > aisStreamMaxFrameBytes {
-		return fmt.Errorf("websocket payload exceeds 1 MiB")
+	if len(payload) > components.MapDisplayWireMaxBytes {
+		return fmt.Errorf("websocket payload exceeds protocol maximum (1048576 bytes)")
 	}
 	head := []byte{0x80 | opcode}
 	n := len(payload)

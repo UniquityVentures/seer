@@ -12,6 +12,7 @@ import (
 const (
 	WorkerRunnerKindReddit  = "reddit"
 	WorkerRunnerKindWebsite = "website"
+	WorkerRunnerKindGDELT   = "gdelt"
 )
 
 // WorkerRunLogsTable is the GORM/Postgres table for one worker-pool pass.

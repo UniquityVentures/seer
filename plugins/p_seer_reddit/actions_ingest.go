@@ -61,6 +61,24 @@ func RunRedditBulkIntelIngest(ctx context.Context, db *gorm.DB, posts []RedditPo
 	}
 }
 
+// RunRedditIntelIngestForSourcePosts ensures [p_seer_intel.Intel] exists for each non-deleted [RedditPost]
+// linked to the given source (worker and manual fetch paths).
+func RunRedditIntelIngestForSourcePosts(ctx context.Context, db *gorm.DB, sourceID uint) {
+	if db == nil || sourceID == 0 {
+		return
+	}
+	var posts []RedditPost
+	err := db.WithContext(ctx).Model(&RedditPost{}).
+		Joins("INNER JOIN "+RedditSourcePostsJoinTable+" rsp ON rsp.reddit_post_id = "+RedditPostsTable+".id AND rsp.reddit_source_id = ?", sourceID).
+		Where(RedditPostsTable + ".deleted_at IS NULL").
+		Find(&posts).Error
+	if err != nil {
+		slog.Warn("p_seer_reddit: list posts for intel ingest", "reddit_source_id", sourceID, "error", err)
+		return
+	}
+	RunRedditBulkIntelIngest(ctx, db, posts)
+}
+
 // RunRedditSinglePostIntelIngest runs [createIntelForRedditPostIfMissing] for one post in the background window.
 func RunRedditSinglePostIntelIngest(ctx context.Context, db *gorm.DB, post RedditPost) {
 	ctx, cancel := context.WithTimeout(ctx, 15*time.Minute)

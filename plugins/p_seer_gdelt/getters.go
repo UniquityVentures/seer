@@ -11,6 +11,21 @@ import (
 	"github.com/UniquityVentures/lago/registry"
 )
 
+// gdeltSourceSortPairGetter maps persisted [GDELTSource.Sort] string to a select pair for forms.
+func gdeltSourceSortPairGetter() getters.Getter[registry.Pair[string, string]] {
+	return func(ctx context.Context) (registry.Pair[string, string], error) {
+		s, err := getters.Key[string]("$in.Sort")(ctx)
+		if err != nil || strings.TrimSpace(s) == "" {
+			s = gdeltSortDateDesc
+		}
+		s = strings.TrimSpace(s)
+		if p, ok := registry.PairFromPairs(s, gdeltSortChoices); ok {
+			return p, nil
+		}
+		return registry.Pair[string, string]{Key: gdeltSortDateDesc, Value: "Newest first"}, nil
+	}
+}
+
 func gdeltPairGetterWithDefault(field string, choices []registry.Pair[string, string], fallback string) getters.Getter[registry.Pair[string, string]] {
 	return func(ctx context.Context) (registry.Pair[string, string], error) {
 		s, err := getters.Key[string]("$get." + field)(ctx)
