@@ -172,11 +172,23 @@ The proposed implementation is feasible because Seer is not a concept-only propo
 
 Implementation will proceed by strengthening the existing prototype while keeping the analyst-facing capabilities active from the beginning.
 
-In the first stage, the core platform will be stabilised. This includes improving worker reliability, formalising the Intel schema, strengthening logging and audit trails, and making the source-plugin framework more robust.
+In the first stage:
++ *Workers:* improve reliability of scheduled collection and background jobs.
++ *Intel schema:* formalise the shared intelligence model so downstream tools share one structure.
++ *Logging and audit trails:* strengthen traceability and operational review.
++ *Scraping microservice fleet:* complete the pattern of separate fetcher services per major source, outside the main application, each deployable and scalable on its own—building on the Reddit and website workers already shown in the prototype.
 
-In the second stage, the analyst workflows already demonstrated in the prototype will be hardened. This includes RAG-based AI chat, semantic search, similarity search, automated report generation, alerting, map-based visualisation, and cross-source correlation.
+In the second stage:
++ *RAG-based AI chat:* harden chat that answers from stored Intel with clear evidence links.
++ *Semantic and similarity search:* mature meaning-based retrieval and “find alike” workflows over Intel.
++ *Report generation:* stabilise automated reports suitable for review.
++ *Alerting:* harden natural-language and scripted alert conditions against incoming Intel.
++ *Map visualisation:* mature GIS-style views tied to geospatial Intel.
 
-In the third stage, more sources are added using the same plugin pattern as the existing Reddit and website collectors. Those two implementations show how scheduling, log-in and rate limits, keeping a copy of the raw material, and turning that material into Intel are handled in one place. Each new source mainly needs its own collection and cleanup rules; the shared Intel layer, search, and analyst-facing features stay the same, so new feeds can be rolled out without rebuilding the rest of the system.
+In the third stage:
++ *New source plugins:* add plugins for additional sources using the same model as the existing Reddit and website collectors (scheduling, credentials and rate limits, raw retention, and mapping into Intel stay encapsulated per plugin).
++ *Controlled rollout for feedback:* deploy to a deliberately limited set of users so structured feedback reflects real workflows before access is widened.
++ *Amendments from feedback:* prioritise and ship changes driven by that feedback—fixes, UX adjustments, and source or workflow tuning—before scaling the user base.
 
 #figure(
   image("implementation.svg", width: 69%),
