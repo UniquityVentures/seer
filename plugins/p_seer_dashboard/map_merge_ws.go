@@ -15,17 +15,18 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/UniquityVentures/lago/components"
 	"github.com/UniquityVentures/lago/getters"
 	"github.com/UniquityVentures/lago/lago"
 	"github.com/UniquityVentures/seer/plugins/p_seer_aisstream"
 	"github.com/UniquityVentures/seer/plugins/p_seer_gdelt"
+	"github.com/UniquityVentures/seer/plugins/p_seer_intel"
 	"github.com/UniquityVentures/seer/plugins/p_seer_opensky"
 	"github.com/fxamacker/cbor/v2"
 )
 
 const (
 	dashboardMapViewportMarginDeg = 0.25
-	dashboardMapMaxFrameBytes     = 1 << 20
 	dashboardMapMaxMergedObjects  = 5000
 	// dashboardMergedMapIconSize is MapLibre symbol icon-size for merged OpenSky / AISStream markers.
 	dashboardMergedMapIconSize = 0.1
@@ -106,8 +107,13 @@ func (h dashboardMapDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 		if opcode != 0x1 && opcode != 0x2 {
 			continue
 		}
+		dec, err := components.DecodeMapDisplayWire(payload, components.MapDisplayViewportDecodeMaxBytes)
+		if err != nil {
+			slog.Debug("p_seer_dashboard: map websocket ignored malformed compressed message", "error", err)
+			continue
+		}
 		var msg dashboardMapViewportMessage
-		if err := cbor.Unmarshal(payload, &msg); err != nil {
+		if err := cbor.Unmarshal(dec, &msg); err != nil {
 			slog.Debug("p_seer_dashboard: map websocket ignored malformed message", "error", err)
 			continue
 		}
@@ -217,16 +223,34 @@ func sendDashboardMergedMapPoints(ctx context.Context, ws *dashboardMapWSConn, w
 		}
 	}
 
+	var intelPts []p_seer_intel.MapDisplayPointWire
+	if gdSkipBBox {
+		intelPts, err = p_seer_intel.MapDisplayPointsForBounds(ctx, nil, 0, 1, 0, -1, "intel_event")
+	} else {
+		intelPts, err = p_seer_intel.MapDisplayPointsForBounds(ctx, nil, gdWest, gdSouth, gdEast, gdNorth, "intel_event")
+	}
+	if err != nil {
+		slog.Warn("p_seer_dashboard: intel event map points", "error", err)
+	} else {
+		for i := range intelPts {
+			if len(merged) >= dashboardMapMaxMergedObjects {
+				break
+			}
+			merged = append(merged, intelPts[i])
+		}
+	}
+
 	b, err := cbor.Marshal(merged)
 	if err != nil {
 		return err
 	}
-	if len(b) > dashboardMapMaxFrameBytes {
-		return fmt.Errorf("dashboard map payload exceeds 1 MiB: bytes=%d", len(b))
+	wire, err := components.EncodeMapDisplayWire(b)
+	if err != nil {
+		return err
 	}
 	writeMu.Lock()
 	defer writeMu.Unlock()
-	return ws.writeBinary(b)
+	return ws.writeBinary(wire)
 }
 
 func headerContainsToken(header, token string) bool {
@@ -287,8 +311,8 @@ func (c *dashboardMapWSConn) readFrame() (byte, []byte, error) {
 		if opcode >= 0x8 && length > 125 {
 			return 0, nil, fmt.Errorf("websocket control frame too large")
 		}
-		if length > 1<<20 {
-			return 0, nil, fmt.Errorf("websocket frame exceeds 1 MiB")
+		if length > uint64(components.MapDisplayWireMaxBytes) {
+			return 0, nil, fmt.Errorf("websocket frame exceeds protocol maximum (1048576 bytes)")
 		}
 
 		var mask [4]byte
@@ -332,8 +356,8 @@ func (c *dashboardMapWSConn) writeFrame(opcode byte, payload []byte) error {
 	c.write.Lock()
 	defer c.write.Unlock()
 
-	if len(payload) > dashboardMapMaxFrameBytes {
-		return fmt.Errorf("websocket payload exceeds 1 MiB")
+	if len(payload) > components.MapDisplayWireMaxBytes {
+		return fmt.Errorf("websocket payload exceeds protocol maximum (1048576 bytes)")
 	}
 	header := []byte{0x80 | opcode}
 	switch {

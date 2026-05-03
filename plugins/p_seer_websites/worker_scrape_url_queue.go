@@ -74,5 +74,10 @@ func WebsiteScrapeIfAbsent(ctx context.Context, db *gorm.DB, u *url.URL) error {
 	if err := db.WithContext(ctx).Create(&w).Error; err != nil {
 		return fmt.Errorf("create website: %w", err)
 	}
+	if w.ID != 0 {
+		site := w
+		dbCopy := db
+		go RunWebsiteSingleIntelIngest(context.Background(), dbCopy, site)
+	}
 	return nil
 }

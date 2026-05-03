@@ -13,6 +13,7 @@ type MapDisplayPointWire struct {
 	Direction aisStreamMapDisplayVector   `json:"direction,omitempty" cbor:"direction,omitempty"`
 	Time      int64                       `json:"time,omitempty" cbor:"time,omitempty"`
 	Link      string                      `json:"link,omitempty" cbor:"link,omitempty"`
+	Title     string                      `json:"title,omitempty" cbor:"title,omitempty"`
 	Layer     string                      `json:"layer,omitempty" cbor:"layer,omitempty"`
 	Icon      string                      `json:"icon,omitempty" cbor:"icon,omitempty"`
 	IconSize  float64                     `json:"iconSize,omitempty" cbor:"iconSize,omitempty"`
@@ -37,6 +38,7 @@ func MapDisplayPointsForBounds(ctx context.Context, db *gorm.DB, bounds *Aisstre
 			Direction: inner[i].Direction,
 			Time:      inner[i].Time,
 			Link:      inner[i].Link,
+			Title:     inner[i].Title,
 			Layer:     layer,
 		}
 	}

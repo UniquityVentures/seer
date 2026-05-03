@@ -119,6 +119,10 @@ func runRedditRunnerWorkerPool(db *gorm.DB, runnerID uint, ctx context.Context) 
 						"runner_id", runnerID,
 						"reddit_source_id", src.ID,
 					)
+				} else {
+					sid := src.ID
+					dbCopy := db
+					go RunRedditIntelIngestForSourcePosts(context.Background(), dbCopy, sid)
 				}
 			}
 		}

@@ -20,6 +20,10 @@ var gdeltSortChoices = []registry.Pair[string, string]{
 
 func init() {
 	registerGDELTMenuPages()
+	registerGDELTSourcesPages()
+	registerGDELTSourceCreatePages()
+	registerGDELTSourceUpdatePages()
+	registerGDELTWorkerPages()
 	registerGDELTSearchPages()
 	registerGDELTMapPages()
 	registerGDELTEventPages()
@@ -34,14 +38,66 @@ func registerGDELTMenuPages() {
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
-				Title: getters.Static("Search"),
+				Title: getters.Static("Sources"),
 				Url:   lago.RoutePath("seer_gdelt.DefaultRoute", nil),
+			},
+			&components.SidebarMenuItem{
+				Title: getters.Static("Search"),
+				Url:   lago.RoutePath("seer_gdelt.SearchRoute", nil),
+			},
+			&components.SidebarMenuItem{
+				Title: getters.Static("Workers"),
+				Url:   lago.RoutePath("seer_gdelt.GDELTWorkerListRoute", nil),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.Static("Events"),
 				Url:   lago.RoutePath("seer_gdelt.EventListRoute", nil),
 			},
 			&gdeltMapSidebarLink{Page: components.Page{Key: "seer_gdelt.MenuMapLink"}},
+		},
+	})
+
+	lago.RegistryPage.Register("seer_gdelt.GDELTSourceDetailMenu", &components.SidebarMenu{
+		Title: getters.Format("GDELT source #%d", getters.Any(getters.Key[uint]("gdeltSource.ID"))),
+		Back: &components.SidebarMenuItem{
+			Title: getters.Static("Sources"),
+			Url:   lago.RoutePath("seer_gdelt.DefaultRoute", nil),
+		},
+		Children: []components.PageInterface{
+			&components.SidebarMenuItem{
+				Title: getters.Static("Detail"),
+				Url: lago.RoutePath("seer_gdelt.GDELTSourceDetailRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("gdeltSource.ID")),
+				}),
+			},
+			&components.SidebarMenuItem{
+				Title: getters.Static("Edit"),
+				Url: lago.RoutePath("seer_gdelt.GDELTSourceUpdateRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("gdeltSource.ID")),
+				}),
+			},
+		},
+	})
+
+	lago.RegistryPage.Register("seer_gdelt.GDELTWorkerDetailMenu", &components.SidebarMenu{
+		Title: getters.Key[string]("gdeltWorker.Name"),
+		Back: &components.SidebarMenuItem{
+			Title: getters.Static("Workers"),
+			Url:   lago.RoutePath("seer_gdelt.GDELTWorkerListRoute", nil),
+		},
+		Children: []components.PageInterface{
+			&components.SidebarMenuItem{
+				Title: getters.Static("Detail"),
+				Url: lago.RoutePath("seer_gdelt.GDELTWorkerDetailRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("gdeltWorker.ID")),
+				}),
+			},
+			&components.SidebarMenuItem{
+				Title: getters.Static("Edit"),
+				Url: lago.RoutePath("seer_gdelt.GDELTWorkerUpdateRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("gdeltWorker.ID")),
+				}),
+			},
 		},
 	})
 }
@@ -73,7 +129,7 @@ func registerGDELTSearchPages() {
 									&components.ButtonSubmit{Label: "Search GDELT"},
 									&components.ButtonLink{
 										Label:   "Clear",
-										Link:    lago.RoutePath("seer_gdelt.DefaultRoute", nil),
+										Link:    lago.RoutePath("seer_gdelt.SearchRoute", nil),
 										Classes: "btn-ghost",
 									},
 								},

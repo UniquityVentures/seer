@@ -14,6 +14,7 @@ type MapDisplayPointWire struct {
 	Velocity  openSkyMapDisplayVector   `json:"velocity,omitempty" cbor:"velocity,omitempty"`
 	Time      int64                     `json:"time,omitempty" cbor:"time,omitempty"`
 	Link      string                    `json:"link,omitempty" cbor:"link,omitempty"`
+	Title     string                    `json:"title,omitempty" cbor:"title,omitempty"`
 	Layer     string                    `json:"layer,omitempty" cbor:"layer,omitempty"`
 	Icon      string                    `json:"icon,omitempty" cbor:"icon,omitempty"`
 	IconSize  float64                   `json:"iconSize,omitempty" cbor:"iconSize,omitempty"`
@@ -39,6 +40,7 @@ func MapDisplayPointsForBounds(ctx context.Context, db *gorm.DB, bounds *OpenSky
 			Velocity:  inner[i].Velocity,
 			Time:      inner[i].Time,
 			Link:      inner[i].Link,
+			Title:     inner[i].Title,
 			Layer:     layer,
 		}
 	}

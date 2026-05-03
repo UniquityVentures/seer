@@ -36,7 +36,7 @@ type GDELTSearchRequest struct {
 
 type gdeltBigQueryRow struct {
 	// INTEGER in BigQuery; client decodes as int64 (not uint64).
-	GlobalEventID int64 `bigquery:"GLOBALEVENTID"`
+	GlobalEventID int64   `bigquery:"GLOBALEVENTID"`
 	SQLDate       int64   `bigquery:"SQLDATE"`
 	MonthYear     int64   `bigquery:"MonthYear"`
 	Year          int64   `bigquery:"Year"`
@@ -106,7 +106,8 @@ type gdeltBigQueryRow struct {
 	SourceURL string `bigquery:"SOURCEURL"`
 }
 
-func FetchAndStoreGDELTEvents(ctx context.Context, db *gorm.DB, search GDELTSearchRequest) ([]Event, error) {
+// gdeltSourceID when non-nil is stored on each upserted [Event]; ad-hoc UI search passes nil.
+func FetchAndStoreGDELTEvents(ctx context.Context, db *gorm.DB, search GDELTSearchRequest, gdeltSourceID *uint) ([]Event, error) {
 	if strings.TrimSpace(Config.ProjectID) == "" {
 		return nil, fmt.Errorf("configure [Plugins.p_seer_gdelt].projectID to run BigQuery searches")
 	}
@@ -149,7 +150,7 @@ func FetchAndStoreGDELTEvents(ctx context.Context, db *gorm.DB, search GDELTSear
 		}
 		rows = append(rows, row)
 	}
-	return upsertEventsFromBigQuery(ctx, db, rows)
+	return upsertEventsFromBigQuery(ctx, db, rows, gdeltSourceID)
 }
 
 func buildGDELTBigQuery(search GDELTSearchRequest) (string, []bigquery.QueryParameter, error) {
@@ -313,7 +314,7 @@ func gdeltDateNumber(t *time.Time) int {
 
 // upsertEventsFromBigQuery inserts or updates rows by GlobalEventID. It does not delete other local
 // rows, so the Events table accumulates results across searches (subject to BigQuery LIMIT per run).
-func upsertEventsFromBigQuery(ctx context.Context, db *gorm.DB, rows []gdeltBigQueryRow) ([]Event, error) {
+func upsertEventsFromBigQuery(ctx context.Context, db *gorm.DB, rows []gdeltBigQueryRow, gdeltSourceID *uint) ([]Event, error) {
 	if db == nil {
 		return nil, fmt.Errorf("p_seer_gdelt: db is nil")
 	}
@@ -321,6 +322,10 @@ func upsertEventsFromBigQuery(ctx context.Context, db *gorm.DB, rows []gdeltBigQ
 	err := db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		for _, row := range rows {
 			ev := eventFromBigQueryRow(row)
+			if gdeltSourceID != nil {
+				id := *gdeltSourceID
+				ev.GDELTSourceID = &id
+			}
 			var existing Event
 			err := tx.Where("global_event_id = ?", ev.GlobalEventID).First(&existing).Error
 			if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -337,6 +342,9 @@ func upsertEventsFromBigQuery(ctx context.Context, db *gorm.DB, rows []gdeltBigQ
 			}
 			ev.ID = existing.ID
 			ev.CreatedAt = existing.CreatedAt
+			if gdeltSourceID == nil {
+				ev.GDELTSourceID = existing.GDELTSourceID
+			}
 			if err := tx.Session(&gorm.Session{FullSaveAssociations: false}).Save(&ev).Error; err != nil {
 				slog.Error("p_seer_gdelt: update event failed", "error", err, "global_event_id", ev.GlobalEventID)
 				return err

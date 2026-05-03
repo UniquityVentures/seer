@@ -15,6 +15,7 @@ type MapDisplayPointWire struct {
 		Lng float64 `json:"lng" cbor:"lng"`
 	} `json:"position" cbor:"position"`
 	Link  string `json:"link,omitempty" cbor:"link,omitempty"`
+	Title string `json:"title,omitempty" cbor:"title,omitempty"`
 	Layer string `json:"layer,omitempty" cbor:"layer,omitempty"`
 }
 
@@ -55,6 +56,7 @@ func MapDisplayPointsForBounds(ctx context.Context, _ *gorm.DB, west, south, eas
 		p.Position.Lat = m.Lat
 		p.Position.Lng = m.Lng
 		p.Link = m.DetailPath
+		p.Title = m.Title
 		p.Layer = layer
 		out = append(out, p)
 	}
