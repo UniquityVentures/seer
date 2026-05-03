@@ -161,10 +161,8 @@ The proposed implementation is feasible because Seer is not a concept-only propo
 Implementation will proceed by strengthening the existing prototype while keeping the analyst-facing capabilities active from the beginning.
 
 In the first stage:
-+ *Workers:* improve reliability of scheduled collection and background jobs.
-+ *Intel schema:* formalise the shared intelligence model so downstream tools share one structure.
-+ *Logging and audit trails:* strengthen traceability and operational review.
 + *Scraping microservice fleet:* complete the pattern of separate fetcher services per major source, outside the main application, each deployable and scalable on its own—building on the Reddit and website workers already shown in the prototype.
++ *Intel schema:* Consult the to-be users of the software and use feedback to formalise the shared intelligence model so downstream tools share one structure.
 
 In the second stage:
 + *RAG-based AI chat:* harden chat that answers from stored Intel with clear evidence links.
