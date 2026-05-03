@@ -579,7 +579,17 @@ The proposed implementation is feasible because Seer is not a concept-only propo
 
 == What a full-scale deployment would require
 
-== Implementation Strategy
+The current prototype is a proof of concept that demonstrates the core architecture end to end, but it runs on a small number of nodes, calls external model APIs for chat and embeddings, and relies on the developers themselves for ad-hoc fetcher maintenance. A full-scale deployment closes that gap. The three requirements that drive the budget below are:
+
++ *Distributed fetcher fleet across regions and networks:* Public sources actively detect and block automated collection through IP reputation, fingerprinting, rate limits, and behavioural signals. A production deployment needs several fetcher nodes spread across different regions, networks, and hosting providers, so that a block on one node or one network does not interrupt collection and so each source plugin can be routed through the network conditions that work for it.
+
++ *A team of engineers to maintain and upgrade the fetcher fleet:* Source platforms change layouts, identifiers, anti-bot defences, and access rules continuously. A fetcher that works today can break in a week, and new sources are added as analyst priorities shift. The platform therefore needs a steady team responsible for monitoring fetcher health, repairing scrapers when sources change, adding new source plugins, and maintaining the operational tooling around the fleet.
+
++ *On-premise multi-GPU server for local AI:* The prototype calls third-party model APIs for chat, deep research, and multimodal embeddings, which is not acceptable for sensitive OSINT workloads. A full deployment will run open-source LLMs and the multimodal embedding generator on a dedicated multi-GPU server, giving control over latency, cost per query, data custody, and model selection while supporting RAG-based chat, semantic search, and similarity search across the Intel store.
+
+The implementation plan and budget that follow estimate these requirements as closely as possible at this stage. The figures are subject to revision as implementation, testing, and the beta deployment reveal new requirements and real operating conditions.
+
+== Implementation Timeline
 The implementation effort will focus on hardening, scaling, extending, and operationalising the validated architecture.
 
 *Stage 1: Testing and Troubleshooting* (4 Months)
@@ -603,21 +613,96 @@ The implementation effort will focus on hardening, scaling, extending, and opera
 + *On-demand microservices:* Add scraping microservices on demand.
 + *Complete rollout:* Full rollout to the intended user base.
 
-Misinformation and conflicting stories are addressed on top of the common Intel model. Intel entries stay linked to the original captures (for example web address, time, and a fingerprint of the content where that helps). The system can flag tensions between sources by comparing who, what, where, and when; when analysts correct or dismiss a finding, that is logged so later improvements apply across all feeds, not just one.
+#figure(
+  table(
+    columns: (1fr, auto, auto),
+    align: (left + horizon, center + horizon, center + horizon),
+    stroke: 0.5pt,
+    fill: (_, y) => if y == 0 { gray.lighten(75%) },
+    table.header[*Activity*][*Stage*][*Estimated duration*],
+    [Server setup], [Stage 1], [2 weeks],
+    [Microservice development and testing (12 sources)], [Stage 1], [14 weeks],
+    [Intel schema finalisation], [Stage 1], [4 weeks],
+    [Reports and alerts system], [Stage 1], [6 weeks],
+    [Core product finalisation], [Stage 1], [4 weeks],
+    [Standard operating procedures], [Stage 1], [3 weeks],
+    [Local embedding model and LLM deployment], [Stage 2], [5 weeks],
+    [Beta testing with limited user base], [Stage 2], [10 weeks],
+    [Amendments based on beta feedback], [Stage 2], [5 weeks],
+    [Multi-region node deployment], [Stage 3], [8 weeks],
+    [On-demand microservice additions], [Stage 3], [6 weeks],
+    [Complete rollout], [Stage 3], [6 weeks],
+  ),
+  caption: [Per-activity duration estimates. Activities within a stage run in parallel; each stage spans approximately 4 months, for a 12-month total programme.],
+)
 
-Collection is split into separate services and background jobs. Raw material is stored per source, while the curated Intel and search layers are shared. If one site changes its layout, blocks access, or throttles traffic, work on other sources can continue, and extra capacity can be added for busy feeds without redesigning the analyst application.
 
-The same separation supports integration with existing processes. The web app, reports, alerts, and maps all draw from the same Intel; in time, other systems could connect through secure interfaces and exports that keep the link from a conclusion back to the underlying source material. That way important decisions can be checked against evidence, not only against generated text.
 
-The *Working Prototype* already covers the difficult joins between plugins, background collection, multimodal search, and chat grounded in stored Intel. What remains is steady engineering work: evolving the data model without breaking existing users, clearer operational monitoring, access control suitable for sensitive topics, sensible handling of busy queues and retries, and proving the platform under larger volumes of sources and traffic.
+== Estimated Budget
 
-= Challenges & Mitigation (if any)
-The main implementation challenges are source reliability, data quality, AI accuracy, scalability, and secure deployment. Public web sources may change layouts, restrict access, rate-limit traffic, or block automated collection. Seer mitigates this through independent source plugins, separate fetcher microservices, scheduled retries, source-specific handling, and the ability to update or replace one scraper without affecting the rest of the platform.
+The figures below are an indicative one-year budget for the full-scale deployment described above. Node and infrastructure counts are placeholders that will be revised once Stage 1 test results are in.
 
-OSINT data can also contain noise, duplication, misinformation, and conflicting claims. Seer addresses this through pre-processing, deduplication, source-level filtering, raw data preservation, provenance tracking, and cross-source comparison. Analysts will be able to trace extracted Intel back to the original source record before acting on important outputs.
+#figure(
+  table(
+    columns: (1fr, auto),
+    align: (left + horizon, right + horizon),
+    stroke: 0.5pt,
+    fill: (_, y) => if y == 0 { gray.lighten(75%) },
+    table.header[*Item*][*Estimate (INR)*],
+    [Team of 10 developers to maintain fetcher microservices (1 year)], [60 Lakh],
+    [50-70 microservice nodes (estimate, to be revised per plan)], [25 Lakh],
+    [Internet and operating costs for microservice nodes], [2.5 Lakh],
+    [Nvidia GB300 server for local AI deployment], [80 Lakh],
+    table.cell(fill: gray.lighten(85%))[*Total*],
+    table.cell(fill: gray.lighten(85%))[*167.5 Lakh*],
+  ),
+  caption: [Estimated one-year budget for full-scale deployment of Seer.],
+)
 
-AI-generated analysis may occasionally produce incomplete or incorrect interpretations. This will be mitigated by using RAG over stored Intel, preserving evidence links, adding confidence and source-context indicators where appropriate, and keeping analyst review in the workflow for critical decisions.
 
-At larger scale, scraping, embedding generation, storage, and AI processing can become resource-intensive. The architecture mitigates this through distributed workers, horizontal scaling, queue-based processing, source-specific raw stores, and monitoring of job failures, queue depth, and service health.
 
-Security and access control are also important because the system may handle sensitive user-defined monitoring topics and operational outputs. The deployment plan will therefore include role-based access control, audit logs, encrypted transport, controlled user access, and separation between collection services, databases, and analyst-facing applications.
+#pagebreak()
+
+= Challenges & Mitigation
+
+A platform of this scope faces challenges that are well understood from the start, and the architecture in the earlier sections is designed to absorb them rather than treat them as afterthoughts. The subsections below pair each principal challenge with the specific mitigations already built into Seer's design or planned as part of the full-scale deployment.
+
+== Source Volatility and Active Blocking
+
+Public sources are the most unreliable input to any OSINT system. Layouts change, identifiers move, request patterns are throttled, IP ranges are flagged, behavioural signals are scored, and CAPTCHAs are introduced without notice. A scraper that works today can break next week, and a stable address can be banned the moment a platform updates its defences.
+
+Seer responds at three layers. Each fetcher is an independent microservice, so a broken or banned fetcher does not stop the rest of the platform; only that one source's collection is interrupted while the team repairs it. The fetcher fleet is then distributed across multiple regions, networks, and hosting providers so that a block on a single node or network does not interrupt collection from that source. Within each fetcher, source-specific anti-blocking mechanisms like proxy rotation, browser spoofing, fingerprint randomisation, CAPTCHA handling, and human-behaviour emulation are treated as part of the plugin rather than a global toggle, so each platform can be matched with the strategy that actually works for it.
+
+== Noise, Duplication, and Data Quality
+
+Public web data carries far more irrelevant content than useful intelligence. Entertainment, advertising, repeat posts, and unrelated chatter outweigh the signal in almost every feed. If this material reaches the Intel layer unfiltered, search results, reports, alerts, and AI responses all degrade together.
+
+Seer pushes filtering up the pipeline rather than relying on downstream cleanup. Each Source Plugin runs source-specific pre-processing, deduplication against its own raw store, and topic-aware filtering that supports both natural-language objectives — for example, "reports of military movement near a border region" — and scripted rules for technical users. Raw, source-native records are retained alongside the cleaned Intel so that a record discarded in error can always be recovered, and so any later question about what was filtered has a clear answer.
+
+== Misinformation and Source Credibility
+
+OSINT collection cannot assume sources are honest. Some platforms host disinformation by design, others are compromised, and many simply repeat low-confidence claims. A platform that flattens all sources into one search index will surface contradictions without context, and a single bad source can pull an analyst toward the wrong conclusion.
+
+Every Intel record in Seer keeps a provenance link to the raw source record that produced it, including the source plugin, the fetch time, and the source-native identifiers. The Intel Layer can therefore compare claims across sources, flag contradictions, and let analysts trace each piece of Intel back to its origin. Repeated conflict from a particular source can be tracked over time, turning provenance from passive auditing into a credibility signal the analyst can act on rather than a feature buried in the database.
+
+== AI Accuracy and Grounded Outputs
+
+LLMs are useful for structured extraction, summarisation, semantic search, and analyst chat, but they can hallucinate, generalise inappropriately, or invent details. Untreated, this risks producing intelligence that is fluent but incorrect, which is worse than no answer at all in operational use.
+
+Seer keeps generative AI grounded in stored evidence. Chat and report workflows use Retrieval Augmented Generation against the Intel Layer, so answers are anchored to retrieved Intel records and, through them, to raw source material. Outputs surface their evidence links rather than producing untraceable narrative, and analyst review remains in the workflow for any decision that matters. Running open-source LLMs on the dedicated GPU server during full-scale deployment further avoids surrendering custody of sensitive prompts and retrieved Intel to a third-party API.
+
+== Scalability and Operational Load
+
+At full scale, scraping, embedding generation, storage, and AI processing all become resource-intensive at the same time. A naive monolithic deployment would couple their failure modes: a slow embedding job would back up scraping, and a single overloaded host would degrade everything downstream of it.
+
+The architecture separates these concerns so they can scale independently. The fetcher fleet runs as horizontally scaled microservices; embedding and AI workloads run on the dedicated multi-GPU server provided for in the budget; raw storage is per source so that a busy feed cannot starve quieter ones; and queues, retries, and backpressure are handled at the boundaries between stages. Operational visibility — job failure rates, queue depth, fetcher health, and service-level metrics — is treated as a first-class deployment requirement rather than a later addition, and the SOPs formalised in Stage 1 are the artefact that keeps that visibility actionable.
+
+== Security, Access Control, and Data Custody
+
+A system that monitors sensitive subjects produces sensitive outputs. Operational topics, watchlists, alert conditions, and Intel records cannot be exposed to general application users, and the maintenance access needed to repair fetchers must not extend to analyst data.
+
+Seer is built on least-privilege boundaries. Fetcher microservices are operationally separate from the analyst-facing application, so a developer maintaining a Reddit or website scraper does not require, and does not get, access to analyst workflows or Intel. The deployment plan includes role-based access control, audit logs, encrypted transport, and a clean separation between collection services, databases, and the analyst application. Hosting LLMs and the multimodal embedding model on the on-premise GPU server removes the remaining need to send sensitive prompts or retrieved Intel to external providers.
+
+== Summary
+
+None of the challenges above are eliminated permanently — they are kept localised, traceable, and operationally manageable. Source breakage stays inside one plugin; noise is removed before it pollutes Intel; conflicting claims are surfaced with their provenance; AI outputs stay tied to evidence; load is absorbed by independently scaled services; and sensitive data does not leave the boundaries of the deployment. Together with the implementation timeline and budget in the previous section, these mitigations make Seer realistic to operate, not only realistic to demonstrate.
