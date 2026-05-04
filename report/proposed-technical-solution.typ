@@ -2,7 +2,12 @@
 #set heading(numbering: "1.")
 
 #set page(
-  margin: 6em,
+  margin: (
+    top: 6.9em,
+    bottom: 4.2em,
+    left: 4.2em,
+    right: 4.2em,
+  ),
   header: [
     #align(right)[
       #block([
