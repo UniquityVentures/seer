@@ -233,13 +233,18 @@ The result is a flexible source layer that can fetch data, remove noise, retain 
     spacing: (1em, 1em),
 
     node((0, 0), align(center)[
-      #text(weight: "bold")[Source Inputs]\
-      #text(size: 8pt)[scrapers \ APIs \ datasets \ feeds]
+      #text(weight: "bold")[Sources Fetch]\
+      #text(size: 8pt)[Scrapers \ APIs \ Datasets \ Feeds]
     ], width: 4cm, inset: 6pt, corner-radius: 4pt, fill: gray.lighten(90%)),
 
-    node((1, 0), align(center)[Fetch], width: 2.4cm, inset: 6pt, corner-radius: 4pt, fill: orange.lighten(88%)),
-    node((2, 0), align(center)[Pre-process\ + Dedup], width: 2.6cm, inset: 6pt, corner-radius: 4pt, fill: yellow.lighten(85%)),
-    node((3, 0), align(center)[Filter\ (NL / scripts)], width: 2.6cm, inset: 6pt, corner-radius: 4pt, fill: green.lighten(88%)),
+    node((1, 0), align(center)[Pre-process\ + Dedup], width: 2.6cm, inset: 6pt, corner-radius: 4pt, fill: yellow.lighten(85%)),
+    node((2, 0), align(center)[Filter\ (NL / scripts)], width: 2.6cm, inset: 6pt, corner-radius: 4pt, fill: green.lighten(88%)),
+    node((3, 0), align(center)[
+      #text(weight: "bold")[Raw Store]\
+      #text(size: 8pt)[source-native record\ audit history \ dedup history]
+    ], width: 3.2cm, inset: 6pt, corner-radius: 4pt, fill: red.lighten(92%)),
+    edge((1, 0), (1, 0), "->"),
+    edge((1, 0), (0, 0), "..>", bend: 90deg, label: text(size: 7.5pt)[Source Weave]),
     node((4, 0), align(center)[Intel\ Extraction], width: 2.6cm, inset: 6pt, corner-radius: 4pt, fill: blue.lighten(88%)),
 
     edge((0, 0), (1, 0), "->"),
@@ -247,18 +252,6 @@ The result is a flexible source layer that can fetch data, remove noise, retain 
     edge((2, 0), (3, 0), "->"),
     edge((3, 0), (4, 0), "->"),
 
-    node((2, 1), align(center)[
-      #text(weight: "bold")[Raw Store]\
-      #text(size: 8pt)[source-native record\ audit history \ dedup history]
-    ], width: 3.2cm, inset: 6pt, corner-radius: 4pt, fill: red.lighten(92%)),
-    edge((2, 0), (2, 1), "->"),
-    edge((2, 1), (4, 0), "..>", bend: -20deg, label: text(size: 7.5pt)[provenance link]),
-
-    node((1, -1), align(center)[
-      #text(weight: "bold")[Other Source Plugins]\
-      #text(size: 8pt)[e.g. Website Plugin]
-    ], inset: 6pt, corner-radius: 4pt, fill: orange.lighten(94%)),
-    edge((1, 0), (1, -1), "<->", label: text(size: 7.5pt)[SourceWeave]),
   )
   ]
   ],
@@ -567,7 +560,7 @@ For OSINT workflows, this is useful when related evidence appears in different f
 = Implementation and Feasibility
 
 == Working Prototype
-The proposed implementation is feasible because Seer is not a concept-only proposal. A *Working Prototype* has been tested as a proof-of-concept (available at https://seer.lariv.in/) and demonstrates the core platform capabilities needed for this solution: source plugins, Reddit and website collection, scheduled scraping workers, an Intel layer, multimodal embedding support, RAG-based AI chat, deep research workflows, report generation, and GIS visualisation. 
+The proposed implementation is feasible because Seer is not a concept-only proposal. A *Working Prototype* has been tested as a proof-of-concept and demonstrates the core platform capabilities needed for this solution: source plugins, Reddit and website collection, scheduled scraping workers, an Intel layer, multimodal embedding support, RAG-based AI chat, deep research workflows, report generation, and GIS visualisation. 
 
 
 #text(style: "italic", weight: "bold")[You can preview a prototype of the proposed solution - Seer at https://seer.lariv.in/.]

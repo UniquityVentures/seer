@@ -2,3 +2,4 @@ seer
 tmp/
 *.pdf
 *.png
+!Seer HomePage.png
