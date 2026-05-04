@@ -1,4 +1,15 @@
-#set page(margin: 0.69in)
+#set page(
+  margin: 6em,
+  header: [
+    #align(right)[
+      #block([
+        #image("logo.webp")
+      ], below: -2em, height: 4em)
+    ],
+  ],
+  footer: context align(center)[#counter(page).display("1")]
+)
+
 #set text(size: 12pt)
 #set par(justify: true, leading: 0.69em)
 #show heading: it => block(above: 1em, below: 0.69em, it)
@@ -53,3 +64,34 @@ Golang, Large Language Models, Web Scraping, NLP, Vector Search and RAG, GIS
     "8", [Custom Workflows], [Configurable workflows such as deep research, image analysis, object tracking, source-specific filtering, summarisation, similarity search, and report generation.],
     "9", [Managed Intelligence Platform], [A packaged web application with role-based access and tailored UI for intel gatherers, analysts, and senior military decision-makers.]
 )
+
+#pagebreak()
+
+
+= Phase-wise Timeline
+#table(
+    columns: (auto, auto, 1fr),
+    inset: 8pt,
+    align: left + horizon,
+    [*Phase*], [*Duration*], [*Key Activities*],
+    [*Stage 1:*\ Testing and Troubleshooting], [4 months], [
+        - Setup of lightweight microservice fleet nodes.
+        - Development and testing of microservices for 12 sources (Reddit, Facebook, X, Instagram, websites, LinkedIn, GDELT, YouTube, BlueSky, OpenSky, AIStream, ActivityPub).
+        - Intel schema finalisation with concerned personnel.
+        - Reports and alerts system.
+        - Core product finalisation based on feedback.
+        - SOPs for node and microservice maintenance.
+    ],
+    [*Stage 2:*\ Pre-Scaling], [4 months], [
+        - On-premise deployment of the embedding model and LLM on the local GPU server.
+        - Beta testing with a limited user base.
+        - Amendments and changes shipped based on beta feedback.
+    ],
+    [*Stage 3:*\ Scaling Up], [4 months], [
+        - Large-scale deployment of nodes across multiple regions (counts decided from Stage 1 test results).
+        - On-demand addition of new scraping microservices.
+        - Complete rollout to the intended user base.
+    ],
+)
+
+#text(style: "italic", size: 10pt)[Activities within a stage run in parallel; each stage spans approximately 4 months, for a 12-month total programme.]
