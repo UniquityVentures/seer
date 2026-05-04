@@ -2,7 +2,14 @@
 #set heading(numbering: "1.")
 
 #set page(
-  margin: 0.69in,
+  margin: 6em,
+  header: [
+    #align(right)[
+      #block([
+        #image("logo.webp")
+      ], below: -2em, height: 4em)
+    ],
+  ],
   footer: context align(center)[#counter(page).display("1")]
 )
 

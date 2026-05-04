@@ -1,4 +1,15 @@
-#set page(margin: 0.69in)
+#set page(
+  margin: 6em,
+  header: [
+    #align(right)[
+      #block([
+        #image("logo.webp")
+      ], below: -2em, height: 4em)
+    ],
+  ],
+  footer: context align(center)[#counter(page).display("1")]
+)
+
 #set text(size: 12pt)
 #set par(justify: true, leading: 0.69em)
 #show heading: it => block(above: 1em, below: 0.69em, it)
