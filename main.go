@@ -1,7 +1,10 @@
 package main
 
 import (
+	"log"
 	"log/slog"
+	"net/http"
+	_ "net/http/pprof"
 
 	"github.com/UniquityVentures/lago/lago"
 	"github.com/UniquityVentures/seer/plugins/p_seer_workerregistry"
@@ -28,6 +31,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	go func() {
+		log.Fatal(http.ListenAndServe(":7777", nil))
+	}()
 	p_seer_workerregistry.BuildAllRegistries()
 	if err := lago.Start(config); err != nil {
 		slog.Error(err.Error())

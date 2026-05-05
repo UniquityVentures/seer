@@ -9,45 +9,53 @@ import (
 	"time"
 
 	aisstream "github.com/aisstream/ais-message-models/golang/aisStream"
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
-func ingestAISStreamPacket(ctx context.Context, db *gorm.DB, packet aisstream.AisStreamMessage) error {
+func ingestAISStreamPackets(ctx context.Context, db *gorm.DB, packets []aisstream.AisStreamMessage) error {
 	if db == nil {
 		return nil
 	}
-	rawMetadata, err := marshalPostgresJSON(packet.MetaData)
-	if err != nil {
-		return fmt.Errorf("metadata json: %w", err)
+	msgs := make([]AISStreamMessage, 0, len(packets))
+
+	currentTime := time.Now().UTC()
+
+	for _, packet := range packets {
+		rawMetadata, err := marshalPostgresJSON(packet.MetaData)
+		if err != nil {
+			return fmt.Errorf("metadata json: %w", err)
+		}
+		rawMessage, err := marshalPostgresJSON(packet.Message)
+		if err != nil {
+			return fmt.Errorf("message json: %w", err)
+		}
+		msg := AISStreamMessage{
+			MessageType: string(packet.MessageType),
+			ReceivedAt:  currentTime,
+			RawMessage:  rawMessage,
+			RawMetadata: rawMetadata,
+		}
+		applyEnvelopeFields(&msg, packet)
+		msgs = append(msgs, msg)
 	}
-	rawMessage, err := marshalPostgresJSON(packet.Message)
-	if err != nil {
-		return fmt.Errorf("message json: %w", err)
-	}
-	msg := AISStreamMessage{
-		MessageType: string(packet.MessageType),
-		ReceivedAt:  time.Now().UTC(),
-		RawMetadata: datatypes.JSON(rawMetadata),
-		RawMessage:  datatypes.JSON(rawMessage),
-	}
-	applyEnvelopeFields(&msg, packet)
 
 	tx := db.WithContext(ctx).Begin()
 	if tx.Error != nil {
 		return tx.Error
 	}
-	if err := tx.Create(&msg).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-	if handler, ok := AISStreamMessageTypes.Get(msg.MessageType); ok && handler.Save != nil {
-		if err := handler.Save(ctx, tx, msg, packet); err != nil {
+	for i, msg := range msgs {
+		if err := gorm.G[AISStreamMessage](tx).Create(ctx, &msg); err != nil {
 			tx.Rollback()
 			return err
 		}
-	} else {
-		slog.Warn("p_seer_aisstream: unknown AIS message type", "message_type", msg.MessageType)
+		if handler, ok := AISStreamMessageTypes.Get(msg.MessageType); ok && handler.Save != nil {
+			if err := handler.Save(ctx, tx, msg, packets[i]); err != nil {
+				tx.Rollback()
+				return err
+			}
+		} else {
+			slog.Warn("p_seer_aisstream: unknown AIS message type", "message_type", msg.MessageType)
+		}
 	}
 	return tx.Commit().Error
 }

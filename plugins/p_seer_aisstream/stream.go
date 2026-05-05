@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"slices"
+	"sync"
 	"time"
 
 	aisstream "github.com/aisstream/ais-message-models/golang/aisStream"
@@ -78,23 +80,47 @@ func runAISStreamSession(ctx context.Context, db *gorm.DB, cfg *AISStreamConfig)
 	}
 	slog.Info("p_seer_aisstream: stream worker connected", "url", cfg.StreamURL)
 
+	var packets []aisstream.AisStreamMessage
+	packetsLock := sync.Mutex{}
+	refreshInterval := Config.MapRefreshEvery()
+	if refreshInterval == 0 {
+		return fmt.Errorf("refreshInterval set to 0")
+	}
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				func() {
+					time.Sleep(refreshInterval)
+					packetsLock.Lock()
+					localPackets := slices.Clone(packets)
+					packets = packets[0:0]
+					packetsLock.Unlock()
+					if err := ingestAISStreamPackets(ctx, db, localPackets); err != nil {
+						slog.Error("Error while ingesting aisstream packets", "error", err)
+					}
+				}()
+			}
+		}
+	}()
+
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
 		default:
 		}
-		_, p, err := ws.ReadMessage()
-		if err != nil {
-			return err
-		}
-		var packet aisstream.AisStreamMessage
-		if err := json.Unmarshal(p, &packet); err != nil {
-			slog.Error("p_seer_aisstream: packet json", "error", err)
-			continue
-		}
-		if err := ingestAISStreamPacket(ctx, db, packet); err != nil {
-			slog.Error("p_seer_aisstream: ingest", "error", err, "message_type", packet.MessageType)
-		}
+		func() {
+			packetsLock.Lock()
+			defer packetsLock.Unlock()
+			packet := aisstream.AisStreamMessage{}
+			if err := ws.ReadJSON(&packet); err != nil {
+				slog.Error("p_seer_aisstream: packet json", "error", err)
+				return
+			}
+			packets = append(packets, packet)
+		}()
 	}
 }
