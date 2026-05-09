@@ -7,12 +7,15 @@ import (
 	"log/slog"
 	"slices"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	aisstream "github.com/aisstream/ais-message-models/golang/aisStream"
 	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
 )
+
+const maxBufferedAISPackets = 5000
 
 func startAISStreamWorkerIfConfigured(db *gorm.DB) {
 	if db == nil || Config == nil {
@@ -90,26 +93,26 @@ func runAISStreamSession(ctx context.Context, db *gorm.DB, cfg *AISStreamConfig,
 
 	var packets []aisstream.AisStreamMessage
 	packetsLock := sync.Mutex{}
+	var droppedPackets uint64
 	refreshInterval := Config.MapRefreshEvery()
 	if refreshInterval == 0 {
 		return fmt.Errorf("refreshInterval set to 0")
 	}
 	go func() {
+		ticker := time.NewTicker(refreshInterval)
+		defer ticker.Stop()
 		for {
 			select {
 			case <-sessionCtx.Done():
 				return
-			default:
-				func() {
-					time.Sleep(refreshInterval)
-					packetsLock.Lock()
-					localPackets := slices.Clone(packets)
-					packets = packets[0:0]
-					packetsLock.Unlock()
-					if err := ingestAISStreamPackets(ctx, db, localPackets); err != nil {
-						slog.Error("Error while ingesting aisstream packets", "error", err)
-					}
-				}()
+			case <-ticker.C:
+			}
+			packetsLock.Lock()
+			localPackets := slices.Clone(packets)
+			packets = packets[0:0]
+			packetsLock.Unlock()
+			if err := ingestAISStreamPackets(ctx, db, localPackets); err != nil {
+				slog.Error("Error while ingesting aisstream packets", "error", err)
 			}
 		}
 	}()
@@ -129,6 +132,14 @@ func runAISStreamSession(ctx context.Context, db *gorm.DB, cfg *AISStreamConfig,
 			return fmt.Errorf("read message: %w", err)
 		}
 		packetsLock.Lock()
+		if len(packets) >= maxBufferedAISPackets {
+			dropped := atomic.AddUint64(&droppedPackets, 1)
+			if dropped == 1 || dropped%100 == 0 {
+				slog.Warn("p_seer_aisstream: dropping packet because buffer is full", "buffer_limit", maxBufferedAISPackets, "dropped", dropped)
+			}
+			packetsLock.Unlock()
+			continue
+		}
 		packets = append(packets, packet)
 		packetsLock.Unlock()
 	}

@@ -2,6 +2,7 @@ package p_seer_reddit
 
 import (
 	"html"
+	"log/slog"
 	"net/url"
 	"regexp"
 	"strings"
@@ -43,7 +44,11 @@ func tryEnqueueWebsiteScrapeURL(raw string) {
 	if err != nil || toSend.Host == "" {
 		return
 	}
-	p_seer_websites.WebsiteScrapeURLQueue <- toSend
+	select {
+	case p_seer_websites.WebsiteScrapeURLQueue <- toSend:
+	default:
+		slog.Warn("p_seer_reddit: website scrape queue full; dropping URL", "url", toSend.String())
+	}
 }
 
 // allHTTPURLsInHTML returns every http(s) URL found in HTML (valid parse, deduped, document order).

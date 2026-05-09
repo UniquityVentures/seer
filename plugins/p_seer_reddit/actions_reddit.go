@@ -18,6 +18,7 @@ import (
 )
 
 const defaultMaxFreshPosts = 25
+const maxConcurrentSubredditFetches = 8
 
 // redditFetchPostsActive is true while a source "Load" ([FetchNewRedditPosts]) runs in the background.
 var redditFetchPostsActive atomic.Bool
@@ -56,10 +57,13 @@ func FetchNewRedditPosts(ctx context.Context, db *gorm.DB, src *RedditSource) er
 	var mu sync.Mutex
 	var wg sync.WaitGroup
 	var firstErr error
+	sem := make(chan struct{}, maxConcurrentSubredditFetches)
 	for _, name := range names {
 		wg.Add(1)
 		go func(sub string) {
 			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
 			if err := src.fetchSubredditListings(ctx, db, sub, query, maxFresh); err != nil {
 				mu.Lock()
 				if firstErr == nil {
