@@ -32,7 +32,9 @@ func startAISStreamWorkerIfConfigured(db *gorm.DB) {
 func runAISStreamWorker(ctx context.Context, db *gorm.DB, cfg *AISStreamConfig) {
 	backoff := 2 * time.Second
 	for {
-		err := runAISStreamSession(ctx, db, cfg)
+		err := runAISStreamSession(ctx, db, cfg, func() {
+			backoff = 2 * time.Second
+		})
 		if err == nil {
 			return
 		}
@@ -50,7 +52,7 @@ func runAISStreamWorker(ctx context.Context, db *gorm.DB, cfg *AISStreamConfig) 
 	}
 }
 
-func runAISStreamSession(ctx context.Context, db *gorm.DB, cfg *AISStreamConfig) error {
+func runAISStreamSession(ctx context.Context, db *gorm.DB, cfg *AISStreamConfig, onConnected func()) error {
 	if cfg == nil {
 		return nil
 	}
@@ -76,9 +78,15 @@ func runAISStreamSession(ctx context.Context, db *gorm.DB, cfg *AISStreamConfig)
 		return err
 	}
 	if err := ws.WriteMessage(websocket.TextMessage, b); err != nil {
-		return err
+		return fmt.Errorf("subscribe: %w", err)
+	}
+	if onConnected != nil {
+		onConnected()
 	}
 	slog.Info("p_seer_aisstream: stream worker connected", "url", cfg.StreamURL)
+
+	sessionCtx, cancelSession := context.WithCancel(ctx)
+	defer cancelSession()
 
 	var packets []aisstream.AisStreamMessage
 	packetsLock := sync.Mutex{}
@@ -89,7 +97,7 @@ func runAISStreamSession(ctx context.Context, db *gorm.DB, cfg *AISStreamConfig)
 	go func() {
 		for {
 			select {
-			case <-ctx.Done():
+			case <-sessionCtx.Done():
 				return
 			default:
 				func() {
@@ -112,15 +120,16 @@ func runAISStreamSession(ctx context.Context, db *gorm.DB, cfg *AISStreamConfig)
 			return nil
 		default:
 		}
-		func() {
-			packetsLock.Lock()
-			defer packetsLock.Unlock()
-			packet := aisstream.AisStreamMessage{}
-			if err := ws.ReadJSON(&packet); err != nil {
-				slog.Error("p_seer_aisstream: packet json", "error", err)
-				return
+		var packet aisstream.AisStreamMessage
+		if err := ws.ReadJSON(&packet); err != nil {
+			if ctx.Err() != nil {
+				return nil
 			}
-			packets = append(packets, packet)
-		}()
+			slog.Error("p_seer_aisstream: read message", "error", err)
+			return fmt.Errorf("read message: %w", err)
+		}
+		packetsLock.Lock()
+		packets = append(packets, packet)
+		packetsLock.Unlock()
 	}
 }
