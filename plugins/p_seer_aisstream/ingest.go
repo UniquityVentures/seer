@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const aisStreamMessageInsertBatchSize = 500
+const aisStreamMessageInsertBatchSize = 5000
 
 func ingestAISStreamPackets(ctx context.Context, db *gorm.DB, packets []aisstream.AisStreamMessage) error {
 	if db == nil {

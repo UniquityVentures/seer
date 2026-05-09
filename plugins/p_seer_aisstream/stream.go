@@ -15,7 +15,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const maxBufferedAISPackets = 5000
+const maxBufferedAISPackets = 25000
 
 func startAISStreamWorkerIfConfigured(db *gorm.DB) {
 	if db == nil || Config == nil {
