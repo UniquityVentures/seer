@@ -12,6 +12,8 @@ import (
 	"gorm.io/gorm"
 )
 
+const aisStreamMessageInsertBatchSize = 500
+
 func ingestAISStreamPackets(ctx context.Context, db *gorm.DB, packets []aisstream.AisStreamMessage) error {
 	if db == nil {
 		return nil
@@ -38,16 +40,19 @@ func ingestAISStreamPackets(ctx context.Context, db *gorm.DB, packets []aisstrea
 		applyEnvelopeFields(&msg, packet)
 		msgs = append(msgs, msg)
 	}
+	if len(msgs) == 0 {
+		return nil
+	}
 
 	tx := db.WithContext(ctx).Begin()
 	if tx.Error != nil {
 		return tx.Error
 	}
+	if err := tx.CreateInBatches(&msgs, aisStreamMessageInsertBatchSize).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
 	for i, msg := range msgs {
-		if err := gorm.G[AISStreamMessage](tx).Create(ctx, &msg); err != nil {
-			tx.Rollback()
-			return err
-		}
 		if handler, ok := AISStreamMessageTypes.Get(msg.MessageType); ok && handler.Save != nil {
 			if err := handler.Save(ctx, tx, msg, packets[i]); err != nil {
 				tx.Rollback()
