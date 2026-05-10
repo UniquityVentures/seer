@@ -74,7 +74,11 @@ func fetchRenderedHTML(ctx context.Context, pageURL *url.URL) (html string, fina
 	if err != nil {
 		return "", nil, err
 	}
-	rodCtx, cancel := context.WithTimeout(context.Background(), rodNavigateTimeout)
+	rodBaseCtx := ctx
+	if rodBaseCtx == nil {
+		rodBaseCtx = context.Background()
+	}
+	rodCtx, cancel := context.WithTimeout(rodBaseCtx, rodNavigateTimeout)
 	defer cancel()
 
 	page, err := b.Page(proto.TargetCreateTarget{})
