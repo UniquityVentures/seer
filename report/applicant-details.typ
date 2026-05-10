@@ -12,7 +12,7 @@
       #block([
         #image("logo.webp")
       ], below: -2em, height: 4em)
-    ],
+    ]
   ],
   footer: context align(center)[#counter(page).display("1")]
 )
@@ -49,7 +49,7 @@
 
 *Founder — Uniquity Ventures* #h(1fr) *Oct 2024 – Present*
 
-- Working on building deep-tech products in robotics and AI0
+- Working on building deep-tech products in robotics and AI
 - Researching and building AI and ERP systems for the past year under the *Lariv* brand
 
 #v(0.5em)

@@ -13,7 +13,7 @@
       #block([
         #image("logo.webp")
       ], below: -2em, height: 4em)
-    ],
+    ]
   ],
   footer: context align(center)[#counter(page).display("1")]
 )
@@ -572,10 +572,11 @@ For OSINT workflows, this is useful when related evidence appears in different f
 = Implementation and Feasibility
 
 == Working Prototype
-The proposed implementation is feasible because Seer is not a concept-only proposal. A *Working Prototype* has been tested as a proof-of-concept and demonstrates the core platform capabilities needed for this solution: source plugins, Reddit and website collection, scheduled scraping workers, an Intel layer, multimodal embedding support, RAG-based AI chat, deep research workflows, report generation, and GIS visualisation. 
-
-
-#text(style: "italic", weight: "bold")[You can preview a prototype of the proposed solution - Seer at https://seer.lariv.in/.]
+The proposed implementation is feasible because Seer is not a concept-only proposal. A *Working Prototype* has been tested as a proof-of-concept and demonstrates the core platform capabilities needed for this solution: source plugins, Reddit and website collection, scheduled scraping workers, an Intel layer, multimodal embedding support, RAG-based AI chat, deep research workflows, report generation, and GIS visualisation. \
+*You can preview a prototype of the proposed solution - Seer at https://seer.lariv.in/ * \
+Use the following credentials to log in: \
+*email:* user\@lariv.in, \
+*password:* password
 
 #figure(
   image("Seer HomePage.png"),

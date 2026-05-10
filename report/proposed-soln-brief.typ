@@ -10,7 +10,7 @@
       #block([
         #image("logo.webp")
       ], below: -2em, height: 4em)
-    ],
+    ]
   ],
   footer: context align(center)[#counter(page).display("1")]
 )
