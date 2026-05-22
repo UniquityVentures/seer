@@ -83,7 +83,7 @@ func websiteRunnerWorkerPoolStopHandler(_ *views.View) http.Handler {
 func registerWebsiteRunnerWorkerPoolViews() {
 	lago.RegistryView.Register("seer_websites.WebsiteRunnerWorkerPoolStartView",
 		lago.GetPageView("seer_websites.WebsiteRunnerDetail").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website_runner.worker_pool_start_post", websiteRunnerWorkerPoolPOSTOnlyLayer{}).
 			WithLayer("seer_websites.website_runner.worker_pool_start", views.MethodLayer{
 				Method:  http.MethodPost,
@@ -92,7 +92,7 @@ func registerWebsiteRunnerWorkerPoolViews() {
 
 	lago.RegistryView.Register("seer_websites.WebsiteRunnerWorkerPoolStopView",
 		lago.GetPageView("seer_websites.WebsiteRunnerDetail").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website_runner.worker_pool_stop_post", websiteRunnerWorkerPoolPOSTOnlyLayer{}).
 			WithLayer("seer_websites.website_runner.worker_pool_stop", views.MethodLayer{
 				Method:  http.MethodPost,

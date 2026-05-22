@@ -84,7 +84,7 @@ func redditRunnerWorkerPoolStopHandler(_ *views.View) http.Handler {
 func registerRedditRunnerWorkerPoolViews() {
 	lago.RegistryView.Register("seer_reddit.RedditRunnerWorkerPoolStartView",
 		lago.GetPageView("seer_reddit.RedditRunnerDetail").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.reddit_runner.worker_pool_start_post", redditRunnerWorkerPoolPOSTOnlyLayer{}).
 			WithLayer("seer_reddit.reddit_runner.worker_pool_start", views.MethodLayer{
 				Method:  http.MethodPost,
@@ -93,7 +93,7 @@ func registerRedditRunnerWorkerPoolViews() {
 
 	lago.RegistryView.Register("seer_reddit.RedditRunnerWorkerPoolStopView",
 		lago.GetPageView("seer_reddit.RedditRunnerDetail").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.reddit_runner.worker_pool_stop_post", redditRunnerWorkerPoolPOSTOnlyLayer{}).
 			WithLayer("seer_reddit.reddit_runner.worker_pool_stop", views.MethodLayer{
 				Method:  http.MethodPost,

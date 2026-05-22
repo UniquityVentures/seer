@@ -28,11 +28,11 @@ func init() {
 
 	lago.RegistryView.Register("seer_deepsearch.HomeView",
 		lago.GetPageView("seer_deepsearch.DeepSearchHome").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}))
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}))
 
 	lago.RegistryView.Register("seer_deepsearch.HistoryView",
 		lago.GetPageView("seer_deepsearch.HistoryTable").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_deepsearch.deepsearch.list", views.LayerList[DeepSearch]{
 				Key:           getters.Static("deepSearches"),
 				QueryPatchers: deepSearchListPatchers,
@@ -40,13 +40,13 @@ func init() {
 
 	lago.RegistryView.Register("seer_deepsearch.StartView",
 		lago.GetPageView("seer_deepsearch.StartBlank").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_deepsearch.start_method", deepSearchStartRejectGetLayer{}).
 			WithLayer("seer_deepsearch.start_post", deepSearchStartPostLayer{}))
 
 	lago.RegistryView.Register("seer_deepsearch.DetailView",
 		lago.GetPageView("seer_deepsearch.DeepSearchDetail").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_deepsearch.deepsearch.detail", views.LayerDetail[DeepSearch]{
 				Key:           getters.Static("deepSearch"),
 				PathParamKey:  getters.Static("id"),
@@ -55,13 +55,13 @@ func init() {
 
 	lago.RegistryView.Register("seer_deepsearch.StopView",
 		lago.GetPageView("seer_deepsearch.StartBlank").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_deepsearch.stop_method", deepSearchStartRejectGetLayer{}).
 			WithLayer("seer_deepsearch.stop_post", deepSearchStopPostLayer{}))
 
 	lago.RegistryView.Register("seer_deepsearch.RestartView",
 		lago.GetPageView("seer_deepsearch.StartBlank").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_deepsearch.restart_method", deepSearchStartRejectGetLayer{}).
 			WithLayer("seer_deepsearch.restart_post", deepSearchRestartPostLayer{}))
 }

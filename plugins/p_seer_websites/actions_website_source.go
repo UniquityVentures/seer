@@ -85,9 +85,13 @@ func FetchWebsiteSource(ctx context.Context, db *gorm.DB, src *WebsiteSource) er
 		}
 		seen[key] = struct{}{}
 
-		htmlStr, finalU, err := fetchRenderedHTML(ctx, canon)
+		htmlStr, finalU, err := scrapeHTMLViaFleet(ctx, key)
 		if err != nil {
 			slog.Warn("p_seer_websites: crawl fetch", "error", err, "url", key)
+			continue
+		}
+		if urlFailsSSRF(ctx, finalU) {
+			slog.Warn("p_seer_websites: crawl redirect SSRF", "url", key)
 			continue
 		}
 		pagesProcessed++

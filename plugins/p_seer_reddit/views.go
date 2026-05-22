@@ -102,7 +102,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_reddit.RedditSourceListView",
 		lago.GetPageView("seer_reddit.RedditSourceTable").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.reddit_source.list", views.LayerList[RedditSource]{
 				Key:           getters.Static("redditSources"),
 				QueryPatchers: sourcePatchers,
@@ -110,7 +110,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_reddit.RedditSourceUnsetSelectView",
 		lago.GetPageView("seer_reddit.RedditSourceUnsetSelectionTable").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.reddit_source.unset_select_list", views.LayerList[RedditSource]{
 				Key:           getters.Static("redditSources"),
 				QueryPatchers: sourceUnsetPatchers,
@@ -118,7 +118,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_reddit.RedditSourceDetailView",
 		lago.GetPageView("seer_reddit.RedditSourceDetail").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.reddit_source.detail", views.LayerDetail[RedditSource]{
 				Key:           getters.Static("redditSource"),
 				PathParamKey:  getters.Static("id"),
@@ -127,7 +127,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_reddit.RedditSourceCreateView",
 		lago.GetPageView("seer_reddit.RedditSourceCreateForm").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.reddit_source.create", views.LayerCreate[RedditSource]{
 				SuccessURL: lago.RoutePath("seer_reddit.RedditSourceDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),
@@ -139,7 +139,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_reddit.RedditSourceUpdateView",
 		lago.GetPageView("seer_reddit.RedditSourceUpdateForm").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.reddit_source.detail", views.LayerDetail[RedditSource]{
 				Key:           getters.Static("redditSource"),
 				PathParamKey:  getters.Static("id"),
@@ -157,7 +157,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_reddit.RedditSourceDeleteView",
 		lago.GetPageView("seer_reddit.RedditSourceDeleteForm").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.reddit_source.delete_detail", views.LayerDetail[RedditSource]{
 				Key:           getters.Static("redditSource"),
 				PathParamKey:  getters.Static("id"),
@@ -179,7 +179,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_reddit.RedditPostListView",
 		lago.GetPageView("seer_reddit.RedditPostTable").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.post_list_by_source_flag", redditPostListBySourceFlagLayer{Value: false}).
 			WithLayer("seer_reddit.reddit_post.list", views.LayerList[RedditPost]{
 				Key:           getters.Static("redditPosts"),
@@ -188,7 +188,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_reddit.RedditPostListBySourceView",
 		lago.GetPageView("seer_reddit.RedditPostTableBySource").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.post_list_by_source_flag", redditPostListBySourceFlagLayer{Value: true}).
 			WithLayer("seer_reddit.reddit_source.detail_by_source_id", views.LayerDetail[RedditSource]{
 				Key:           getters.Static("redditSource"),
@@ -202,7 +202,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_reddit.RedditPostListBulkAddIntelView",
 		lago.GetPageView("seer_reddit.RedditPostTable").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.post_list_by_source_flag", redditPostListBySourceFlagLayer{Value: false}).
 			WithLayer("seer_reddit.reddit_post.list", views.LayerList[RedditPost]{
 				Key:           getters.Static("redditPosts"),
@@ -214,7 +214,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_reddit.RedditPostListBySourceBulkAddIntelView",
 		lago.GetPageView("seer_reddit.RedditPostTableBySource").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.post_list_by_source_flag", redditPostListBySourceFlagLayer{Value: true}).
 			WithLayer("seer_reddit.reddit_source.detail_by_source_id", views.LayerDetail[RedditSource]{
 				Key:           getters.Static("redditSource"),
@@ -232,13 +232,13 @@ func init() {
 
 	lago.RegistryView.Register("seer_reddit.RedditSourceFetchPostsView",
 		lago.GetPageView("seer_reddit.RedditPostTableBySource").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.post_list_by_source_flag", redditPostListBySourceFlagLayer{Value: true}).
 			WithLayer("seer_reddit.fetch_posts", redditSourceFetchPostsActionLayer{}))
 
 	lago.RegistryView.Register("seer_reddit.RedditPostDetailView",
 		lago.GetPageView("seer_reddit.RedditPostDetail").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.reddit_post.detail", views.LayerDetail[RedditPost]{
 				Key:           getters.Static("redditPost"),
 				PathParamKey:  getters.Static("id"),
@@ -248,7 +248,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_reddit.RedditPostAddIntelView",
 		lago.GetPageView("seer_reddit.RedditPostDetail").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.reddit_post.add_intel_detail", views.LayerDetail[RedditPost]{
 				Key:           getters.Static("redditPost"),
 				PathParamKey:  getters.Static("id"),
@@ -259,7 +259,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_reddit.RedditPostSoftDeleteView",
 		lago.GetPageView("seer_reddit.RedditPostDeleteForm").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.reddit_post.delete_detail", views.LayerDetail[RedditPost]{
 				Key:           getters.Static("redditPost"),
 				PathParamKey:  getters.Static("id"),
@@ -273,7 +273,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_reddit.RedditRunnerListView",
 		lago.GetPageView("seer_reddit.RedditRunnerTable").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.reddit_runner.list", views.LayerList[RedditRunner]{
 				Key:           getters.Static("redditRunners"),
 				QueryPatchers: runnerPatchers,
@@ -281,7 +281,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_reddit.RedditRunnerSelectView",
 		lago.GetPageView("seer_reddit.RedditRunnerSelectionTable").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.reddit_runner.select_list", views.LayerList[RedditRunner]{
 				Key:           getters.Static("redditRunners"),
 				QueryPatchers: runnerPatchers,
@@ -289,7 +289,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_reddit.RedditRunnerDetailView",
 		lago.GetPageView("seer_reddit.RedditRunnerDetail").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.reddit_runner.detail", views.LayerDetail[RedditRunner]{
 				Key:          getters.Static("redditRunner"),
 				PathParamKey: getters.Static("id"),
@@ -302,7 +302,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_reddit.RedditRunnerCreateView",
 		lago.GetPageView("seer_reddit.RedditRunnerCreateForm").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.reddit_runner.create", views.LayerCreate[RedditRunner]{
 				SuccessURL: lago.RoutePath("seer_reddit.RedditRunnerDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),
@@ -314,7 +314,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_reddit.RedditRunnerUpdateView",
 		lago.GetPageView("seer_reddit.RedditRunnerUpdateForm").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.reddit_runner.detail", views.LayerDetail[RedditRunner]{
 				Key:          getters.Static("redditRunner"),
 				PathParamKey: getters.Static("id"),
@@ -332,7 +332,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_reddit.RedditRunnerDeleteView",
 		lago.GetPageView("seer_reddit.RedditRunnerDeleteForm").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.reddit_runner.delete_detail", views.LayerDetail[RedditRunner]{
 				Key:          getters.Static("redditRunner"),
 				PathParamKey: getters.Static("id"),

@@ -14,7 +14,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_intel.ListView",
 		lago.GetPageView("seer_intel.IntelTable").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_intel.intel.list", views.LayerList[Intel]{
 				Key:           getters.Static("intels"),
 				QueryPatchers: intelListPatchers,
@@ -22,7 +22,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_intel.DetailView",
 		lago.GetPageView("seer_intel.IntelDetail").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_intel.intel.detail", views.LayerDetail[Intel]{
 				Key:          getters.Static("intel"),
 				PathParamKey: getters.Static("id"),

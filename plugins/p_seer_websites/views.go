@@ -89,7 +89,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_websites.WebsiteListView",
 		lago.GetPageView("seer_websites.WebsiteTable").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website.list", views.LayerList[Website]{
 				Key:           getters.Static("websites"),
 				QueryPatchers: websitePatchers,
@@ -97,7 +97,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_websites.WebsiteAddView",
 		lago.GetPageView("seer_websites.WebsiteAddForm").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website.create", views.LayerCreate[Website]{
 				SuccessURL: lago.RoutePath("seer_websites.WebsiteDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),
@@ -109,7 +109,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_websites.WebsiteDetailView",
 		lago.GetPageView("seer_websites.WebsiteDetail").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website.detail", views.LayerDetail[Website]{
 				Key:           getters.Static("website"),
 				PathParamKey:  getters.Static("id"),
@@ -119,7 +119,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_websites.WebsiteAddIntelView",
 		lago.GetPageView("seer_websites.WebsiteDetail").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website.add_intel_detail", views.LayerDetail[Website]{
 				Key:           getters.Static("website"),
 				PathParamKey:  getters.Static("id"),
@@ -130,12 +130,12 @@ func init() {
 
 	lago.RegistryView.Register("seer_websites.WebsiteAddAllIntelView",
 		lago.GetPageView("seer_websites.WebsiteTable").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website.add_all_intel", websiteAddAllIntelLayer{}))
 
 	lago.RegistryView.Register("seer_websites.WebsiteSoftDeleteView",
 		lago.GetPageView("seer_websites.WebsiteDeleteForm").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website.delete_detail", views.LayerDetail[Website]{
 				Key:           getters.Static("website"),
 				PathParamKey:  getters.Static("id"),
@@ -157,7 +157,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_websites.WebsiteSourceListView",
 		lago.GetPageView("seer_websites.WebsiteSourceTable").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website_source.list", views.LayerList[WebsiteSource]{
 				Key:           getters.Static("websiteSources"),
 				QueryPatchers: websiteSourcePatchers,
@@ -165,7 +165,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_websites.WebsiteSourceDetailView",
 		lago.GetPageView("seer_websites.WebsiteSourceDetail").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website_source.detail", views.LayerDetail[WebsiteSource]{
 				Key:           getters.Static("websiteSource"),
 				PathParamKey:  getters.Static("id"),
@@ -174,7 +174,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_websites.WebsiteSourceCreateView",
 		lago.GetPageView("seer_websites.WebsiteSourceCreateForm").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website_source.create", views.LayerCreate[WebsiteSource]{
 				SuccessURL: lago.RoutePath("seer_websites.WebsiteSourceDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),
@@ -187,7 +187,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_websites.WebsiteSourceUpdateView",
 		lago.GetPageView("seer_websites.WebsiteSourceUpdateForm").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website_source.detail_for_update", views.LayerDetail[WebsiteSource]{
 				Key:           getters.Static("websiteSource"),
 				PathParamKey:  getters.Static("id"),
@@ -206,7 +206,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_websites.WebsiteSourceDeleteView",
 		lago.GetPageView("seer_websites.WebsiteSourceDeleteForm").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website_source.delete_detail", views.LayerDetail[WebsiteSource]{
 				Key:           getters.Static("websiteSource"),
 				PathParamKey:  getters.Static("id"),
@@ -219,7 +219,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_websites.WebsiteSourceFetchView",
 		lago.GetPageView("seer_websites.WebsiteSourceDetail").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website_source.fetch_detail", views.LayerDetail[WebsiteSource]{
 				Key:           getters.Static("websiteSource"),
 				PathParamKey:  getters.Static("source_id"),
@@ -229,7 +229,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_websites.WebsiteRunnerListView",
 		lago.GetPageView("seer_websites.WebsiteRunnerTable").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website_runner.list", views.LayerList[WebsiteRunner]{
 				Key:           getters.Static("websiteRunners"),
 				QueryPatchers: runnerPatchers,
@@ -237,7 +237,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_websites.WebsiteRunnerSelectView",
 		lago.GetPageView("seer_websites.WebsiteRunnerSelectionTable").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website_runner.select_list", views.LayerList[WebsiteRunner]{
 				Key:           getters.Static("websiteRunners"),
 				QueryPatchers: runnerPatchers,
@@ -245,7 +245,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_websites.WebsiteRunnerDetailView",
 		lago.GetPageView("seer_websites.WebsiteRunnerDetail").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website_runner.detail", views.LayerDetail[WebsiteRunner]{
 				Key:          getters.Static("websiteRunner"),
 				PathParamKey: getters.Static("id"),
@@ -258,7 +258,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_websites.WebsiteRunnerCreateView",
 		lago.GetPageView("seer_websites.WebsiteRunnerCreateForm").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website_runner.create", views.LayerCreate[WebsiteRunner]{
 				SuccessURL: lago.RoutePath("seer_websites.WebsiteRunnerDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),
@@ -270,7 +270,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_websites.WebsiteRunnerUpdateView",
 		lago.GetPageView("seer_websites.WebsiteRunnerUpdateForm").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website_runner.detail_update", views.LayerDetail[WebsiteRunner]{
 				Key:          getters.Static("websiteRunner"),
 				PathParamKey: getters.Static("id"),
@@ -287,7 +287,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_websites.WebsiteRunnerDeleteView",
 		lago.GetPageView("seer_websites.WebsiteRunnerDeleteForm").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website_runner.delete_detail", views.LayerDetail[WebsiteRunner]{
 				Key:          getters.Static("websiteRunner"),
 				PathParamKey: getters.Static("id"),

@@ -83,7 +83,7 @@ func gdeltWorkerPoolStopHandler(_ *views.View) http.Handler {
 func registerGDELTWorkerPoolViews() {
 	lago.RegistryView.Register("seer_gdelt.GDELTWorkerPoolStartView",
 		lago.GetPageView("seer_gdelt.GDELTWorkerDetail").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_gdelt.gdelt_worker.worker_pool_start_post", gdeltWorkerPoolPOSTOnlyLayer{}).
 			WithLayer("seer_gdelt.gdelt_worker.worker_pool_start", views.MethodLayer{
 				Method:  http.MethodPost,
@@ -92,7 +92,7 @@ func registerGDELTWorkerPoolViews() {
 
 	lago.RegistryView.Register("seer_gdelt.GDELTWorkerPoolStopView",
 		lago.GetPageView("seer_gdelt.GDELTWorkerDetail").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_gdelt.gdelt_worker.worker_pool_stop_post", gdeltWorkerPoolPOSTOnlyLayer{}).
 			WithLayer("seer_gdelt.gdelt_worker.worker_pool_stop", views.MethodLayer{
 				Method:  http.MethodPost,

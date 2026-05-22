@@ -7,135 +7,95 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
-	"sync"
-	"time"
+	"sync/atomic"
 
 	"github.com/UniquityVentures/lago/lago"
 	"github.com/UniquityVentures/lago/views"
-	"github.com/go-rod/rod"
-	"github.com/go-rod/rod/lib/devices"
-	"github.com/go-rod/rod/lib/launcher"
-	"github.com/go-rod/rod/lib/proto"
-)
-
-// EnvChromeBin optional explicit Chromium/Chrome binary (same idea as p_lacerate).
-const EnvChromeBin = "LAGO_seer_websites_CHROME_BIN"
-
-const rodNavigateTimeout = 120 * time.Second
-
-var (
-	rodBrowserMu sync.Mutex
-	rodBrowser   *rod.Browser
+	"github.com/UniquityVentures/seer/plugins/p_seer_node_fleet"
+	"github.com/UniquityVentures/seer/plugins/p_seer_node_fleet/messages"
 )
 
 var errSSRFAfterRedirect = errors.New("p_seer_websites: redirect landed on non-public host")
 
-func getRodBrowser() (*rod.Browser, error) {
-	rodBrowserMu.Lock()
-	defer rodBrowserMu.Unlock()
-	if rodBrowser != nil {
-		return rodBrowser, nil
-	}
+var fleetCommandID atomic.Uint64
 
-	// Launcher and [rod.Browser] outlive a single HTTP request. Do not cancel a child context when this
-	// function returns — that tears down Chrome/CDP. Do not use [http.Request.Context] on the singleton
-	// [rod.Browser] or it becomes unusable after the first POST returns.
-	l := launcher.New().Context(context.Background()).Leakless(true).Headless(true)
-	if bin := strings.TrimSpace(os.Getenv(EnvChromeBin)); bin != "" {
-		l = l.Bin(bin)
+func fleetScrapeError(resp *messages.Response) error {
+	if resp == nil || resp.GetError() == nil {
+		return fmt.Errorf("fleet scrape: unknown error")
 	}
-	if dir := strings.TrimSpace(WebsiteRod.UserDataDir); dir != "" {
-		l = l.UserDataDir(dir)
-		if prof := strings.TrimSpace(WebsiteRod.ProfileDir); prof != "" {
-			l = l.ProfileDir(prof)
+	if wsErr := resp.GetError().GetWebsiteScraperError(); wsErr != nil {
+		if sf := wsErr.GetScrapeFailed(); sf != nil && strings.TrimSpace(sf.GetMessage()) != "" {
+			return fmt.Errorf("fleet scrape failed: %s", sf.GetMessage())
 		}
 	}
-	ws, err := l.Launch()
-	if err != nil {
-		return nil, err
-	}
-	b := rod.New().Context(context.Background()).ControlURL(ws)
-	if err := b.Connect(); err != nil {
-		return nil, err
-	}
-	rodBrowser = b
-	slog.Info("p_seer_websites: rod browser started")
-	return rodBrowser, nil
+	return fmt.Errorf("fleet scrape error: %v", resp.GetError())
 }
 
-// fetchRenderedHTML loads pageURL in headless Chromium and returns document HTML and final URL after navigation.
-func fetchRenderedHTML(ctx context.Context, pageURL *url.URL) (html string, final *url.URL, err error) {
-	if pageURL == nil {
-		return "", nil, fmt.Errorf("page url is nil")
+func scrapeHTMLViaFleet(ctx context.Context, pageURL string) (html string, final *url.URL, err error) {
+	cmdID := fleetCommandID.Add(1)
+	cmd := &messages.Command{
+		Id: cmdID,
+		CommandType: &messages.Command_TriggerScraper{
+			TriggerScraper: &messages.TriggerScraper{
+				ScraperArgs: &messages.TriggerScraper_WebsiteScraper{
+					WebsiteScraper: &messages.WebsiteScraperArgs{
+						SourceUrl: pageURL,
+					},
+				},
+			},
+		},
 	}
-	b, err := getRodBrowser()
+	resp, err := p_seer_node_fleet.DispatchCommand(cmd)
+	if err != nil {
+		return "", nil, fmt.Errorf("fleet dispatch: %w", err)
+	}
+	if resp.GetError() != nil {
+		return "", nil, fleetScrapeError(resp)
+	}
+	ok := resp.GetOk()
+	if ok == nil {
+		return "", nil, fmt.Errorf("fleet scrape: empty ok response")
+	}
+	ws := ok.GetWebsiteScraper()
+	if ws == nil {
+		return "", nil, fmt.Errorf("fleet scrape: not a website scraper response")
+	}
+	if resp.GetCommandId() != 0 && resp.GetCommandId() != cmdID {
+		return "", nil, fmt.Errorf("fleet scrape: response command id mismatch (sent %d, got %d)", cmdID, resp.GetCommandId())
+	}
+	html = ws.GetContent()
+	finalU, err := url.Parse(ws.GetSourceUrl())
 	if err != nil {
 		return "", nil, err
 	}
-	rodBaseCtx := ctx
-	if rodBaseCtx == nil {
-		rodBaseCtx = context.Background()
+	slog.Info("p_seer_websites: fleet scrape returned HTML",
+		"url", pageURL,
+		"final_url", finalU.String(),
+		"html_bytes", len(html),
+	)
+	if strings.TrimSpace(html) == "" {
+		return "", nil, fmt.Errorf("fleet scrape returned empty HTML for %s (check nodescraper logs; Chrome/chromedriver must be available on the node)", pageURL)
 	}
-	rodCtx, cancel := context.WithTimeout(rodBaseCtx, rodNavigateTimeout)
-	defer cancel()
-
-	page, err := b.Page(proto.TargetCreateTarget{})
-	if err != nil {
-		return "", nil, err
-	}
-	defer func() {
-		if cerr := page.Close(); cerr != nil {
-			slog.Warn("p_seer_websites: rod page close", "error", cerr)
-		}
-	}()
-
-	p := page.Context(rodCtx)
-	if err := p.Emulate(devices.IPhoneX); err != nil {
-		return "", nil, fmt.Errorf("emulate device: %w", err)
-	}
-	pageURLStr := pageURL.String()
-	if err := p.Navigate(pageURLStr); err != nil {
-		return "", nil, err
-	}
-	if err := p.WaitStable(500 * time.Millisecond); err != nil {
-		slog.Warn("p_seer_websites: rod wait stable", "error", err, "url", pageURLStr)
-	}
-	info, err := p.Info()
-	if err != nil {
-		return "", nil, err
-	}
-	finalU, err := url.Parse(info.URL)
-	if err != nil {
-		return "", nil, err
-	}
-	if urlFailsSSRF(ctx, finalU) {
-		return "", nil, errSSRFAfterRedirect
-	}
-	h, err := p.HTML()
-	if err != nil {
-		return "", nil, err
-	}
-	if len(h) > maxScrapedHTMLBytes {
-		h = h[:maxScrapedHTMLBytes]
-	}
-	return h, finalU, nil
+	return html, finalU, nil
 }
 
-// ScrapeToMarkdown validates URL, fetches rendered HTML with rod, returns markdown and canonical URL.
+// ScrapeToMarkdown validates URL, fetches rendered HTML via the node fleet, returns markdown and canonical URL.
 func ScrapeToMarkdown(ctx context.Context, rawURL string) (markdown string, canonical *url.URL, err error) {
 	canon, err := fetchableWebsiteURL(ctx, rawURL)
 	if err != nil {
 		return "", nil, err
 	}
-	htmlStr, finalU, err := fetchRenderedHTML(ctx, canon)
+	htmlStr, finalU, err := scrapeHTMLViaFleet(ctx, canon.String())
 	if err != nil {
 		return "", nil, fmt.Errorf("fetch page: %w", err)
 	}
+	if urlFailsSSRF(ctx, finalU) {
+		return "", nil, errSSRFAfterRedirect
+	}
 	md := markdownFromRenderedHTML(htmlStr, finalU)
 	if strings.TrimSpace(md) == "" {
-		return "", nil, fmt.Errorf("no extractable text from page (readability empty)")
+		return "", nil, fmt.Errorf("no extractable text from page (readability empty; fleet returned %d bytes HTML from %s)", len(htmlStr), finalU.String())
 	}
 	out := cloneURL(canon)
 	if finalU != nil {

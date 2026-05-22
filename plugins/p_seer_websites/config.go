@@ -9,20 +9,8 @@ import (
 	"github.com/UniquityVentures/lago/lago"
 )
 
-// WebsiteRodConfig controls headless Chromium launch for website scraping ([getRodBrowser]).
-// Loaded from the app config under [Plugins] key "p_seer_websites" (see [lago.LoadConfigFromFile]).
-//
-// Example TOML fragment:
-//
-//	[Plugins.p_seer_websites]
-//	userDataDir = "/home/you/.config/chromium"
-//	profileDir = "Default"
-//
-// [UserDataDir] is passed to Chrome as --user-data-dir. Default matches Chromium’s usual profile root
-// (Linux: ~/.config/chromium, macOS: ~/Library/Application Support/Chromium, Windows: %LOCALAPPDATA%\Chromium\User Data).
-// Only one process may use a given user-data-dir at a time (quit GUI Chromium before scraping if they match).
-//
-// [ProfileDir] is optional; when set, passed as --profile-directory (e.g. "Default", "Profile 1").
+// WebsiteRodConfig is retained for future node-side browser configuration.
+// Website scraping is dispatched to the Seer node fleet ([p_seer_node_fleet.DispatchCommand]).
 type WebsiteRodConfig struct {
 	UserDataDir string `toml:"userDataDir"`
 	ProfileDir  string `toml:"profileDir"`

@@ -20,6 +20,7 @@ import (
 	_ "github.com/UniquityVentures/seer/plugins/p_seer_deepsearch"
 	_ "github.com/UniquityVentures/seer/plugins/p_seer_gdelt"
 	_ "github.com/UniquityVentures/seer/plugins/p_seer_intel"
+	_ "github.com/UniquityVentures/seer/plugins/p_seer_node_fleet"
 	_ "github.com/UniquityVentures/seer/plugins/p_seer_opensky"
 	_ "github.com/UniquityVentures/seer/plugins/p_seer_reddit"
 	_ "github.com/UniquityVentures/seer/plugins/p_seer_runners"
@@ -27,15 +28,14 @@ import (
 )
 
 func main() {
-	config, err := lago.LoadConfigFromFile("seer.toml")
-	if err != nil {
-		panic(err)
-	}
-
 	go func() {
 		log.Fatal(http.ListenAndServe(":7777", nil))
 	}()
 	p_seer_workerregistry.BuildAllRegistries()
+	config, err := lago.LoadConfigFromFile("seer.toml")
+	if err != nil {
+		panic(err)
+	}
 	if err := lago.Start(config); err != nil {
 		slog.Error(err.Error())
 	}

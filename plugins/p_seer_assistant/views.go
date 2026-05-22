@@ -18,11 +18,11 @@ func init() {
 
 	lago.RegistryView.Register("seer_assistant.ChatView",
 		lago.GetPageView("seer_assistant.ChatPage").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}))
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}))
 
 	lago.RegistryView.Register("seer_assistant.HistoryView",
 		lago.GetPageView("seer_assistant.HistoryPage").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_assistant.session.list", views.LayerList[SeerAssistantSession]{
 				Key:           getters.Static("assistantSessions"),
 				QueryPatchers: sessionListPatchers,
@@ -30,7 +30,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_assistant.ChatSessionView",
 		lago.GetPageView("seer_assistant.ChatPage").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_assistant.session.detail", views.LayerDetail[SeerAssistantSession]{
 				Key:           getters.Static("assistantSession"),
 				PathParamKey:  getters.Static("id"),

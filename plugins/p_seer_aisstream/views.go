@@ -14,11 +14,11 @@ var aisStreamMessageListQueryPatchers = views.QueryPatchers[AISStreamMessage]{
 func init() {
 	lago.RegistryView.Register("seer_aisstream.MapView",
 		lago.GetPageView("seer_aisstream.MapPage").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}))
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}))
 
 	lago.RegistryView.Register("seer_aisstream.MessageListView",
 		lago.GetPageView("seer_aisstream.MessageTablePage").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_aisstream.message.list", views.LayerList[AISStreamMessage]{
 				Key:           getters.Static("aisStreamMessages"),
 				PageSize:      getters.Static(uint(25)),
@@ -27,7 +27,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_aisstream.MessageDetailView",
 		lago.GetPageView("seer_aisstream.MessageDetailPage").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_aisstream.message.detail", views.LayerDetail[AISStreamMessage]{
 				Key:          getters.Static("aisStreamMessage"),
 				PathParamKey: getters.Static("id"),

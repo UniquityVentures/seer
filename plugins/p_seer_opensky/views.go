@@ -14,11 +14,11 @@ var stateListQueryPatchers = views.QueryPatchers[OpenSkyState]{
 func init() {
 	lago.RegistryView.Register("seer_opensky.MapView",
 		lago.GetPageView("seer_opensky.MapPage").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}))
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}))
 
 	lago.RegistryView.Register("seer_opensky.StateListView",
 		lago.GetPageView("seer_opensky.StateTablePage").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_opensky.state.list", views.LayerList[OpenSkyState]{
 				Key:           getters.Static("openskyStates"),
 				PageSize:      getters.Static(uint(25)),
@@ -27,7 +27,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_opensky.StateCreateView",
 		lago.GetPageView("seer_opensky.StateCreateForm").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_opensky.state.create", views.LayerCreate[OpenSkyState]{
 				SuccessURL: lago.RoutePath("seer_opensky.StateDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),
@@ -37,7 +37,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_opensky.StateDetailView",
 		lago.GetPageView("seer_opensky.StateDetailPage").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_opensky.state.detail", views.LayerDetail[OpenSkyState]{
 				Key:          getters.Static("openskyState"),
 				PathParamKey: getters.Static("id"),
@@ -45,7 +45,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_opensky.StateUpdateView",
 		lago.GetPageView("seer_opensky.StateUpdateForm").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_opensky.state.detail_for_update", views.LayerDetail[OpenSkyState]{
 				Key:          getters.Static("openskyState"),
 				PathParamKey: getters.Static("id"),
@@ -60,7 +60,7 @@ func init() {
 
 	lago.RegistryView.Register("seer_opensky.StateDeleteView",
 		lago.GetPageView("seer_opensky.StateDeleteFormModal").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_opensky.state.detail_for_delete", views.LayerDetail[OpenSkyState]{
 				Key:          getters.Static("openskyState"),
 				PathParamKey: getters.Static("id"),
