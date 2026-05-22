@@ -18,3 +18,8 @@ uuid = { version = "1.23.1", features = ["v4"] }
 
 [build-dependencies]
 prost-build = "0.14.3"
+
+[profile.release]
+strip = true  # Automatically strip symbols and debuginfo
+lto = true
+codegen-units = 1
