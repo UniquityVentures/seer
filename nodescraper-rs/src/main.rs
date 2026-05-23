@@ -1,7 +1,10 @@
 use futures_util::{SinkExt, StreamExt};
 use prost::Message;
-use std::{sync::OnceLock, time::Duration};
-use tokio::pin;
+use std::{
+    sync::{Arc, OnceLock},
+    time::Duration,
+};
+use tokio::{pin, sync::Mutex};
 pub mod scrapers;
 
 pub mod messages {
@@ -42,38 +45,42 @@ async fn main() {
                 continue;
             }
         };
-        let (mut sink, stream) = ws_stream.split();
+        let (sink, stream) = ws_stream.split();
 
+        let sink = Arc::new(Mutex::new(sink));
         let command_stream =
             stream.then(async |item| item.map(|item| messages::Command::decode(item.into_data())));
         pin!(command_stream);
-        while let Some(command) = command_stream.next().await {
-            let command = match command {
-                Ok(c) => c,
-                Err(e) => {
-                    log::error!("Error while getting the data from websocket: {e}");
-                    continue;
-                }
-            };
-            let command = match command {
-                Ok(c) => c,
-                Err(e) => {
-                    log::error!("Error while parsing data to Command format: {e}");
-                    continue;
-                }
-            };
-            let response = handle_command(command).await.encode_to_vec();
-            match sink
-                .send(tokio_tungstenite::tungstenite::Message::binary(response))
-                .await
-            {
-                Ok(_) => {}
-                Err(e) => {
-                    log::error!("Error while sending back message to the server: {e}");
-                    continue;
-                }
-            };
-        }
+        command_stream
+            .for_each_concurrent(None, async |command| {
+                let command = match command {
+                    Ok(c) => c,
+                    Err(e) => {
+                        log::error!("Error while getting the data from websocket: {e}");
+                        return;
+                    }
+                };
+                let command = match command {
+                    Ok(c) => c,
+                    Err(e) => {
+                        log::error!("Error while parsing data to Command format: {e}");
+                        return;
+                    }
+                };
+                let response = handle_command(command).await.encode_to_vec();
+                let mut sink = Arc::clone(&sink).lock_owned().await;
+                match sink
+                    .send(tokio_tungstenite::tungstenite::Message::binary(response))
+                    .await
+                {
+                    Ok(_) => {}
+                    Err(e) => {
+                        log::error!("Error while sending back message to the server: {e}");
+                        return;
+                    }
+                };
+            })
+            .await;
     }
 }
 

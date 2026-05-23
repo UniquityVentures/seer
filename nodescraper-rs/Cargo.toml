@@ -4,13 +4,14 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+dom_smoothie = "0.17.0"
 env_logger = "0.11.10"
 futures-util = { version = "0.3.32", features = ["tokio-io"] }
 log = "0.4.29"
 prost = "0.14.3"
 prost-types = "0.14.3"
 rand = "0.10.1"
-thirtyfour = "0.36.3"
+thirtyfour = "0.37.0"
 tokio = { version = "1.52.3", features = ["full", "macros"] }
 tokio-tungstenite = { version = "0.29.0", features = ["url"] }
 url = "2.5.8"

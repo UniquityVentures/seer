@@ -55,7 +55,10 @@ message WebsiteScraperArgs {
 
 message WebsiteScraperResponse {
   string source_url = 1;
+  // Extracted readable content (markdown from dom_smoothie on the node).
   string content = 2;
+  // Full rendered page HTML (for same-origin link discovery during crawls).
+  string rendered_html = 3;
 }
 
 message ResponseError {

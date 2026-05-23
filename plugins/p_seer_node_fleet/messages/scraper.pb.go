@@ -602,9 +602,12 @@ func (x *WebsiteScraperArgs) GetSourceUrl() string {
 }
 
 type WebsiteScraperResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	SourceUrl     string                 `protobuf:"bytes,1,opt,name=source_url,json=sourceUrl,proto3" json:"source_url,omitempty"`
-	Content       string                 `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	SourceUrl string                 `protobuf:"bytes,1,opt,name=source_url,json=sourceUrl,proto3" json:"source_url,omitempty"`
+	// Extracted readable content (markdown from dom_smoothie on the node).
+	Content string `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
+	// Full rendered page HTML (for same-origin link discovery during crawls).
+	RenderedHtml  string `protobuf:"bytes,3,opt,name=rendered_html,json=renderedHtml,proto3" json:"rendered_html,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -649,6 +652,13 @@ func (x *WebsiteScraperResponse) GetSourceUrl() string {
 func (x *WebsiteScraperResponse) GetContent() string {
 	if x != nil {
 		return x.Content
+	}
+	return ""
+}
+
+func (x *WebsiteScraperResponse) GetRenderedHtml() string {
+	if x != nil {
+		return x.RenderedHtml
 	}
 	return ""
 }
@@ -1024,11 +1034,12 @@ const file_scraper_proto_rawDesc = "" +
 	"\x05patch\x18\x03 \x01(\rR\x05patch\"3\n" +
 	"\x12WebsiteScraperArgs\x12\x1d\n" +
 	"\n" +
-	"source_url\x18\x01 \x01(\tR\tsourceUrl\"Q\n" +
+	"source_url\x18\x01 \x01(\tR\tsourceUrl\"v\n" +
 	"\x16WebsiteScraperResponse\x12\x1d\n" +
 	"\n" +
 	"source_url\x18\x01 \x01(\tR\tsourceUrl\x12\x18\n" +
-	"\acontent\x18\x02 \x01(\tR\acontent\"\xb9\x02\n" +
+	"\acontent\x18\x02 \x01(\tR\acontent\x12#\n" +
+	"\rrendered_html\x18\x03 \x01(\tR\frenderedHtml\"\xb9\x02\n" +
 	"\rResponseError\x12V\n" +
 	"\x15unknown_command_error\x18\x01 \x01(\v2 .nodescraper.UnknownCommandErrorH\x00R\x13unknownCommandError\x12f\n" +
 	"\x1bmissing_command_field_error\x18\x02 \x01(\v2%.nodescraper.MissingCommandFieldErrorH\x00R\x18missingCommandFieldError\x12V\n" +

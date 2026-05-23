@@ -32,7 +32,7 @@ func fleetScrapeError(resp *messages.Response) error {
 	return fmt.Errorf("fleet scrape error: %v", resp.GetError())
 }
 
-func scrapeHTMLViaFleet(ctx context.Context, pageURL string) (html string, final *url.URL, err error) {
+func scrapeViaFleet(ctx context.Context, pageURL string) (markdown string, renderedHTML string, final *url.URL, err error) {
 	cmdID := fleetCommandID.Add(1)
 	cmd := &messages.Command{
 		Id: cmdID,
