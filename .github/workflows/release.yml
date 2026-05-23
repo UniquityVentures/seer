@@ -24,6 +24,7 @@ jobs:
           sudo apt upgrade -y
           sudo apt install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
           sudo apt install -y protobuf-compiler
+          rustup target add aarch64-unknown-linux-gnu
           go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
           go build -ldflags "-s -w" -o "main"
           cd nodescraper-rs && cargo build --release --target=aarch64-unknown-linux-gnu
