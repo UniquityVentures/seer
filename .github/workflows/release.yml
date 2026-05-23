@@ -34,5 +34,5 @@ jobs:
         with:
           files: |
             main
-            nodescraper-rs/target/release/nodescraper-rs
+            nodescraper-rs/target/aarch64-unknown-linux-gnu/release/nodescraper-rs
           generate_release_notes: true
