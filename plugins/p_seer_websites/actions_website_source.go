@@ -85,7 +85,7 @@ func FetchWebsiteSource(ctx context.Context, db *gorm.DB, src *WebsiteSource) er
 		}
 		seen[key] = struct{}{}
 
-		htmlStr, finalU, err := scrapeHTMLViaFleet(ctx, key)
+		md, htmlStr, finalU, err := scrapeViaFleet(ctx, key)
 		if err != nil {
 			slog.Warn("p_seer_websites: crawl fetch", "error", err, "url", key)
 			continue
@@ -102,7 +102,7 @@ func FetchWebsiteSource(ctx context.Context, db *gorm.DB, src *WebsiteSource) er
 			crawlOrigin = cloneURL(&o)
 		}
 
-		if err := websiteCreateIfAbsentFromRenderedHTML(ctx, db, htmlStr, finalU); err != nil {
+		if err := websiteCreateIfAbsent(ctx, db, md, finalU); err != nil {
 			slog.Warn("p_seer_websites: crawl persist website", "error", err, "url", key)
 		}
 
@@ -216,17 +216,16 @@ func dedupeURLPointers(in []*url.URL) []*url.URL {
 	return out
 }
 
-func websiteCreateIfAbsentFromRenderedHTML(ctx context.Context, db *gorm.DB, fullHTML string, pageURL *url.URL) error {
+func websiteCreateIfAbsent(ctx context.Context, db *gorm.DB, md string, pageURL *url.URL) error {
 	if db == nil {
-		return errors.New("p_seer_websites: websiteCreateIfAbsentFromRenderedHTML: db is nil")
+		return errors.New("p_seer_websites: websiteCreateIfAbsent: db is nil")
 	}
-	md := markdownFromRenderedHTML(fullHTML, pageURL)
 	if strings.TrimSpace(md) == "" {
 		return nil
 	}
 	canon := pageURL
 	if canon == nil {
-		return errors.New("p_seer_websites: websiteCreateIfAbsentFromRenderedHTML: page URL is nil")
+		return errors.New("p_seer_websites: websiteCreateIfAbsent: page URL is nil")
 	}
 	keyU, err := fetchableWebsiteURL(ctx, canon.String())
 	if err != nil {
