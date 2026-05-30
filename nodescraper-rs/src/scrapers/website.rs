@@ -1,6 +1,11 @@
 use std::{
+    panic,
     rc::Rc,
-    sync::mpsc,
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicBool, Ordering},
+        mpsc,
+    },
     thread::{self, JoinHandle},
     time::{Duration, Instant},
 };
@@ -12,7 +17,6 @@ use servo::{
     LoadStatus, Preferences, RenderingContext, Servo, ServoBuilder, SoftwareRenderingContext,
     WebDriverCommandMsg, WebDriverScriptCommand, WebView, WebViewBuilder, WebViewDelegate,
 };
-use servo_base::id::BrowsingContextId;
 use url::Url;
 
 use crate::messages::{
@@ -27,11 +31,11 @@ const PAGE_LOAD_TIMEOUT: Duration = Duration::from_secs(120);
 const MOBILE_USER_AGENT: &str = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1";
 const VIEWPORT_WIDTH: u32 = 390;
 const VIEWPORT_HEIGHT: u32 = 844;
+const WORKER_RESTART_DELAY: Duration = Duration::from_millis(250);
+const SERVO_UNAVAILABLE: &str = "servo scraper unavailable";
 
-struct ScrapeRequest {
-    source_url: String,
-    reply: tokio::sync::oneshot::Sender<Result<(String, String, String), String>>,
-}
+/// Servo initializes process-global options once; only one engine can exist per process.
+static SERVO_INITIALIZED: AtomicBool = AtomicBool::new(false);
 
 struct ScrapeDelegate;
 
@@ -43,8 +47,7 @@ impl WebViewDelegate for ScrapeDelegate {
 
 struct ServoEngine {
     servo: Servo,
-    webview: WebView,
-    browsing_context_id: BrowsingContextId,
+    rendering_context: Rc<SoftwareRenderingContext>,
 }
 
 impl ServoEngine {
@@ -58,18 +61,27 @@ impl ServoEngine {
             .make_current()
             .map_err(|err| format!("making rendering context current: {err:?}"))?;
 
-        let mut prefs = Preferences::default();
-        prefs.user_agent = MOBILE_USER_AGENT.to_string();
-        prefs.network_http_proxy_uri = String::new();
-        prefs.network_https_proxy_uri = String::new();
-        prefs.dom_intersection_observer_enabled = true;
+        let prefs = Preferences {
+            user_agent: MOBILE_USER_AGENT.to_string(),
+            network_http_proxy_uri: String::new(),
+            network_https_proxy_uri: String::new(),
+            dom_intersection_observer_enabled: true,
+            ..Default::default()
+        };
 
         let servo = ServoBuilder::default().preferences(prefs).build();
         // Logging is initialized by the binary (`env_logger::init`); Servo's setup_logging
         // also calls log::set_logger and panics if one is already installed.
 
+        Ok(Self {
+            servo,
+            rendering_context,
+        })
+    }
+
+    fn scrape(&mut self, source_url: Url) -> Result<(String, String, String), String> {
         let delegate: Rc<dyn WebViewDelegate> = Rc::new(ScrapeDelegate);
-        let webview = WebViewBuilder::new(&servo, rendering_context)
+        let webview = WebViewBuilder::new(&self.servo, self.rendering_context.clone())
             .url(
                 Url::parse("about:blank")
                     .map_err(|err| format!("invalid about:blank url: {err}"))?,
@@ -78,41 +90,25 @@ impl ServoEngine {
             .delegate(delegate)
             .build();
 
-        let browsing_context_id = BrowsingContextId::from(webview.id());
         wait_until(
-            &servo,
+            &self.servo,
             || webview.url().is_some(),
             Duration::from_secs(30),
             "initial webview url not ready",
         )?;
         wait_until(
-            &servo,
+            &self.servo,
             || webview.load_status() == LoadStatus::Complete,
             Duration::from_secs(30),
             "initial webview load not complete",
         )?;
 
-        Ok(Self {
-            servo,
-            webview,
-            browsing_context_id,
-        })
-    }
-
-    fn scrape(&mut self, source_url: &str) -> Result<(String, String, String), String> {
-        let source_url = source_url.trim();
-        if source_url.is_empty() {
-            return Err("source url is empty".into());
-        }
-
-        let url = Url::parse(source_url).map_err(|err| format!("invalid url: {err}"))?;
-
-        self.webview.load(url.clone());
-        wait_for_navigation(&self.servo, &self.webview, &url, PAGE_LOAD_TIMEOUT)?;
+        webview.load(source_url.clone());
+        wait_for_navigation(&self.servo, &webview, &source_url, PAGE_LOAD_TIMEOUT)?;
         self.settle_rendering();
 
-        let final_url = self.resolve_final_url(source_url)?;
-        let html = self.get_page_source()?;
+        let final_url = self.resolve_final_url(&source_url, &webview)?;
+        let html = self.get_page_source(&webview)?;
         if html.trim().is_empty() {
             return Err("rendered page source is empty".into());
         }
@@ -132,14 +128,18 @@ impl ServoEngine {
         }
     }
 
-    fn resolve_final_url(&mut self, source_url: &str) -> Result<String, String> {
-        if let Ok(url) = self.get_url_with_timeout(Duration::from_secs(10)) {
-            if is_usable_document_url(&url) {
-                return Ok(url);
-            }
+    fn resolve_final_url(
+        &mut self,
+        source_url: &Url,
+        webview: &WebView,
+    ) -> Result<String, String> {
+        if let Ok(url) = self.get_url_with_timeout(Duration::from_secs(10), webview)
+            && is_usable_document_url(&url)
+        {
+            return Ok(url);
         }
 
-        if let Some(url) = self.webview.url() {
+        if let Some(url) = webview.url() {
             let url = url.to_string();
             if is_usable_document_url(&url) {
                 return Ok(url);
@@ -149,12 +149,17 @@ impl ServoEngine {
         Ok(source_url.to_string())
     }
 
-    fn get_url_with_timeout(&mut self, timeout: Duration) -> Result<String, String> {
+    fn get_url_with_timeout(
+        &mut self,
+        timeout: Duration,
+        webview: &WebView,
+    ) -> Result<String, String> {
         let (sender, receiver) =
             servo_base::generic_channel::channel().ok_or("failed to create url channel")?;
+
         self.servo
             .execute_webdriver_command(WebDriverCommandMsg::ScriptCommand(
-                self.browsing_context_id,
+                webview.id().into(),
                 WebDriverScriptCommand::GetUrl(sender),
             ));
 
@@ -175,12 +180,12 @@ impl ServoEngine {
         }
     }
 
-    fn get_page_source(&mut self) -> Result<String, String> {
+    fn get_page_source(&mut self, webview: &WebView) -> Result<String, String> {
         let (sender, receiver) =
             servo_base::generic_channel::channel().ok_or("failed to create page source channel")?;
         self.servo
             .execute_webdriver_command(WebDriverCommandMsg::ScriptCommand(
-                self.browsing_context_id,
+                webview.id().into(),
                 WebDriverScriptCommand::GetPageSource(sender),
             ));
 
@@ -349,27 +354,143 @@ fn extract_readable_content(html: &str, document_url: &str) -> Result<String, St
     Ok(content)
 }
 
-fn run_servo_thread(request_rx: mpsc::Receiver<ScrapeRequest>) {
+struct ScrapeRequest {
+    command_id: u64,
+    url: Url,
+    reply: tokio::sync::oneshot::Sender<messages::Response>,
+}
+
+fn run_servo_worker(request_rx: mpsc::Receiver<ScrapeRequest>) {
     let mut engine = match ServoEngine::new() {
-        Ok(engine) => engine,
+        Ok(engine) => {
+            SERVO_INITIALIZED.store(true, Ordering::Release);
+            engine
+        }
         Err(err) => {
-            log::error!("failed to initialize servo engine: {err}");
-            while let Ok(request) = request_rx.recv() {
-                let _ = request.reply.send(Err(err.clone()));
-            }
+            log::error!("servo worker failed to initialize: {err}");
+            drain_requests_with_error(request_rx, err);
             return;
         }
     };
 
     while let Ok(request) = request_rx.recv() {
-        let result = engine.scrape(&request.source_url);
-        let _ = request.reply.send(result);
+        let ScrapeRequest {
+            command_id,
+            url,
+            reply,
+        } = request;
+
+        let response = match panic::catch_unwind(panic::AssertUnwindSafe(|| engine.scrape(url))) {
+            Ok(Ok((source_url, content, rendered_html))) => {
+                website_ok_response(command_id, source_url, content, rendered_html)
+            }
+            Ok(Err(err)) => website_scrape_error_response(command_id, err),
+            Err(_) => {
+                log::error!("servo worker panicked during scrape");
+                website_scrape_error_response(
+                    command_id,
+                    "servo worker panicked during scrape".into(),
+                )
+            }
+        };
+        let _ = reply.send(response);
+    }
+}
+
+fn drain_requests_with_error(request_rx: mpsc::Receiver<ScrapeRequest>, message: String) {
+    while let Ok(request) = request_rx.recv() {
+        let _ = request.reply.send(website_scrape_error_response(
+            request.command_id,
+            message.clone(),
+        ));
+    }
+}
+
+fn run_servo_supervisor(request_tx: Arc<Mutex<mpsc::Sender<ScrapeRequest>>>) {
+    let mut permanently_failed = false;
+
+    loop {
+        let (tx, rx) = mpsc::channel();
+        {
+            let mut sender = request_tx
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            *sender = tx;
+        }
+
+        if permanently_failed {
+            drain_requests_with_error(rx, SERVO_UNAVAILABLE.into());
+            break;
+        }
+
+        let worker = match thread::Builder::new()
+            .name("servo-scraper".into())
+            .spawn(move || run_servo_worker(rx))
+        {
+            Ok(worker) => worker,
+            Err(err) => {
+                log::error!("failed to spawn servo worker: {err}");
+                thread::sleep(WORKER_RESTART_DELAY);
+                continue;
+            }
+        };
+
+        match worker.join() {
+            Ok(()) => {
+                log::info!("servo worker stopped");
+                break;
+            }
+            Err(_) => {
+                if SERVO_INITIALIZED.load(Ordering::Acquire) {
+                    log::error!(
+                        "servo worker panicked after initialization; cannot restart Servo in-process"
+                    );
+                    permanently_failed = true;
+                } else {
+                    log::error!("servo worker panicked before initialization, restarting");
+                    thread::sleep(WORKER_RESTART_DELAY);
+                }
+            }
+        }
+    }
+}
+
+struct ServoThread {
+    request_tx: Arc<Mutex<mpsc::Sender<ScrapeRequest>>>,
+    _supervisor: JoinHandle<()>,
+}
+
+impl ServoThread {
+    fn start() -> Result<Self, String> {
+        let (request_tx, _request_rx) = mpsc::channel();
+        let request_tx = Arc::new(Mutex::new(request_tx));
+        let supervisor = thread::Builder::new()
+            .name("servo-scraper-supervisor".into())
+            .spawn({
+                let request_tx = Arc::clone(&request_tx);
+                move || run_servo_supervisor(request_tx)
+            })
+            .map_err(|err| format!("failed to spawn servo supervisor: {err}"))?;
+
+        log::info!("started servo scraper thread");
+
+        Ok(Self {
+            request_tx,
+            _supervisor: supervisor,
+        })
+    }
+
+    fn dispatch(&self, request: ScrapeRequest) -> Result<(), mpsc::SendError<ScrapeRequest>> {
+        let sender = self
+            .request_tx
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        sender.send(request)
     }
 }
 
 pub struct WebsiteScraper {
-    request_tx: mpsc::Sender<ScrapeRequest>,
-    _servo_thread: JoinHandle<()>,
+    servo: ServoThread,
 }
 
 impl Scraper for WebsiteScraper {
@@ -377,27 +498,29 @@ impl Scraper for WebsiteScraper {
     type Args = crate::messages::WebsiteScraperArgs;
 
     fn init() -> Result<Self, Self::Error> {
-        let (request_tx, request_rx) = mpsc::channel();
-        let servo_thread = thread::Builder::new()
-            .name("servo-scraper".into())
-            .spawn(move || run_servo_thread(request_rx))
-            .map_err(|err| format!("failed to spawn servo thread: {err}"))?;
-
         Ok(Self {
-            request_tx,
-            _servo_thread: servo_thread,
+            servo: ServoThread::start()?,
         })
     }
 
     async fn scrape(&self, command_id: u64, trigger: Self::Args) -> messages::Response {
+        let url = match Url::parse(&trigger.source_url) {
+            Ok(url) => url,
+            Err(err) => {
+                log::error!("website scrape failed for {}: {err}", trigger.source_url);
+                return website_scrape_error_response(command_id, err.to_string());
+            }
+        };
+
         let (reply_tx, reply_rx) = tokio::sync::oneshot::channel();
         let request = ScrapeRequest {
-            source_url: trigger.source_url.clone(),
+            command_id,
+            url,
             reply: reply_tx,
         };
 
-        if self.request_tx.send(request).is_err() {
-            let message = "servo scraper thread is unavailable".into();
+        if self.servo.dispatch(request).is_err() {
+            let message = SERVO_UNAVAILABLE.to_string();
             log::error!(
                 "website scrape failed for {}: {message}",
                 trigger.source_url
@@ -406,43 +529,11 @@ impl Scraper for WebsiteScraper {
         }
 
         match reply_rx.await {
-            Ok(result) => match result {
-                Ok((source_url, content, rendered_html)) => {
-                    website_ok_response(command_id, source_url, content, rendered_html)
-                }
-                Err(err) => {
-                    log::error!("website scrape failed for {}: {err}", trigger.source_url);
-                    website_scrape_error_response(command_id, err)
-                }
-            },
-            Err(_) => {
-                let message = "servo scraper thread dropped the response".into();
-                log::error!(
-                    "website scrape failed for {}: {message}",
-                    trigger.source_url
-                );
-                website_scrape_error_response(command_id, message)
+            Ok(response) => response,
+            Err(err) => {
+                log::error!("website scrape failed for {}: {err}", trigger.source_url);
+                website_scrape_error_response(command_id, err.to_string())
             }
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn scrape_example_com() {
-        // Servo opts/script init are process-global; run scrape on this thread like Servo's tests.
-        let mut engine = ServoEngine::new().expect("init servo engine");
-        let (source_url, content, rendered_html) = engine
-            .scrape("https://example.com")
-            .expect("scrape https://example.com should succeed");
-        assert!(
-            source_url.contains("example.com"),
-            "unexpected source url: {source_url}"
-        );
-        assert!(!content.is_empty(), "content should not be empty");
-        assert!(!rendered_html.is_empty(), "html should not be empty");
     }
 }

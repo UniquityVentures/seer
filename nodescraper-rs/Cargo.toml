@@ -25,7 +25,4 @@ servo-allocator = { version = "0.1", default-features = false }
 prost-build = "0.14.3"
 
 [profile.release]
-strip = true  # Automatically strip symbols and debuginfo
-lto = true
-codegen-units = 1
-debug = 1
+lto = "thin"
