@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/lamu"
 	"gorm.io/gorm"
 )
 
@@ -27,16 +27,16 @@ type WebsiteSourceUpdateParams struct {
 	WebsiteRunnerID *uint
 }
 
-func pageURLFromValidatedSeed(ctx context.Context, raw string) (lago.PageURL, error) {
+func pageURLFromValidatedSeed(ctx context.Context, raw string) (lamu.PageURL, error) {
 	raw = strings.TrimSpace(raw)
 	if raw == "" {
-		return lago.PageURL{}, errors.New("seed url is required")
+		return lamu.PageURL{}, errors.New("seed url is required")
 	}
 	u, err := fetchableWebsiteURL(ctx, raw)
 	if err != nil {
-		return lago.PageURL{}, err
+		return lamu.PageURL{}, err
 	}
-	var pp lago.PageURL
+	var pp lamu.PageURL
 	pp.SetFromURL(u)
 	return pp, nil
 }

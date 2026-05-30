@@ -3,7 +3,7 @@ package p_seer_deepsearch
 import (
 	"context"
 
-	"github.com/UniquityVentures/lago/syncmap"
+	"github.com/UniquityVentures/lamu/syncmap"
 	"gorm.io/gorm"
 )
 

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/UniquityVentures/lago/plugins/p_google_genai"
+	"github.com/UniquityVentures/lamu/plugins/p_google_genai"
 	"github.com/UniquityVentures/seer/plugins/p_seer_intel"
 	"google.golang.org/genai"
 	"gorm.io/gorm"

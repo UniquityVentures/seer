@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/views"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/views"
 )
 
 const connectedNodesKey = "seer_node_fleet.connectedNodes"

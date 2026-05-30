@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"strings"
 	"time"
+	"github.com/UniquityVentures/lamu/fields"
 
-	"github.com/UniquityVentures/lago/lago"
 	"gorm.io/gorm"
 )
 
@@ -22,7 +22,7 @@ type IntelEvent struct {
 	// Datetime is the inferred event time from the summary (not ingest time).
 	Datetime time.Time `gorm:"not null"`
 	// Location is WGS84 as PostgreSQL point: X = longitude, Y = latitude.
-	Location lago.PGPoint `gorm:"type:point"`
+	Location fields.PGPoint `gorm:"type:point"`
 }
 
 func (e *IntelEvent) BeforeCreate(tx *gorm.DB) error {
@@ -43,6 +43,6 @@ func (e *IntelEvent) BeforeCreate(tx *gorm.DB) error {
 		slog.Warn("p_seer_intel: geocode intel event", "error", err, "address", addr)
 		return nil
 	}
-	e.Location = lago.NewPGPoint(lng, lat)
+	e.Location = fields.NewPGPoint(lng, lat)
 	return nil
 }

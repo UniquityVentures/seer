@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/UniquityVentures/lago/registry"
+	"github.com/UniquityVentures/lamu/registry"
 	"gorm.io/gorm"
 )
 

@@ -5,9 +5,9 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -21,7 +21,7 @@ func (e *openskyMapMenuLink) GetRoles() []string { return e.Roles }
 func (e *openskyMapMenuLink) Build(ctx context.Context) Node {
 	// Use states/map/ so a root-relative path does not join under .../states/ (which
 	// would hit StateDetail with id=map). Also /seer-opensky/map/ remains valid via MapRoute.
-	href, err := lago.RoutePath("seer_opensky.MapRouteUnderStates", nil)(ctx)
+	href, err := lamu.RoutePath("seer_opensky.MapRouteUnderStates", nil)(ctx)
 	if err != nil || href == "" {
 		slog.Error("p_seer_opensky: MapRouteUnderStates path failed", "error", err)
 		href = AppUrl + "states/map/"
@@ -38,13 +38,13 @@ func (e *openskyMapMenuLink) Build(ctx context.Context) Node {
 }
 
 func registerOpenSkyMapPages() {
-	lago.RegistryPage.Register("seer_opensky.MapPage", &components.ShellScaffold{
+	registerPluginPage("seer_opensky.MapPage", &components.ShellScaffold{
 		Page: components.Page{Key: "seer_opensky.MapPageShell"},
 		ExtraHead: []components.PageInterface{
 			&components.MapDisplayLibreHead{Page: components.Page{Key: "seer_opensky.MapLibreHead"}},
 		},
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_opensky.AppMenu"},
+			lamu.DynamicPage{Name: "seer_opensky.AppMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.ContainerColumn{
@@ -59,7 +59,7 @@ func registerOpenSkyMapPages() {
 					},
 					&components.MapDisplay{
 						Page:    components.Page{Key: "seer_opensky.MapDisplay"},
-						DataURL: lago.RoutePath("seer_opensky.MapDataRoute", nil),
+						DataURL: lamu.RoutePath("seer_opensky.MapDataRoute", nil),
 					},
 				},
 			},

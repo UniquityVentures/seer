@@ -3,10 +3,10 @@ package p_seer_deepsearch
 import (
 	"time"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/registry"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/registry"
 )
 
 func deepSearchHistoryColumns() []components.TableColumn {
@@ -38,9 +38,9 @@ func deepSearchHistoryColumns() []components.TableColumn {
 }
 
 func registerDeepSearchHistoryPages() {
-	lago.RegistryPage.Register("seer_deepsearch.HistoryTable", &components.ShellScaffold{
+	registerPluginPage("seer_deepsearch.HistoryTable", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_deepsearch.DeepSearchMenu"},
+			lamu.DynamicPage{Name: "seer_deepsearch.DeepSearchMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[DeepSearch]{
@@ -51,12 +51,12 @@ func registerDeepSearchHistoryPages() {
 				Actions: []components.PageInterface{
 					&components.TableButtonCreate{
 						Page:  components.Page{Key: "seer_deepsearch.HistoryNewSearchBtn"},
-						Link:  lago.RoutePath("seer_deepsearch.DefaultRoute", nil),
+						Link:  lamu.RoutePath("seer_deepsearch.DefaultRoute", nil),
 						Label: "New search",
 					},
 				},
 				RowAttr: getters.RowAttrNavigate(
-					lago.RoutePath("seer_deepsearch.DetailRoute", map[string]getters.Getter[any]{
+					lamu.RoutePath("seer_deepsearch.DetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					}),
 				),

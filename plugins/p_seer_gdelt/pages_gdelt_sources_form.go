@@ -3,9 +3,9 @@ package p_seer_gdelt
 import (
 	"time"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 )
 
 var gdeltSourceCreateFormDefaults = GDELTSource{
@@ -23,7 +23,7 @@ func gdeltSourceFormFields() components.PageInterface {
 					&components.InputForeignKey[GDELTWorker]{
 						Label:       "Worker",
 						Name:        "GDELTWorkerID",
-						Url:         lago.RoutePath("seer_gdelt.GDELTWorkerSelectRoute", nil),
+						Url:         lamu.RoutePath("seer_gdelt.GDELTWorkerSelectRoute", nil),
 						Display:     getters.Key[string]("$in.Name"),
 						Placeholder: "Optional worker…",
 						Required:    false,
@@ -195,14 +195,14 @@ func gdeltSourceFormFields() components.PageInterface {
 func registerGDELTSourceCreatePages() {
 	createFormName := getters.Static("seer_gdelt.GDELTSourceCreateForm")
 
-	lago.RegistryPage.Register("seer_gdelt.GDELTSourceCreateForm", &components.ShellScaffold{
+	registerPluginPage("seer_gdelt.GDELTSourceCreateForm", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_gdelt.Menu"},
+			lamu.DynamicPage{Name: "seer_gdelt.Menu"},
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
 				Name:      createFormName,
-				ActionURL: lago.RoutePath("seer_gdelt.GDELTSourceCreateRoute", nil),
+				ActionURL: lamu.RoutePath("seer_gdelt.GDELTSourceCreateRoute", nil),
 				Children: []components.PageInterface{
 					&components.FormComponent[GDELTSource]{
 						Getter:   getters.Static(gdeltSourceCreateFormDefaults),
@@ -227,14 +227,14 @@ func registerGDELTSourceUpdatePages() {
 	updateFormName := getters.Static("seer_gdelt.GDELTSourceUpdateForm")
 	deleteFormName := getters.Static("seer_gdelt.GDELTSourceDeleteForm")
 
-	lago.RegistryPage.Register("seer_gdelt.GDELTSourceUpdateForm", &components.ShellScaffold{
+	registerPluginPage("seer_gdelt.GDELTSourceUpdateForm", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_gdelt.GDELTSourceDetailMenu"},
+			lamu.DynamicPage{Name: "seer_gdelt.GDELTSourceDetailMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
 				Name: updateFormName,
-				ActionURL: lago.RoutePath("seer_gdelt.GDELTSourceUpdateRoute", map[string]getters.Getter[any]{
+				ActionURL: lamu.RoutePath("seer_gdelt.GDELTSourceUpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("gdeltSource.ID")),
 				}),
 				Children: []components.PageInterface{
@@ -259,8 +259,8 @@ func registerGDELTSourceUpdatePages() {
 												Label:       "Delete",
 												Icon:        "trash",
 												Name:        deleteFormName,
-												Url:         lago.RoutePath("seer_gdelt.GDELTSourceDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("gdeltSource.ID"))}),
-												FormPostURL: lago.RoutePath("seer_gdelt.GDELTSourceDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("gdeltSource.ID"))}),
+												Url:         lamu.RoutePath("seer_gdelt.GDELTSourceDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("gdeltSource.ID"))}),
+												FormPostURL: lamu.RoutePath("seer_gdelt.GDELTSourceDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("gdeltSource.ID"))}),
 												ModalUID:    "seer-gdelt-source-delete-modal",
 												Classes:     "btn-error",
 											},
@@ -275,7 +275,7 @@ func registerGDELTSourceUpdatePages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_gdelt.GDELTSourceDeleteForm", &components.Modal{
+	registerPluginPage("seer_gdelt.GDELTSourceDeleteForm", &components.Modal{
 		UID: "seer-gdelt-source-delete-modal",
 		Children: []components.PageInterface{
 			&components.DeleteConfirmation{

@@ -4,10 +4,10 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/plugins/p_users"
-	"github.com/UniquityVentures/lago/views"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/plugins/p_users"
+	"github.com/UniquityVentures/lamu/views"
 	"github.com/UniquityVentures/seer/plugins/p_seer_workerregistry"
 	"gorm.io/gorm"
 )
@@ -41,24 +41,24 @@ func init() {
 		{Key: "seer_gdelt.source.order", Value: views.QueryPatcherOrderBy[GDELTSource]{Order: "id DESC"}},
 	}
 
-	lago.RegistryView.Register("seer_gdelt.GDELTSourceListView",
-		lago.GetPageView("seer_gdelt.GDELTSourceTable").
+	registerPluginView("seer_gdelt.GDELTSourceListView",
+		lamu.GetPageView("seer_gdelt.GDELTSourceTable").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_gdelt.gdelt_source.list", views.LayerList[GDELTSource]{
 				Key:           getters.Static("gdeltSources"),
 				QueryPatchers: gdeltSourcePatchers,
 			}))
 
-	lago.RegistryView.Register("seer_gdelt.GDELTSourceUnsetSelectView",
-		lago.GetPageView("seer_gdelt.GDELTSourceUnsetSelectionTable").
+	registerPluginView("seer_gdelt.GDELTSourceUnsetSelectView",
+		lamu.GetPageView("seer_gdelt.GDELTSourceUnsetSelectionTable").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_gdelt.gdelt_source.unset_select_list", views.LayerList[GDELTSource]{
 				Key:           getters.Static("gdeltSources"),
 				QueryPatchers: gdeltSourceUnsetPatchers,
 			}))
 
-	lago.RegistryView.Register("seer_gdelt.GDELTSourceDetailView",
-		lago.GetPageView("seer_gdelt.GDELTSourceDetail").
+	registerPluginView("seer_gdelt.GDELTSourceDetailView",
+		lamu.GetPageView("seer_gdelt.GDELTSourceDetail").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_gdelt.gdelt_source.detail", views.LayerDetail[GDELTSource]{
 				Key:           getters.Static("gdeltSource"),
@@ -66,11 +66,11 @@ func init() {
 				QueryPatchers: gdeltSourceDetailPatchers,
 			}))
 
-	lago.RegistryView.Register("seer_gdelt.GDELTSourceCreateView",
-		lago.GetPageView("seer_gdelt.GDELTSourceCreateForm").
+	registerPluginView("seer_gdelt.GDELTSourceCreateView",
+		lamu.GetPageView("seer_gdelt.GDELTSourceCreateForm").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_gdelt.gdelt_source.create", views.LayerCreate[GDELTSource]{
-				SuccessURL: lago.RoutePath("seer_gdelt.GDELTSourceDetailRoute", map[string]getters.Getter[any]{
+				SuccessURL: lamu.RoutePath("seer_gdelt.GDELTSourceDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),
 				}),
 				FormPatchers: views.FormPatchers{
@@ -78,8 +78,8 @@ func init() {
 				},
 			}))
 
-	lago.RegistryView.Register("seer_gdelt.GDELTSourceUpdateView",
-		lago.GetPageView("seer_gdelt.GDELTSourceUpdateForm").
+	registerPluginView("seer_gdelt.GDELTSourceUpdateView",
+		lamu.GetPageView("seer_gdelt.GDELTSourceUpdateForm").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_gdelt.gdelt_source.detail_for_update", views.LayerDetail[GDELTSource]{
 				Key:           getters.Static("gdeltSource"),
@@ -88,7 +88,7 @@ func init() {
 			}).
 			WithLayer("seer_gdelt.gdelt_source.update", views.LayerUpdate[GDELTSource]{
 				Key: getters.Static("gdeltSource"),
-				SuccessURL: lago.RoutePath("seer_gdelt.GDELTSourceDetailRoute", map[string]getters.Getter[any]{
+				SuccessURL: lamu.RoutePath("seer_gdelt.GDELTSourceDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("gdeltSource.ID")),
 				}),
 				FormPatchers: views.FormPatchers{
@@ -96,8 +96,8 @@ func init() {
 				},
 			}))
 
-	lago.RegistryView.Register("seer_gdelt.GDELTSourceDeleteView",
-		lago.GetPageView("seer_gdelt.GDELTSourceDeleteForm").
+	registerPluginView("seer_gdelt.GDELTSourceDeleteView",
+		lamu.GetPageView("seer_gdelt.GDELTSourceDeleteForm").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_gdelt.gdelt_source.delete_detail", views.LayerDetail[GDELTSource]{
 				Key:           getters.Static("gdeltSource"),
@@ -106,31 +106,31 @@ func init() {
 			}).
 			WithLayer("seer_gdelt.gdelt_source.delete", views.LayerDelete[GDELTSource]{
 				Key:        getters.Static("gdeltSource"),
-				SuccessURL: lago.RoutePath("seer_gdelt.DefaultRoute", nil),
+				SuccessURL: lamu.RoutePath("seer_gdelt.DefaultRoute", nil),
 			}))
 
 	gdeltWorkerPatchers := views.QueryPatchers[GDELTWorker]{
 		{Key: "seer_gdelt.worker.order", Value: views.QueryPatcherOrderBy[GDELTWorker]{Order: "id DESC"}},
 	}
 
-	lago.RegistryView.Register("seer_gdelt.GDELTWorkerListView",
-		lago.GetPageView("seer_gdelt.GDELTWorkerTable").
+	registerPluginView("seer_gdelt.GDELTWorkerListView",
+		lamu.GetPageView("seer_gdelt.GDELTWorkerTable").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_gdelt.gdelt_worker.list", views.LayerList[GDELTWorker]{
 				Key:           getters.Static("gdeltWorkers"),
 				QueryPatchers: gdeltWorkerPatchers,
 			}))
 
-	lago.RegistryView.Register("seer_gdelt.GDELTWorkerSelectView",
-		lago.GetPageView("seer_gdelt.GDELTWorkerSelectionTable").
+	registerPluginView("seer_gdelt.GDELTWorkerSelectView",
+		lamu.GetPageView("seer_gdelt.GDELTWorkerSelectionTable").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_gdelt.gdelt_worker.select_list", views.LayerList[GDELTWorker]{
 				Key:           getters.Static("gdeltWorkers"),
 				QueryPatchers: gdeltWorkerPatchers,
 			}))
 
-	lago.RegistryView.Register("seer_gdelt.GDELTWorkerDetailView",
-		lago.GetPageView("seer_gdelt.GDELTWorkerDetail").
+	registerPluginView("seer_gdelt.GDELTWorkerDetailView",
+		lamu.GetPageView("seer_gdelt.GDELTWorkerDetail").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_gdelt.gdelt_worker.detail", views.LayerDetail[GDELTWorker]{
 				Key:          getters.Static("gdeltWorker"),
@@ -142,11 +142,11 @@ func init() {
 				Kind:             p_seer_workerregistry.WorkerRunnerKindGDELT,
 			}))
 
-	lago.RegistryView.Register("seer_gdelt.GDELTWorkerCreateView",
-		lago.GetPageView("seer_gdelt.GDELTWorkerCreateForm").
+	registerPluginView("seer_gdelt.GDELTWorkerCreateView",
+		lamu.GetPageView("seer_gdelt.GDELTWorkerCreateForm").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_gdelt.gdelt_worker.create", views.LayerCreate[GDELTWorker]{
-				SuccessURL: lago.RoutePath("seer_gdelt.GDELTWorkerDetailRoute", map[string]getters.Getter[any]{
+				SuccessURL: lamu.RoutePath("seer_gdelt.GDELTWorkerDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),
 				}),
 				FormPatchers: views.FormPatchers{
@@ -154,8 +154,8 @@ func init() {
 				},
 			}))
 
-	lago.RegistryView.Register("seer_gdelt.GDELTWorkerUpdateView",
-		lago.GetPageView("seer_gdelt.GDELTWorkerUpdateForm").
+	registerPluginView("seer_gdelt.GDELTWorkerUpdateView",
+		lamu.GetPageView("seer_gdelt.GDELTWorkerUpdateForm").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_gdelt.gdelt_worker.detail_for_update", views.LayerDetail[GDELTWorker]{
 				Key:          getters.Static("gdeltWorker"),
@@ -164,7 +164,7 @@ func init() {
 			WithLayer("seer_gdelt.gdelt_worker.enrich_source_ids", gdeltWorkerEnrichSourceIDsLayer{}).
 			WithLayer("seer_gdelt.gdelt_worker.update", views.LayerUpdate[GDELTWorker]{
 				Key: getters.Static("gdeltWorker"),
-				SuccessURL: lago.RoutePath("seer_gdelt.GDELTWorkerDetailRoute", map[string]getters.Getter[any]{
+				SuccessURL: lamu.RoutePath("seer_gdelt.GDELTWorkerDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("gdeltWorker.ID")),
 				}),
 				FormPatchers: views.FormPatchers{
@@ -172,8 +172,8 @@ func init() {
 				},
 			}))
 
-	lago.RegistryView.Register("seer_gdelt.GDELTWorkerDeleteView",
-		lago.GetPageView("seer_gdelt.GDELTWorkerDeleteForm").
+	registerPluginView("seer_gdelt.GDELTWorkerDeleteView",
+		lamu.GetPageView("seer_gdelt.GDELTWorkerDeleteForm").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_gdelt.gdelt_worker.delete_detail", views.LayerDetail[GDELTWorker]{
 				Key:          getters.Static("gdeltWorker"),
@@ -181,23 +181,23 @@ func init() {
 			}).
 			WithLayer("seer_gdelt.gdelt_worker.delete", views.LayerDelete[GDELTWorker]{
 				Key:        getters.Static("gdeltWorker"),
-				SuccessURL: lago.RoutePath("seer_gdelt.GDELTWorkerListRoute", nil),
+				SuccessURL: lamu.RoutePath("seer_gdelt.GDELTWorkerListRoute", nil),
 			}))
 
 	registerGDELTWorkerPoolViews()
 
-	lago.RegistryView.Register("seer_gdelt.MapView",
-		lago.GetPageView("seer_gdelt.MapPage").
+	registerPluginView("seer_gdelt.MapView",
+		lamu.GetPageView("seer_gdelt.MapPage").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_gdelt.map", gdeltMapLayer{}))
 
-	lago.RegistryView.Register("seer_gdelt.SearchView",
-		lago.GetPageView("seer_gdelt.SearchPage").
+	registerPluginView("seer_gdelt.SearchView",
+		lamu.GetPageView("seer_gdelt.SearchPage").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_gdelt.search", gdeltSearchLayer{}))
 
-	lago.RegistryView.Register("seer_gdelt.EventListView",
-		lago.GetPageView("seer_gdelt.EventTable").
+	registerPluginView("seer_gdelt.EventListView",
+		lamu.GetPageView("seer_gdelt.EventTable").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_gdelt.event.list", views.LayerList[Event]{
 				Key:           getters.Static("gdeltEvents"),
@@ -205,25 +205,25 @@ func init() {
 				QueryPatchers: gdeltEventListPatchers,
 			}))
 
-	lago.RegistryView.Register("seer_gdelt.EventCreateView",
-		lago.GetPageView("seer_gdelt.EventCreateForm").
+	registerPluginView("seer_gdelt.EventCreateView",
+		lamu.GetPageView("seer_gdelt.EventCreateForm").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_gdelt.event.create", views.LayerCreate[Event]{
-				SuccessURL: lago.RoutePath("seer_gdelt.EventDetailRoute", map[string]getters.Getter[any]{
+				SuccessURL: lamu.RoutePath("seer_gdelt.EventDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),
 				}),
 			}))
 
-	lago.RegistryView.Register("seer_gdelt.EventDetailView",
-		lago.GetPageView("seer_gdelt.EventDetail").
+	registerPluginView("seer_gdelt.EventDetailView",
+		lamu.GetPageView("seer_gdelt.EventDetail").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_gdelt.event.detail", views.LayerDetail[Event]{
 				Key:          getters.Static("gdeltEvent"),
 				PathParamKey: getters.Static("id"),
 			}))
 
-	lago.RegistryView.Register("seer_gdelt.EventUpdateView",
-		lago.GetPageView("seer_gdelt.EventUpdateForm").
+	registerPluginView("seer_gdelt.EventUpdateView",
+		lamu.GetPageView("seer_gdelt.EventUpdateForm").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_gdelt.event.detail_for_update", views.LayerDetail[Event]{
 				Key:          getters.Static("gdeltEvent"),
@@ -231,13 +231,13 @@ func init() {
 			}).
 			WithLayer("seer_gdelt.event.update", views.LayerUpdate[Event]{
 				Key: getters.Static("gdeltEvent"),
-				SuccessURL: lago.RoutePath("seer_gdelt.EventDetailRoute", map[string]getters.Getter[any]{
+				SuccessURL: lamu.RoutePath("seer_gdelt.EventDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("gdeltEvent.ID")),
 				}),
 			}))
 
-	lago.RegistryView.Register("seer_gdelt.EventDeleteView",
-		lago.GetPageView("seer_gdelt.EventDeleteForm").
+	registerPluginView("seer_gdelt.EventDeleteView",
+		lamu.GetPageView("seer_gdelt.EventDeleteForm").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_gdelt.event.detail_for_delete", views.LayerDetail[Event]{
 				Key:          getters.Static("gdeltEvent"),
@@ -245,7 +245,7 @@ func init() {
 			}).
 			WithLayer("seer_gdelt.event.delete", views.LayerDelete[Event]{
 				Key:        getters.Static("gdeltEvent"),
-				SuccessURL: lago.RoutePath("seer_gdelt.EventListRoute", nil),
+				SuccessURL: lamu.RoutePath("seer_gdelt.EventListRoute", nil),
 			}))
 }
 

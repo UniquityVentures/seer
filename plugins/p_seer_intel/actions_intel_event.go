@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/UniquityVentures/lago/plugins/p_google_genai"
+	"github.com/UniquityVentures/lamu/plugins/p_google_genai"
 	"google.golang.org/genai"
 	"gorm.io/gorm"
 )

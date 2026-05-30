@@ -1,10 +1,10 @@
 package p_seer_intel
 
 import (
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/plugins/p_users"
-	"github.com/UniquityVentures/lago/views"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/plugins/p_users"
+	"github.com/UniquityVentures/lamu/views"
 )
 
 func init() {
@@ -12,16 +12,16 @@ func init() {
 		{Key: "seer_intel.intel.order", Value: views.QueryPatcherOrderBy[Intel]{Order: "datetime DESC, id DESC"}},
 	}
 
-	lago.RegistryView.Register("seer_intel.ListView",
-		lago.GetPageView("seer_intel.IntelTable").
+	registerPluginView("seer_intel.ListView",
+		lamu.GetPageView("seer_intel.IntelTable").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_intel.intel.list", views.LayerList[Intel]{
 				Key:           getters.Static("intels"),
 				QueryPatchers: intelListPatchers,
 			}))
 
-	lago.RegistryView.Register("seer_intel.DetailView",
-		lago.GetPageView("seer_intel.IntelDetail").
+	registerPluginView("seer_intel.DetailView",
+		lamu.GetPageView("seer_intel.IntelDetail").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_intel.intel.detail", views.LayerDetail[Intel]{
 				Key:          getters.Static("intel"),

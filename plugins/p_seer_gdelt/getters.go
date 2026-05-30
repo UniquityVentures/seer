@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/registry"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/registry"
 )
 
 // gdeltSourceSortPairGetter maps persisted [GDELTSource.Sort] string to a select pair for forms.

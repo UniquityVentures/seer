@@ -1,8 +1,7 @@
 package p_seer_deepsearch
 
 import (
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/registry"
+	"github.com/UniquityVentures/lamu/registry"
 	"gorm.io/gorm"
 )
 
@@ -96,9 +95,10 @@ func (DeepSearch) TableName() string {
 }
 
 func init() {
-	lago.OnDBInit("p_seer_deepsearch.models", func(db *gorm.DB) *gorm.DB {
-		lago.RegisterModel[DeepSearch](db)
-		lago.RegisterModel[DeepSearchLog](db)
+	registerPluginDBInitHook("p_seer_deepsearch.models", func(db *gorm.DB) *gorm.DB {
+		if err := db.AutoMigrate(&DeepSearch{}, &DeepSearchLog{}); err != nil {
+			panic(err)
+		}
 		return db
 	})
 }

@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/registry"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/registry"
 	"github.com/UniquityVentures/seer/plugins/p_seer_intel"
 )
 
@@ -26,7 +26,7 @@ func deepSearchDetailContentColumn() components.PageInterface {
 							&components.ButtonPost{
 								Page:    components.Page{Key: "seer_deepsearch.DeepSearchDetailStopBtn"},
 								Label:   "Stop pipeline",
-								URL:     lago.RoutePath("seer_deepsearch.StopRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("deepSearch.ID"))}),
+								URL:     lamu.RoutePath("seer_deepsearch.StopRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("deepSearch.ID"))}),
 								Icon:    "stop",
 								Classes: "btn-outline btn-warning btn-sm",
 							},
@@ -39,7 +39,7 @@ func deepSearchDetailContentColumn() components.PageInterface {
 							&components.ButtonPost{
 								Page:    components.Page{Key: "seer_deepsearch.DeepSearchDetailRestartBtn"},
 								Label:   "Restart pipeline",
-								URL:     lago.RoutePath("seer_deepsearch.RestartRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("deepSearch.ID"))}),
+								URL:     lamu.RoutePath("seer_deepsearch.RestartRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("deepSearch.ID"))}),
 								Icon:    "arrow-path",
 								Classes: "btn-outline btn-primary btn-sm",
 							},
@@ -131,9 +131,9 @@ func deepSearchDetailContentColumn() components.PageInterface {
 
 func registerDeepSearchDetailPages() {
 	inner := deepSearchDetailContentColumn()
-	lago.RegistryPage.Register("seer_deepsearch.DeepSearchDetail", &components.ShellScaffold{
+	registerPluginPage("seer_deepsearch.DeepSearchDetail", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_deepsearch.DeepSearchMenu"},
+			lamu.DynamicPage{Name: "seer_deepsearch.DeepSearchMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.Detail[DeepSearch]{

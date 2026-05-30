@@ -3,8 +3,8 @@ package p_seer_gdelt
 import (
 	"strings"
 	"time"
+	"github.com/UniquityVentures/lamu/fields"
 
-	"github.com/UniquityVentures/lago/lago"
 	"gorm.io/gorm"
 )
 
@@ -179,7 +179,7 @@ type Event struct {
 	ActionGeoCountryCode string       `gorm:"size:8"`
 	ActionGeoADM1Code    string       `gorm:"size:32"`
 	ActionGeoADM2Code    string       `gorm:"size:32"`
-	ActionGeoPoint       lago.PGPoint `gorm:"type:point"`
+	ActionGeoPoint       fields.PGPoint `gorm:"type:point"`
 	ActionGeoLat         float64      `gorm:"-"` // form roundtrip; persisted via [ActionGeoPoint]
 	ActionGeoLong        float64      `gorm:"-"`
 	ActionGeoFeatureID   string       `gorm:"size:64"`
@@ -204,9 +204,9 @@ func (e *Event) AfterFind(_ *gorm.DB) error {
 
 func (e *Event) BeforeSave(_ *gorm.DB) error {
 	if gdeltValidLatLng(e.ActionGeoLat, e.ActionGeoLong) {
-		e.ActionGeoPoint = lago.NewPGPoint(e.ActionGeoLong, e.ActionGeoLat)
+		e.ActionGeoPoint = fields.NewPGPoint(e.ActionGeoLong, e.ActionGeoLat)
 	} else {
-		e.ActionGeoPoint = lago.PGPoint{}
+		e.ActionGeoPoint = fields.PGPoint{}
 	}
 	return nil
 }
@@ -222,13 +222,13 @@ func (e *Event) syncActionGeoFloatsFromPoint() {
 }
 
 func init() {
-	lago.OnDBInit("p_seer_gdelt.models", func(db *gorm.DB) *gorm.DB {
-		lago.RegisterModel[GDELTWorker](db)
-		lago.RegisterModel[GDELTSource](db)
-		lago.RegisterModel[Event](db)
+	registerPluginDBInitHook("p_seer_gdelt.models", func(db *gorm.DB) *gorm.DB {
+		if err := db.AutoMigrate(&GDELTWorker{}, &GDELTSource{}, &Event{}); err != nil {
+			panic(err)
+		}
 		return db
 	})
-	lago.OnDBInit("p_seer_gdelt.worker_pools_autostart", func(db *gorm.DB) *gorm.DB {
+	registerPluginDBInitHook("p_seer_gdelt.worker_pools_autostart", func(db *gorm.DB) *gorm.DB {
 		StartAllGDELTWorkerPools(db)
 		return db
 	})

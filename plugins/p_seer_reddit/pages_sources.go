@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 	"gorm.io/datatypes"
 )
 
@@ -174,9 +174,9 @@ func redditSourceDetailWorkerLabel(ctx context.Context) (string, error) {
 }
 
 func registerRedditSourcePages() {
-	lago.RegistryPage.Register("seer_reddit.RedditSourceTable", &components.ShellScaffold{
+	registerPluginPage("seer_reddit.RedditSourceTable", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_reddit.RedditMenu"},
+			lamu.DynamicPage{Name: "seer_reddit.RedditMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[RedditSource]{
@@ -185,10 +185,10 @@ func registerRedditSourcePages() {
 				Classes: "w-full",
 				Data:    getters.Key[components.ObjectList[RedditSource]]("redditSources"),
 				Actions: []components.PageInterface{
-					&components.TableButtonCreate{Link: lago.RoutePath("seer_reddit.RedditSourceCreateRoute", nil)},
+					&components.TableButtonCreate{Link: lamu.RoutePath("seer_reddit.RedditSourceCreateRoute", nil)},
 				},
 				RowAttr: getters.RowAttrNavigate(
-					lago.RoutePath("seer_reddit.RedditSourceDetailRoute", map[string]getters.Getter[any]{
+					lamu.RoutePath("seer_reddit.RedditSourceDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					}),
 				),
@@ -222,7 +222,7 @@ func registerRedditSourcePages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_reddit.RedditSourceUnsetSelectionTable", &components.Modal{
+	registerPluginPage("seer_reddit.RedditSourceUnsetSelectionTable", &components.Modal{
 		UID: "reddit-source-unset-selection-modal",
 		Children: []components.PageInterface{
 			&components.DataTable[RedditSource]{
@@ -256,9 +256,9 @@ func registerRedditSourcePages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_reddit.RedditSourceDetail", &components.ShellScaffold{
+	registerPluginPage("seer_reddit.RedditSourceDetail", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_reddit.RedditSourceDetailMenu"},
+			lamu.DynamicPage{Name: "seer_reddit.RedditSourceDetailMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.Detail[RedditSource]{

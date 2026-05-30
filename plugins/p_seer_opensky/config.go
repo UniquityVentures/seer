@@ -3,11 +3,9 @@ package p_seer_opensky
 import (
 	"log/slog"
 	"time"
-
-	"github.com/UniquityVentures/lago/lago"
 )
 
-// OpenSkyConfig is loaded from [lago.LagoConfig.Plugins] under key "p_seer_opensky".
+// OpenSkyConfig is loaded from [lamu.LamuConfig.Plugins] under key "p_seer_opensky".
 //
 // Example:
 //
@@ -77,5 +75,5 @@ func (c *OpenSkyConfig) PostConfig() {
 var Config = &OpenSkyConfig{}
 
 func init() {
-	lago.RegistryConfig.Register("p_seer_opensky", Config)
+	registerPluginConfig("p_seer_opensky", Config)
 }

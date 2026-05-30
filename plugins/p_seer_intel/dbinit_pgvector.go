@@ -3,12 +3,11 @@ package p_seer_intel
 import (
 	"log/slog"
 
-	"github.com/UniquityVentures/lago/lago"
 	"gorm.io/gorm"
 )
 
 func init() {
-	lago.OnDBInit("p_seer_intel.pgvector_extension", func(db *gorm.DB) *gorm.DB {
+	registerPluginDBInitHook("p_seer_intel.pgvector_extension", func(db *gorm.DB) *gorm.DB {
 		if db.Name() != "postgres" {
 			return db
 		}

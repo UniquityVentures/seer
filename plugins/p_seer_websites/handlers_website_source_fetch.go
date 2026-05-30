@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/views"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/views"
 	"gorm.io/gorm"
 )
 
@@ -47,7 +47,7 @@ func (websiteSourceFetchActionLayer) Next(_ views.View, _ http.Handler) http.Han
 		}
 		if WebsiteSourceCrawlIsRunning(id) {
 			slog.Info("p_seer_websites: fetch source skipped (crawl already running)", "website_source_id", id)
-			backURL, rerr := lago.RoutePath("seer_websites.WebsiteSourceDetailRoute", map[string]getters.Getter[any]{
+			backURL, rerr := lamu.RoutePath("seer_websites.WebsiteSourceDetailRoute", map[string]getters.Getter[any]{
 				"id": getters.Any(getters.Static(raw)),
 			})(r.Context())
 			if rerr != nil || backURL == "" {
@@ -68,7 +68,7 @@ func (websiteSourceFetchActionLayer) Next(_ views.View, _ http.Handler) http.Han
 			}
 		}()
 
-		backURL, err := lago.RoutePath("seer_websites.WebsiteSourceDetailRoute", map[string]getters.Getter[any]{
+		backURL, err := lamu.RoutePath("seer_websites.WebsiteSourceDetailRoute", map[string]getters.Getter[any]{
 			"id": getters.Any(getters.Static(raw)),
 		})(r.Context())
 		if err != nil || backURL == "" {

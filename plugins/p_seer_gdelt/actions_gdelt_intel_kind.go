@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 )
 
 const gdeltIntelKind = "gdelt"
@@ -73,7 +73,7 @@ func (e *Event) IntelDetail(ctx context.Context) (string, error) {
 	if e == nil || e.ID == 0 {
 		return "", fmt.Errorf("p_seer_gdelt: IntelDetail: missing event")
 	}
-	return lago.RoutePath("seer_gdelt.EventDetailRoute", map[string]getters.Getter[any]{
+	return lamu.RoutePath("seer_gdelt.EventDetailRoute", map[string]getters.Getter[any]{
 		"id": getters.Any(getters.Static(strconv.FormatUint(uint64(e.ID), 10))),
 	})(ctx)
 }

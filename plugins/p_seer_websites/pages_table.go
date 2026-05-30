@@ -3,9 +3,9 @@ package p_seer_websites
 import (
 	"time"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 )
 
 func websiteListColumns() []components.TableColumn {
@@ -29,9 +29,9 @@ func websiteListColumns() []components.TableColumn {
 }
 
 func registerWebsiteTablePages() {
-	lago.RegistryPage.Register("seer_websites.WebsiteTable", &components.ShellScaffold{
+	registerPluginPage("seer_websites.WebsiteTable", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_websites.WebsiteMenu"},
+			lamu.DynamicPage{Name: "seer_websites.WebsiteMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[Website]{
@@ -43,14 +43,14 @@ func registerWebsiteTablePages() {
 					&components.ButtonPost{
 						Page:    components.Page{Key: "seer_websites.WebsiteTableAddAllIntelBtn"},
 						Label:   "Add all to Intel",
-						URL:     lago.RoutePath("seer_websites.WebsiteAddAllIntelRoute", nil),
+						URL:     lamu.RoutePath("seer_websites.WebsiteAddAllIntelRoute", nil),
 						Icon:    "document-plus",
 						Classes: "btn-outline btn-primary btn-sm shrink-0",
 					},
-					&components.TableButtonCreate{Link: lago.RoutePath("seer_websites.WebsiteAddRoute", nil)},
+					&components.TableButtonCreate{Link: lamu.RoutePath("seer_websites.WebsiteAddRoute", nil)},
 				},
 				RowAttr: getters.RowAttrNavigate(
-					lago.RoutePath("seer_websites.WebsiteDetailRoute", map[string]getters.Getter[any]{
+					lamu.RoutePath("seer_websites.WebsiteDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					}),
 				),

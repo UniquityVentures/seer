@@ -1,13 +1,13 @@
 package p_seer_node_fleet
 
 import (
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/plugins/p_users"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/plugins/p_users"
 )
 
 func init() {
-	lago.RegistryView.Register("seer_node_fleet.HomeView",
-		lago.GetPageView("seer_node_fleet.ConnectedNodesTable").
+	registerPluginView("seer_node_fleet.HomeView",
+		lamu.GetPageView("seer_node_fleet.ConnectedNodesTable").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_node_fleet.connected_nodes", connectedNodesLayer{}))
 }

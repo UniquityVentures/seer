@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/UniquityVentures/lago/views"
+	"github.com/UniquityVentures/lamu/views"
 )
 
 // openSkyFormPatcher normalizes form values for [OpenSkyState] optional pointers and [SensorsText].

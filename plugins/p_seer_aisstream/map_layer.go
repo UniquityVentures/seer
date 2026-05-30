@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/views"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/views"
 	"gorm.io/gorm"
 )
 

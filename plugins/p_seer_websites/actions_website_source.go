@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/lamu"
 	"golang.org/x/net/html"
 	"gorm.io/gorm"
 )
@@ -243,7 +243,7 @@ func websiteCreateIfAbsent(ctx context.Context, db *gorm.DB, md string, pageURL 
 		return nil
 	}
 
-	var pp lago.PageURL
+	var pp lamu.PageURL
 	pp.SetFromURL(keyU)
 	w := Website{URL: pp, Markdown: md}
 	if err := db.WithContext(ctx).Create(&w).Error; err != nil {

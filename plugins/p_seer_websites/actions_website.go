@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 	"gorm.io/gorm"
 )
 
@@ -75,7 +75,7 @@ func (w *Website) IntelDetail(ctx context.Context) (string, error) {
 	if w == nil || w.ID == 0 {
 		return "", fmt.Errorf("p_seer_websites: IntelDetail: missing website")
 	}
-	return lago.RoutePath("seer_websites.WebsiteDetailRoute", map[string]getters.Getter[any]{
+	return lamu.RoutePath("seer_websites.WebsiteDetailRoute", map[string]getters.Getter[any]{
 		"id": getters.Any(getters.Static(strconv.FormatUint(uint64(w.ID), 10))),
 	})(ctx)
 }

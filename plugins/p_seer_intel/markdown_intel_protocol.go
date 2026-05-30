@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 	"github.com/gomarkdown/markdown/ast"
 	mdhtml "github.com/gomarkdown/markdown/html"
 )
@@ -45,7 +45,7 @@ func IntelProtocolMarkdownHooks(ctx context.Context, md string) ([]mdhtml.Render
 	hrefByID := make(map[uint]string, len(rows))
 	for _, r := range rows {
 		titleByID[r.ID] = r.Title
-		path, err := lago.RoutePath("seer_intel.DetailRoute", map[string]getters.Getter[any]{
+		path, err := lamu.RoutePath("seer_intel.DetailRoute", map[string]getters.Getter[any]{
 			"id": getters.Any(getters.Static(strconv.FormatUint(uint64(r.ID), 10))),
 		})(ctx)
 		if err != nil {

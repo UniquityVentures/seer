@@ -1,9 +1,9 @@
 package p_seer_reddit
 
 import (
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 )
 
 func redditPostListTableColumns() []components.TableColumn {
@@ -30,9 +30,9 @@ func redditPostListTableColumns() []components.TableColumn {
 }
 
 func registerRedditPostPages() {
-	lago.RegistryPage.Register("seer_reddit.RedditPostTable", &components.ShellScaffold{
+	registerPluginPage("seer_reddit.RedditPostTable", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_reddit.RedditMenu"},
+			lamu.DynamicPage{Name: "seer_reddit.RedditMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.GetterPage{
@@ -42,9 +42,9 @@ func registerRedditPostPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_reddit.RedditPostTableBySource", &components.ShellScaffold{
+	registerPluginPage("seer_reddit.RedditPostTableBySource", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_reddit.RedditSourceDetailMenu"},
+			lamu.DynamicPage{Name: "seer_reddit.RedditSourceDetailMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.GetterPage{
@@ -54,9 +54,9 @@ func registerRedditPostPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_reddit.RedditPostDetail", &components.ShellScaffold{
+	registerPluginPage("seer_reddit.RedditPostDetail", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_reddit.RedditPostDetailMenu"},
+			lamu.DynamicPage{Name: "seer_reddit.RedditPostDetailMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.Detail[RedditPost]{
@@ -71,7 +71,7 @@ func registerRedditPostPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_reddit.RedditPostDeleteForm", &components.Modal{
+	registerPluginPage("seer_reddit.RedditPostDeleteForm", &components.Modal{
 		UID: "seer-reddit-post-delete-modal",
 		Children: []components.PageInterface{
 			&components.DeleteConfirmation{

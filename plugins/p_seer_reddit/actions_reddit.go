@@ -12,13 +12,15 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 	"gorm.io/gorm"
 )
 
-const defaultMaxFreshPosts = 25
-const maxConcurrentSubredditFetches = 8
+const (
+	defaultMaxFreshPosts          = 25
+	maxConcurrentSubredditFetches = 8
+)
 
 // redditFetchPostsActive is true while a source "Load" ([FetchNewRedditPosts]) runs in the background.
 var redditFetchPostsActive atomic.Bool
@@ -335,7 +337,7 @@ func (p *RedditPost) IntelDetail(ctx context.Context) (string, error) {
 	if p == nil || p.ID == 0 {
 		return "", fmt.Errorf("p_seer_reddit: IntelDetail: missing post")
 	}
-	return lago.RoutePath("seer_reddit.RedditPostDetailRoute", map[string]getters.Getter[any]{
+	return lamu.RoutePath("seer_reddit.RedditPostDetailRoute", map[string]getters.Getter[any]{
 		"id": getters.Any(getters.Static(strconv.FormatUint(uint64(p.ID), 10))),
 	})(ctx)
 }

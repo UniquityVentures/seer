@@ -6,14 +6,15 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/UniquityVentures/lago/lago"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
 func init() {
-	lago.OnDBInit("p_seer_opensky.bootstrap", func(db *gorm.DB) *gorm.DB {
-		lago.RegisterModel[OpenSkyState](db)
+	registerPluginDBInitHook("p_seer_opensky.bootstrap", func(db *gorm.DB) *gorm.DB {
+		if err := db.AutoMigrate(&OpenSkyState{}); err != nil {
+			panic(err)
+		}
 		startOpenSkyPollerIfConfigured(db)
 		return db
 	})

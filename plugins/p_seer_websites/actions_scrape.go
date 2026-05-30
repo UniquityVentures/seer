@@ -10,8 +10,8 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/views"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/views"
 	"github.com/UniquityVentures/seer/plugins/p_seer_node_fleet"
 	"github.com/UniquityVentures/seer/plugins/p_seer_node_fleet/messages"
 )
@@ -127,7 +127,7 @@ func (websiteScrapeFormPatcher) Patch(_ views.View, r *http.Request, formData ma
 		formErrors["_form"] = err
 		return formData, formErrors
 	}
-	var pp lago.PageURL
+	var pp lamu.PageURL
 	pp.SetFromURL(canon)
 	formData["URL"] = pp
 	formData["Markdown"] = md

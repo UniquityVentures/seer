@@ -3,7 +3,7 @@ package p_seer_websites
 import (
 	"time"
 
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/lamu"
 	"gorm.io/gorm"
 )
 
@@ -18,7 +18,7 @@ const (
 type Website struct {
 	gorm.Model
 
-	URL      lago.PageURL `gorm:"column:url;type:text;not null;default:''"`
+	URL      lamu.PageURL `gorm:"column:url;type:text;not null;default:''"`
 	Markdown string       `gorm:"type:text;not null;default:''"`
 }
 
@@ -48,7 +48,7 @@ type WebsiteSource struct {
 	WebsiteRunnerID *uint          `gorm:"index"`
 	WebsiteRunner   *WebsiteRunner `gorm:"foreignKey:WebsiteRunnerID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
 
-	URL   lago.PageURL `gorm:"column:url;type:text;not null;default:''"`
+	URL   lamu.PageURL `gorm:"column:url;type:text;not null;default:''"`
 	Depth uint         `gorm:"not null;default:0"`
 }
 
@@ -57,13 +57,13 @@ func (WebsiteSource) TableName() string {
 }
 
 func init() {
-	lago.OnDBInit("p_seer_websites.models", func(db *gorm.DB) *gorm.DB {
-		lago.RegisterModel[Website](db)
-		lago.RegisterModel[WebsiteRunner](db)
-		lago.RegisterModel[WebsiteSource](db)
+	registerPluginDBInitHook("p_seer_websites.models", func(db *gorm.DB) *gorm.DB {
+		if err := db.AutoMigrate(&Website{}, &WebsiteRunner{}, &WebsiteSource{}); err != nil {
+			panic(err)
+		}
 		return db
 	})
-	lago.OnDBInit("p_seer_websites.runner_pools_autostart", func(db *gorm.DB) *gorm.DB {
+	registerPluginDBInitHook("p_seer_websites.runner_pools_autostart", func(db *gorm.DB) *gorm.DB {
 		StartAllWebsiteRunnerWorkerPools(db)
 		return db
 	})

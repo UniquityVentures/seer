@@ -3,7 +3,6 @@ package p_seer_intel
 import (
 	"time"
 
-	"github.com/UniquityVentures/lago/lago"
 	"github.com/pgvector/pgvector-go"
 	"gorm.io/gorm"
 )
@@ -30,9 +29,10 @@ type Intel struct {
 }
 
 func init() {
-	lago.OnDBInit("p_seer_intel.models", func(db *gorm.DB) *gorm.DB {
-		lago.RegisterModel[Intel](db)
-		lago.RegisterModel[IntelEvent](db)
+	registerPluginDBInitHook("p_seer_intel.models", func(db *gorm.DB) *gorm.DB {
+		if err := db.AutoMigrate(&Intel{}, &IntelEvent{}); err != nil {
+			panic(err)
+		}
 		return db
 	})
 }

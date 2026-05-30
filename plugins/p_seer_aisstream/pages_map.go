@@ -5,9 +5,9 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -18,7 +18,7 @@ func (e *aisStreamMapMenuLink) GetKey() string     { return e.Key }
 func (e *aisStreamMapMenuLink) GetRoles() []string { return e.Roles }
 
 func (e *aisStreamMapMenuLink) Build(ctx context.Context) Node {
-	href, err := lago.RoutePath("seer_aisstream.MapRoute", nil)(ctx)
+	href, err := lamu.RoutePath("seer_aisstream.MapRoute", nil)(ctx)
 	if err != nil || href == "" {
 		slog.Error("p_seer_aisstream: MapRoute path failed", "error", err)
 		href = AppUrl + "map/"
@@ -35,13 +35,13 @@ func (e *aisStreamMapMenuLink) Build(ctx context.Context) Node {
 }
 
 func registerAISStreamMapPages() {
-	lago.RegistryPage.Register("seer_aisstream.MapPage", &components.ShellScaffold{
+	registerPluginPage("seer_aisstream.MapPage", &components.ShellScaffold{
 		Page: components.Page{Key: "seer_aisstream.MapPageShell"},
 		ExtraHead: []components.PageInterface{
 			&components.MapDisplayLibreHead{Page: components.Page{Key: "seer_aisstream.MapLibreHead"}},
 		},
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_aisstream.AppMenu"},
+			lamu.DynamicPage{Name: "seer_aisstream.AppMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.ContainerColumn{
@@ -56,7 +56,7 @@ func registerAISStreamMapPages() {
 					},
 					&components.MapDisplay{
 						Page:    components.Page{Key: "seer_aisstream.MapDisplay"},
-						DataURL: lago.RoutePath("seer_aisstream.MapDataRoute", nil),
+						DataURL: lamu.RoutePath("seer_aisstream.MapDataRoute", nil),
 					},
 				},
 			},

@@ -17,8 +17,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
 	"github.com/fxamacker/cbor/v2"
 )
 

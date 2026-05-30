@@ -1,28 +1,28 @@
 package p_seer_websites
 
 import (
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 )
 
 var websiteAddFormName = getters.Static("seer_websites.WebsiteAddForm")
 
 func registerWebsiteFormPages() {
-	lago.RegistryPage.Register("seer_websites.WebsiteAddForm", &components.ShellScaffold{
+	registerPluginPage("seer_websites.WebsiteAddForm", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_websites.WebsiteMenu"},
+			lamu.DynamicPage{Name: "seer_websites.WebsiteMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
 				Name:      websiteAddFormName,
-				ActionURL: lago.RoutePath("seer_websites.WebsiteAddRoute", nil),
+				ActionURL: lamu.RoutePath("seer_websites.WebsiteAddRoute", nil),
 				Children: []components.PageInterface{
 					&components.FormComponent[Website]{
 						Getter:   getters.Static(Website{}),
 						Attr:     getters.FormBubbling(websiteAddFormName),
 						Title:    "Add website",
-						Subtitle: "Enter a public http(s) URL. Headless Chromium loads the page; readable text is stored as markdown. Requires Chromium on the server (see LAGO_seer_websites_CHROME_BIN).",
+						Subtitle: "Enter a public http(s) URL.",
 						Classes:  "@container",
 						ChildrenInput: []components.PageInterface{
 							&components.InputText{

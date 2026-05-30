@@ -8,15 +8,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/plugins/p_google_genai"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/plugins/p_google_genai"
 	"github.com/UniquityVentures/seer/plugins/p_seer_intel"
 	"github.com/UniquityVentures/seer/plugins/p_seer_reddit"
 	"google.golang.org/genai"
 	"gorm.io/gorm"
 )
 
-const assistantSystemPrompt = `You are Seer Assistant inside the Lago app. You help operators manage Reddit ingestion, Seer Websites (crawl sources + workers), search Intel (vector summaries), and the public web (Google).
+const assistantSystemPrompt = `You are Seer Assistant inside the Lamu app. You help operators manage Reddit ingestion, Seer Websites (crawl sources + workers), search Intel (vector summaries), and the public web (Google).
 
 Use the declared tools when the user needs data or actions from those systems. Before reddit_add_source, call google_search when you need to discover or verify subreddit names or topics on the web.
 

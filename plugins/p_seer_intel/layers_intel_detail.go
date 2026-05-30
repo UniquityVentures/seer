@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/views"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/views"
 )
 
 // intelSourceDetailHrefKey is the request context key for the source app's detail URL

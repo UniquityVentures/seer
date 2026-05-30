@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// MapDisplayPointWire is one CBOR marker for [github.com/UniquityVentures/lago/components.MapDisplay]
+// MapDisplayPointWire is one CBOR marker for [github.com/UniquityVentures/lamu/components.MapDisplay]
 // (optional layer for merged dashboards).
 type MapDisplayPointWire struct {
 	Position  aisStreamMapDisplayPosition `json:"position" cbor:"position"`

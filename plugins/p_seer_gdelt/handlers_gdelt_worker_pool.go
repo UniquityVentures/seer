@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/plugins/p_users"
-	"github.com/UniquityVentures/lago/views"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/plugins/p_users"
+	"github.com/UniquityVentures/lamu/views"
 )
 
 type gdeltWorkerPoolPOSTOnlyLayer struct{}
@@ -43,7 +43,7 @@ func gdeltWorkerPoolStartHandler(_ *views.View) http.Handler {
 			return
 		}
 		ScheduleGDELTWorkerPoolStart(db, workerID)
-		detailURL, err := lago.RoutePath("seer_gdelt.GDELTWorkerDetailRoute", map[string]getters.Getter[any]{
+		detailURL, err := lamu.RoutePath("seer_gdelt.GDELTWorkerDetailRoute", map[string]getters.Getter[any]{
 			"id": getters.Any(getters.Static(idStr)),
 		})(r.Context())
 		if err != nil || detailURL == "" {
@@ -68,7 +68,7 @@ func gdeltWorkerPoolStopHandler(_ *views.View) http.Handler {
 			return
 		}
 		StopGDELTWorkerPool(uint(id64))
-		detailURL, err := lago.RoutePath("seer_gdelt.GDELTWorkerDetailRoute", map[string]getters.Getter[any]{
+		detailURL, err := lamu.RoutePath("seer_gdelt.GDELTWorkerDetailRoute", map[string]getters.Getter[any]{
 			"id": getters.Any(getters.Static(idStr)),
 		})(r.Context())
 		if err != nil || detailURL == "" {
@@ -81,8 +81,8 @@ func gdeltWorkerPoolStopHandler(_ *views.View) http.Handler {
 }
 
 func registerGDELTWorkerPoolViews() {
-	lago.RegistryView.Register("seer_gdelt.GDELTWorkerPoolStartView",
-		lago.GetPageView("seer_gdelt.GDELTWorkerDetail").
+	registerPluginView("seer_gdelt.GDELTWorkerPoolStartView",
+		lamu.GetPageView("seer_gdelt.GDELTWorkerDetail").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_gdelt.gdelt_worker.worker_pool_start_post", gdeltWorkerPoolPOSTOnlyLayer{}).
 			WithLayer("seer_gdelt.gdelt_worker.worker_pool_start", views.MethodLayer{
@@ -90,8 +90,8 @@ func registerGDELTWorkerPoolViews() {
 				Handler: gdeltWorkerPoolStartHandler,
 			}))
 
-	lago.RegistryView.Register("seer_gdelt.GDELTWorkerPoolStopView",
-		lago.GetPageView("seer_gdelt.GDELTWorkerDetail").
+	registerPluginView("seer_gdelt.GDELTWorkerPoolStopView",
+		lamu.GetPageView("seer_gdelt.GDELTWorkerDetail").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_gdelt.gdelt_worker.worker_pool_stop_post", gdeltWorkerPoolPOSTOnlyLayer{}).
 			WithLayer("seer_gdelt.gdelt_worker.worker_pool_stop", views.MethodLayer{

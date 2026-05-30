@@ -7,9 +7,8 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/registry"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/registry"
 	"google.golang.org/genai"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
@@ -1112,24 +1111,10 @@ func init() {
 	RegisterFunctionResponsePartType[SeerAssistantSessionMessageFunctionResponseBlob]()
 	RegisterFunctionResponsePartType[SeerAssistantSessionMessageFunctionResponseFileData]()
 
-	lago.OnDBInit("p_seer_assistant.models", func(db *gorm.DB) *gorm.DB {
-		lago.RegisterModel[SeerAssistantSession](db)
-		lago.RegisterModel[SeerAssistantSessionMessage](db)
-		lago.RegisterModel[SeerAssistantSessionMessagePart](db)
-		lago.RegisterModel[VideoMetadata](db)
-		lago.RegisterModel[SeerAssistantSessionExecutableCode](db)
-		lago.RegisterModel[SeerAssistantSessionMessageInlineData](db)
-		lago.RegisterModel[SeerAssistantSessionMessageFunctionResponse](db)
-		lago.RegisterModel[SeerAssistantSessionMessageFunctionResponsePart](db)
-		lago.RegisterModel[SeerAssistantSessionMessageFunctionResponseBlob](db)
-		lago.RegisterModel[SeerAssistantSessionMessageFunctionResponseFileData](db)
-		lago.RegisterModel[SeerAssistantSessionMessageText](db)
-		lago.RegisterModel[SeerAssistantSessionMessageMediaResolution](db)
-		lago.RegisterModel[SeerAssistantSessionMessageCodeExecutionResult](db)
-		lago.RegisterModel[SeerAssistantSessionMessageToolCall](db)
-		lago.RegisterModel[SeerAssistantSessionMessageFileData](db)
-		lago.RegisterModel[SeerAssistantSessionMessageFunctionCall](db)
-		lago.RegisterModel[SeerAssistantSessionMessageToolResponse](db)
+	registerPluginDBInitHook("p_seer_assistant.models", func(db *gorm.DB) *gorm.DB {
+		if err := db.AutoMigrate(&SeerAssistantSession{}, &SeerAssistantSessionMessage{}, &SeerAssistantSessionMessagePart{}, &VideoMetadata{}, &SeerAssistantSessionExecutableCode{}, &SeerAssistantSessionMessageInlineData{}, &SeerAssistantSessionMessageFunctionResponse{}, &SeerAssistantSessionMessageFunctionResponsePart{}, &SeerAssistantSessionMessageFunctionResponseBlob{}, &SeerAssistantSessionMessageFunctionResponseFileData{}, &SeerAssistantSessionMessageText{}, &SeerAssistantSessionMessageMediaResolution{}, &SeerAssistantSessionMessageCodeExecutionResult{}, &SeerAssistantSessionMessageToolCall{}, &SeerAssistantSessionMessageFileData{}, &SeerAssistantSessionMessageFunctionCall{}, &SeerAssistantSessionMessageToolResponse{}); err != nil {
+			panic(err)
+		}
 		return db
 	})
 }

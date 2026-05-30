@@ -4,7 +4,7 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/UniquityVentures/lago/getters"
+	"github.com/UniquityVentures/lamu/getters"
 )
 
 func int64PtrForm(g getters.Getter[*int64]) getters.Getter[string] {

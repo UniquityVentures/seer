@@ -15,9 +15,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 	"github.com/UniquityVentures/seer/plugins/p_seer_aisstream"
 	"github.com/UniquityVentures/seer/plugins/p_seer_gdelt"
 	"github.com/UniquityVentures/seer/plugins/p_seer_intel"
@@ -172,7 +172,7 @@ func sendDashboardMergedMapPoints(ctx context.Context, ws *dashboardMapWSConn, w
 	if err != nil {
 		slog.Warn("p_seer_dashboard: opensky map points", "error", err)
 	} else {
-		osIcon, osIconErr := lago.RoutePath("seer_dashboard.MapMarkerOpenSkyRoute", nil)(ctx)
+		osIcon, osIconErr := lamu.RoutePath("seer_dashboard.MapMarkerOpenSkyRoute", nil)(ctx)
 		for i := range osPts {
 			if osIconErr == nil && osIcon != "" {
 				osPts[i].Icon = osIcon
@@ -191,7 +191,7 @@ func sendDashboardMergedMapPoints(ctx context.Context, ws *dashboardMapWSConn, w
 	if err != nil {
 		slog.Warn("p_seer_dashboard: aisstream map points", "error", err)
 	} else {
-		aiIcon, aiIconErr := lago.RoutePath("seer_dashboard.MapMarkerAISStreamRoute", nil)(ctx)
+		aiIcon, aiIconErr := lamu.RoutePath("seer_dashboard.MapMarkerAISStreamRoute", nil)(ctx)
 		for i := range aiPts {
 			if aiIconErr == nil && aiIcon != "" {
 				aiPts[i].Icon = aiIcon

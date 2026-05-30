@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/views"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/views"
 )
 
 // gdeltWorkerEnrichSourceIDsLayer sets [GDELTWorker.GDELTSourceIDs] on GET for the worker edit form

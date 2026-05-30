@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/views"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/views"
 	"github.com/UniquityVentures/seer/plugins/p_seer_intel"
 )
 
@@ -42,7 +42,7 @@ func (websiteAddIntelLayer) Next(_ views.View, _ http.Handler) http.Handler {
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
-		detailURL, err := lago.RoutePath("seer_websites.WebsiteDetailRoute", map[string]getters.Getter[any]{
+		detailURL, err := lamu.RoutePath("seer_websites.WebsiteDetailRoute", map[string]getters.Getter[any]{
 			"id": getters.Any(getters.Static(strconv.FormatUint(uint64(site.ID), 10))),
 		})(r.Context())
 		if err != nil || detailURL == "" {
@@ -89,7 +89,7 @@ func (websiteAddAllIntelLayer) Next(_ views.View, _ http.Handler) http.Handler {
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
-		listURL, err := lago.RoutePath("seer_websites.WebsiteListRoute", nil)(r.Context())
+		listURL, err := lamu.RoutePath("seer_websites.WebsiteListRoute", nil)(r.Context())
 		if err != nil || listURL == "" {
 			slog.Error("p_seer_websites: add all intel redirect URL", "error", err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)

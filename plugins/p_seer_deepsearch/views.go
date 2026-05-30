@@ -3,10 +3,10 @@ package p_seer_deepsearch
 import (
 	"net/http"
 
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/plugins/p_users"
-	"github.com/UniquityVentures/lago/views"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/plugins/p_users"
+	"github.com/UniquityVentures/lamu/views"
 	"gorm.io/gorm"
 )
 
@@ -26,26 +26,26 @@ func init() {
 		}},
 	}
 
-	lago.RegistryView.Register("seer_deepsearch.HomeView",
-		lago.GetPageView("seer_deepsearch.DeepSearchHome").
+	registerPluginView("seer_deepsearch.HomeView",
+		lamu.GetPageView("seer_deepsearch.DeepSearchHome").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}))
 
-	lago.RegistryView.Register("seer_deepsearch.HistoryView",
-		lago.GetPageView("seer_deepsearch.HistoryTable").
+	registerPluginView("seer_deepsearch.HistoryView",
+		lamu.GetPageView("seer_deepsearch.HistoryTable").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_deepsearch.deepsearch.list", views.LayerList[DeepSearch]{
 				Key:           getters.Static("deepSearches"),
 				QueryPatchers: deepSearchListPatchers,
 			}))
 
-	lago.RegistryView.Register("seer_deepsearch.StartView",
-		lago.GetPageView("seer_deepsearch.StartBlank").
+	registerPluginView("seer_deepsearch.StartView",
+		lamu.GetPageView("seer_deepsearch.StartBlank").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_deepsearch.start_method", deepSearchStartRejectGetLayer{}).
 			WithLayer("seer_deepsearch.start_post", deepSearchStartPostLayer{}))
 
-	lago.RegistryView.Register("seer_deepsearch.DetailView",
-		lago.GetPageView("seer_deepsearch.DeepSearchDetail").
+	registerPluginView("seer_deepsearch.DetailView",
+		lamu.GetPageView("seer_deepsearch.DeepSearchDetail").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_deepsearch.deepsearch.detail", views.LayerDetail[DeepSearch]{
 				Key:           getters.Static("deepSearch"),
@@ -53,14 +53,14 @@ func init() {
 				QueryPatchers: deepSearchDetailPatchers,
 			}))
 
-	lago.RegistryView.Register("seer_deepsearch.StopView",
-		lago.GetPageView("seer_deepsearch.StartBlank").
+	registerPluginView("seer_deepsearch.StopView",
+		lamu.GetPageView("seer_deepsearch.StartBlank").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_deepsearch.stop_method", deepSearchStartRejectGetLayer{}).
 			WithLayer("seer_deepsearch.stop_post", deepSearchStopPostLayer{}))
 
-	lago.RegistryView.Register("seer_deepsearch.RestartView",
-		lago.GetPageView("seer_deepsearch.StartBlank").
+	registerPluginView("seer_deepsearch.RestartView",
+		lamu.GetPageView("seer_deepsearch.StartBlank").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_deepsearch.restart_method", deepSearchStartRejectGetLayer{}).
 			WithLayer("seer_deepsearch.restart_post", deepSearchRestartPostLayer{}))

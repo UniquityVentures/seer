@@ -7,18 +7,18 @@ import (
 	"log/slog"
 	"net/url"
 
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/lamu"
 	"gorm.io/gorm"
 )
 
 const websiteScrapeURLQueueCap = 512
 
 // WebsiteScrapeURLQueue carries [*url.URL] jobs for [runWebsiteScrapeURLQueueWorker].
-// Send only non-nil URLs; nil is ignored. The worker starts after DB init ([lago.OnDBInit]).
+// Send only non-nil URLs; nil is ignored. The worker starts after DB init ([lamu.OnDBInit]).
 var WebsiteScrapeURLQueue = make(chan *url.URL, websiteScrapeURLQueueCap)
 
 func init() {
-	lago.OnDBInit("p_seer_websites.scrape_url_worker", func(db *gorm.DB) *gorm.DB {
+	registerPluginDBInitHook("p_seer_websites.scrape_url_worker", func(db *gorm.DB) *gorm.DB {
 		ctx := context.Background()
 		go runWebsiteScrapeURLQueueWorker(ctx, db)
 		return db
@@ -68,7 +68,7 @@ func WebsiteScrapeIfAbsent(ctx context.Context, db *gorm.DB, u *url.URL) error {
 		return err
 	}
 
-	var pp lago.PageURL
+	var pp lamu.PageURL
 	pp.SetFromURL(outCanon)
 	w := Website{URL: pp, Markdown: md}
 	if err := db.WithContext(ctx).Create(&w).Error; err != nil {

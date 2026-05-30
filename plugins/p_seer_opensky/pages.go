@@ -4,10 +4,11 @@ import (
 	"context"
 	"strconv"
 	"time"
+	"github.com/UniquityVentures/lamu/fields"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 )
 
 func init() {
@@ -18,16 +19,16 @@ func init() {
 }
 
 func registerOpenSkyMenuPages() {
-	lago.RegistryPage.Register("seer_opensky.AppMenu", &components.SidebarMenu{
+	registerPluginPage("seer_opensky.AppMenu", &components.SidebarMenu{
 		Title: getters.Static("OpenSky"),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to All Apps"),
-			Url:   lago.RoutePath("dashboard.AppsPage", nil),
+			Url:   lamu.RoutePath("dashboard.AppsPage", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("States"),
-				Url:   lago.RoutePath("seer_opensky.DefaultRoute", nil),
+				Url:   lamu.RoutePath("seer_opensky.DefaultRoute", nil),
 			},
 			&openskyMapMenuLink{Page: components.Page{Key: "seer_opensky.AppMenuMapLink"}},
 		},
@@ -35,9 +36,9 @@ func registerOpenSkyMenuPages() {
 }
 
 func registerStateTableAndDetail() {
-	lago.RegistryPage.Register("seer_opensky.StateTablePage", &components.ShellScaffold{
+	registerPluginPage("seer_opensky.StateTablePage", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_opensky.AppMenu"},
+			lamu.DynamicPage{Name: "seer_opensky.AppMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[OpenSkyState]{
@@ -46,10 +47,10 @@ func registerStateTableAndDetail() {
 				Classes: "w-full",
 				Data:    getters.Key[components.ObjectList[OpenSkyState]]("openskyStates"),
 				Actions: []components.PageInterface{
-					&components.TableButtonCreate{Link: lago.RoutePath("seer_opensky.StateCreateRoute", nil)},
+					&components.TableButtonCreate{Link: lamu.RoutePath("seer_opensky.StateCreateRoute", nil)},
 				},
 				RowAttr: getters.RowAttrNavigate(
-					lago.RoutePath("seer_opensky.StateDetailRoute", map[string]getters.Getter[any]{
+					lamu.RoutePath("seer_opensky.StateDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					}),
 				),
@@ -73,41 +74,41 @@ func registerStateTableAndDetail() {
 						&components.FieldText{Getter: boolPtrString(getters.Key[*bool]("$row.OnGround"))},
 					}},
 					{Label: "Lon", Name: "Lon", Children: []components.PageInterface{
-						&components.FieldText{Getter: pointAxisString(getters.Key[lago.PGPoint]("$row.Position"), true)},
+						&components.FieldText{Getter: pointAxisString(getters.Key[fields.PGPoint]("$row.Position"), true)},
 					}},
 					{Label: "Lat", Name: "Lat", Children: []components.PageInterface{
-						&components.FieldText{Getter: pointAxisString(getters.Key[lago.PGPoint]("$row.Position"), false)},
+						&components.FieldText{Getter: pointAxisString(getters.Key[fields.PGPoint]("$row.Position"), false)},
 					}},
 				},
 			},
 		},
 	})
 
-	lago.RegistryPage.Register("seer_opensky.StateDetailMenu", &components.SidebarMenu{
+	registerPluginPage("seer_opensky.StateDetailMenu", &components.SidebarMenu{
 		Title: getters.Static("State"),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("All states"),
-			Url:   lago.RoutePath("seer_opensky.StateListRoute", nil),
+			Url:   lamu.RoutePath("seer_opensky.StateListRoute", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("View"),
-				Url: lago.RoutePath("seer_opensky.StateDetailRoute", map[string]getters.Getter[any]{
+				Url: lamu.RoutePath("seer_opensky.StateDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("openskyState.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.Static("Edit"),
-				Url: lago.RoutePath("seer_opensky.StateUpdateRoute", map[string]getters.Getter[any]{
+				Url: lamu.RoutePath("seer_opensky.StateUpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("openskyState.ID")),
 				}),
 			},
 		},
 	})
 
-	lago.RegistryPage.Register("seer_opensky.StateDetailPage", &components.ShellScaffold{
+	registerPluginPage("seer_opensky.StateDetailPage", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_opensky.StateDetailMenu"},
+			lamu.DynamicPage{Name: "seer_opensky.StateDetailMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.Detail[OpenSkyState]{
@@ -125,7 +126,7 @@ func registerStateTableAndDetail() {
 										&components.FieldTitle{Getter: getters.Format("Aircraft %s", getters.Any(getters.Key[string]("$in.Icao24")))},
 										&components.ButtonLink{
 											Label:   "Edit",
-											Link:    lago.RoutePath("seer_opensky.StateUpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
+											Link:    lamu.RoutePath("seer_opensky.StateUpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
 											Classes: "btn-primary btn-sm",
 										},
 									},
@@ -165,8 +166,8 @@ func stateDetailRows() []components.PageInterface {
 		lbl("Callsign", getters.Deref(getters.Key[*string]("$in.Callsign"))),
 		lbl("Origin country", getters.Deref(getters.Key[*string]("$in.OriginCountry"))),
 		lbl("Time position (unix)", int64PtrString(getters.Key[*int64]("$in.TimePosition"))),
-		lbl("Longitude (WGS84)", pointAxisString(getters.Key[lago.PGPoint]("$in.Position"), true)),
-		lbl("Latitude (WGS84)", pointAxisString(getters.Key[lago.PGPoint]("$in.Position"), false)),
+		lbl("Longitude (WGS84)", pointAxisString(getters.Key[fields.PGPoint]("$in.Position"), true)),
+		lbl("Latitude (WGS84)", pointAxisString(getters.Key[fields.PGPoint]("$in.Position"), false)),
 		lbl("Baro altitude (m)", floatPtrString(getters.Key[*float64]("$in.BaroAltitude"))),
 		lbl("On ground", boolPtrString(getters.Key[*bool]("$in.OnGround"))),
 		lbl("Velocity (m/s)", floatPtrString(getters.Key[*float64]("$in.Velocity"))),
@@ -215,7 +216,7 @@ func intPtrString(g getters.Getter[*int]) getters.Getter[string] {
 	}
 }
 
-func pointAxisString(g getters.Getter[lago.PGPoint], longitude bool) getters.Getter[string] {
+func pointAxisString(g getters.Getter[fields.PGPoint], longitude bool) getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
 		p, err := g(ctx)
 		if err != nil {

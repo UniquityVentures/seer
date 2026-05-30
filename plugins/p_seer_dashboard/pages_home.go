@@ -6,10 +6,10 @@ import (
 	"log"
 	"strings"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/registry"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/registry"
 	"github.com/UniquityVentures/seer/plugins/p_seer_intel"
 	"github.com/UniquityVentures/seer/plugins/p_seer_workerregistry"
 	. "maragu.dev/gomponents"
@@ -32,22 +32,25 @@ func (e seerDashboardWorkerTabs) Build(ctx context.Context) Node {
 			Classes: "text-sm opacity-70 p-2",
 		}).Build(ctx)
 	}
-	tabs := make(map[string]getters.Getter[components.PageInterface])
+	tabEntries := make([]registry.Pair[string, getters.Getter[components.PageInterface]], 0, len(*pairs))
 	for _, pair := range *pairs {
 		k := pair.Key
 		prov := pair.Value
-		tabs[k] = func(ctx context.Context) (components.PageInterface, error) {
-			db, err := getters.DBFromContext(ctx)
-			if err != nil {
-				return nil, err
-			}
-			return seerDashboardWorkerTabPage(k, prov.FetchActiveWorkers(db)), nil
-		}
+		tabEntries = append(tabEntries, registry.Pair[string, getters.Getter[components.PageInterface]]{
+			Key: k,
+			Value: func(ctx context.Context) (components.PageInterface, error) {
+				db, err := getters.DBFromContext(ctx)
+				if err != nil {
+					return nil, err
+				}
+				return seerDashboardWorkerTabPage(k, prov.FetchActiveWorkers(db)), nil
+			},
+		})
 	}
 	// Vertical tab ribbon (stacked labels) above worker panel content — see [components.ClientTabsLayoutVertical].
 	return components.ClientTabs{
 		Page:     components.Page{Key: e.Key + ".clientTabs"},
-		Tabs:     tabs,
+		Tabs:     tabEntries,
 		StateKey: "seerDashWorkerTab",
 		Layout:   components.ClientTabsLayoutVertical,
 	}.Build(ctx)
@@ -172,7 +175,7 @@ func (e seerDashboardIntelFeed) Build(ctx context.Context) Node {
 		if len(summary) > 280 {
 			summary = summary[:277] + "…"
 		}
-		href, herr := lago.RoutePath("seer_intel.DetailRoute", map[string]getters.Getter[any]{
+		href, herr := lamu.RoutePath("seer_intel.DetailRoute", map[string]getters.Getter[any]{
 			"id": getters.Any(getters.Static(it.ID)),
 		})(ctx)
 		if herr != nil {
@@ -207,7 +210,7 @@ func (e seerDashboardIntelFeed) Build(ctx context.Context) Node {
 		pageChildren = append(pageChildren, &components.ButtonLink{
 			Page:    components.Page{Key: e.Key + ".readMore"},
 			Label:   "Read more",
-			Link:    lago.RoutePath("seer_intel.DefaultRoute", nil),
+			Link:    lamu.RoutePath("seer_intel.DefaultRoute", nil),
 			Classes: "btn-sm btn-outline w-full mt-1",
 		})
 	}
@@ -219,7 +222,7 @@ func (e seerDashboardIntelFeed) Build(ctx context.Context) Node {
 }
 
 func registerSeerDashboardHomePagePatch() {
-	lago.RegistryPage.Patch("dashboard.AppsPage", func(page components.PageInterface) components.PageInterface {
+	patchPluginPage("dashboard.AppsPage", func(page components.PageInterface) components.PageInterface {
 		scaffold, ok := page.(*components.ShellTopbarScaffold)
 		if !ok {
 			log.Panic("dashboard.AppsPage was not *components.ShellTopbarScaffold")
@@ -251,7 +254,7 @@ func registerSeerDashboardHomePagePatch() {
 							Children: []components.PageInterface{
 								&SeerDashboardMap{
 									Page:    components.Page{Key: "seer_dashboard.DashboardMap"},
-									DataURL: lago.RoutePath("seer_dashboard.MapDataRoute", nil),
+									DataURL: lamu.RoutePath("seer_dashboard.MapDataRoute", nil),
 									Classes: "w-full h-[50vh] min-h-64 rounded-box border border-base-300 relative z-[1]",
 								},
 								appsGrid,

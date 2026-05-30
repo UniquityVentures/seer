@@ -1,7 +1,7 @@
 package p_seer_websites
 
 import (
-	"github.com/UniquityVentures/lago/syncmap"
+	"github.com/UniquityVentures/lamu/syncmap"
 )
 
 var websiteSourceCrawlBusy *syncmap.SyncMap[uint, struct{}] = &syncmap.SyncMap[uint, struct{}]{}

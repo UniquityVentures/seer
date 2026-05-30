@@ -1,44 +1,44 @@
 package p_seer_opensky
 
 import (
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/plugins/p_users"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/plugins/p_users"
 )
 
 func registerRoutes() {
-	_ = lago.RegistryRoute.Register("seer_opensky.DefaultRoute", lago.Route{
+	registerPluginRoute("seer_opensky.DefaultRoute", lamu.Route{
 		Path:    AppUrl,
-		Handler: lago.NewDynamicView("seer_opensky.StateListView"),
+		Handler: lamu.NewDynamicView("seer_opensky.StateListView"),
 	})
-	_ = lago.RegistryRoute.Register("seer_opensky.StateListRoute", lago.Route{
+	registerPluginRoute("seer_opensky.StateListRoute", lamu.Route{
 		Path:    AppUrl + "states/",
-		Handler: lago.NewDynamicView("seer_opensky.StateListView"),
+		Handler: lamu.NewDynamicView("seer_opensky.StateListView"),
 	})
-	_ = lago.RegistryRoute.Register("seer_opensky.MapRouteUnderStates", lago.Route{
+	registerPluginRoute("seer_opensky.MapRouteUnderStates", lamu.Route{
 		Path:    AppUrl + "states/map/",
-		Handler: lago.NewDynamicView("seer_opensky.MapView"),
+		Handler: lamu.NewDynamicView("seer_opensky.MapView"),
 	})
-	_ = lago.RegistryRoute.Register("seer_opensky.StateCreateRoute", lago.Route{
+	registerPluginRoute("seer_opensky.StateCreateRoute", lamu.Route{
 		Path:    AppUrl + "states/create/",
-		Handler: lago.NewDynamicView("seer_opensky.StateCreateView"),
+		Handler: lamu.NewDynamicView("seer_opensky.StateCreateView"),
 	})
-	_ = lago.RegistryRoute.Register("seer_opensky.StateDetailRoute", lago.Route{
+	registerPluginRoute("seer_opensky.StateDetailRoute", lamu.Route{
 		Path:    AppUrl + "states/{id}/",
-		Handler: lago.NewDynamicView("seer_opensky.StateDetailView"),
+		Handler: lamu.NewDynamicView("seer_opensky.StateDetailView"),
 	})
-	_ = lago.RegistryRoute.Register("seer_opensky.StateUpdateRoute", lago.Route{
+	registerPluginRoute("seer_opensky.StateUpdateRoute", lamu.Route{
 		Path:    AppUrl + "states/{id}/edit/",
-		Handler: lago.NewDynamicView("seer_opensky.StateUpdateView"),
+		Handler: lamu.NewDynamicView("seer_opensky.StateUpdateView"),
 	})
-	_ = lago.RegistryRoute.Register("seer_opensky.StateDeleteRoute", lago.Route{
+	registerPluginRoute("seer_opensky.StateDeleteRoute", lamu.Route{
 		Path:    AppUrl + "states/{id}/delete/",
-		Handler: lago.NewDynamicView("seer_opensky.StateDeleteView"),
+		Handler: lamu.NewDynamicView("seer_opensky.StateDeleteView"),
 	})
-	_ = lago.RegistryRoute.Register("seer_opensky.MapRoute", lago.Route{
+	registerPluginRoute("seer_opensky.MapRoute", lamu.Route{
 		Path:    AppUrl + "map/",
-		Handler: lago.NewDynamicView("seer_opensky.MapView"),
+		Handler: lamu.NewDynamicView("seer_opensky.MapView"),
 	})
-	_ = lago.RegistryRoute.Register("seer_opensky.MapDataRoute", lago.Route{
+	registerPluginRoute("seer_opensky.MapDataRoute", lamu.Route{
 		Path:    AppUrl + "map/data/",
 		Handler: p_users.RequireAuth(openSkyMapDataHandler{}),
 	})

@@ -1,37 +1,37 @@
 package p_seer_deepsearch
 
-import "github.com/UniquityVentures/lago/lago"
+import "github.com/UniquityVentures/lamu/lamu"
 
 func registerRoutes() {
-	_ = lago.RegistryRoute.Register("seer_deepsearch.DefaultRoute", lago.Route{
+	registerPluginRoute("seer_deepsearch.DefaultRoute", lamu.Route{
 		Path:    AppUrl,
-		Handler: lago.NewDynamicView("seer_deepsearch.HomeView"),
+		Handler: lamu.NewDynamicView("seer_deepsearch.HomeView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_deepsearch.StartRoute", lago.Route{
+	registerPluginRoute("seer_deepsearch.StartRoute", lamu.Route{
 		Path:    AppUrl + "start/",
-		Handler: lago.NewDynamicView("seer_deepsearch.StartView"),
+		Handler: lamu.NewDynamicView("seer_deepsearch.StartView"),
 	})
 
 	// Literal "history/" before "{id}/" so /seer-deepsearch/history/ is not captured as an id segment.
-	_ = lago.RegistryRoute.Register("seer_deepsearch.HistoryRoute", lago.Route{
+	registerPluginRoute("seer_deepsearch.HistoryRoute", lamu.Route{
 		Path:    AppUrl + "history/",
-		Handler: lago.NewDynamicView("seer_deepsearch.HistoryView"),
+		Handler: lamu.NewDynamicView("seer_deepsearch.HistoryView"),
 	})
 
 	// Literal "{id}/stop/" and "{id}/restart/" before "{id}/" so they are not swallowed as id text.
-	_ = lago.RegistryRoute.Register("seer_deepsearch.StopRoute", lago.Route{
+	registerPluginRoute("seer_deepsearch.StopRoute", lamu.Route{
 		Path:    AppUrl + "{id}/stop/",
-		Handler: lago.NewDynamicView("seer_deepsearch.StopView"),
+		Handler: lamu.NewDynamicView("seer_deepsearch.StopView"),
 	})
-	_ = lago.RegistryRoute.Register("seer_deepsearch.RestartRoute", lago.Route{
+	registerPluginRoute("seer_deepsearch.RestartRoute", lamu.Route{
 		Path:    AppUrl + "{id}/restart/",
-		Handler: lago.NewDynamicView("seer_deepsearch.RestartView"),
+		Handler: lamu.NewDynamicView("seer_deepsearch.RestartView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_deepsearch.DetailRoute", lago.Route{
+	registerPluginRoute("seer_deepsearch.DetailRoute", lamu.Route{
 		Path:    AppUrl + "{id}/",
-		Handler: lago.NewDynamicView("seer_deepsearch.DetailView"),
+		Handler: lamu.NewDynamicView("seer_deepsearch.DetailView"),
 	})
 }
 

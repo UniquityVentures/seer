@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/plugins/p_users"
-	"github.com/UniquityVentures/lago/views"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/plugins/p_users"
+	"github.com/UniquityVentures/lamu/views"
 )
 
 type websiteRunnerWorkerPoolPOSTOnlyLayer struct{}
@@ -43,7 +43,7 @@ func websiteRunnerWorkerPoolStartHandler(_ *views.View) http.Handler {
 			return
 		}
 		ScheduleWebsiteRunnerWorkerPoolStart(db, runnerID)
-		detailURL, err := lago.RoutePath("seer_websites.WebsiteRunnerDetailRoute", map[string]getters.Getter[any]{
+		detailURL, err := lamu.RoutePath("seer_websites.WebsiteRunnerDetailRoute", map[string]getters.Getter[any]{
 			"id": getters.Any(getters.Static(idStr)),
 		})(r.Context())
 		if err != nil || detailURL == "" {
@@ -68,7 +68,7 @@ func websiteRunnerWorkerPoolStopHandler(_ *views.View) http.Handler {
 			return
 		}
 		StopWebsiteRunnerWorkerPool(uint(id64))
-		detailURL, err := lago.RoutePath("seer_websites.WebsiteRunnerDetailRoute", map[string]getters.Getter[any]{
+		detailURL, err := lamu.RoutePath("seer_websites.WebsiteRunnerDetailRoute", map[string]getters.Getter[any]{
 			"id": getters.Any(getters.Static(idStr)),
 		})(r.Context())
 		if err != nil || detailURL == "" {
@@ -81,8 +81,8 @@ func websiteRunnerWorkerPoolStopHandler(_ *views.View) http.Handler {
 }
 
 func registerWebsiteRunnerWorkerPoolViews() {
-	lago.RegistryView.Register("seer_websites.WebsiteRunnerWorkerPoolStartView",
-		lago.GetPageView("seer_websites.WebsiteRunnerDetail").
+	registerPluginView("seer_websites.WebsiteRunnerWorkerPoolStartView",
+		lamu.GetPageView("seer_websites.WebsiteRunnerDetail").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website_runner.worker_pool_start_post", websiteRunnerWorkerPoolPOSTOnlyLayer{}).
 			WithLayer("seer_websites.website_runner.worker_pool_start", views.MethodLayer{
@@ -90,8 +90,8 @@ func registerWebsiteRunnerWorkerPoolViews() {
 				Handler: websiteRunnerWorkerPoolStartHandler,
 			}))
 
-	lago.RegistryView.Register("seer_websites.WebsiteRunnerWorkerPoolStopView",
-		lago.GetPageView("seer_websites.WebsiteRunnerDetail").
+	registerPluginView("seer_websites.WebsiteRunnerWorkerPoolStopView",
+		lamu.GetPageView("seer_websites.WebsiteRunnerDetail").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website_runner.worker_pool_stop_post", websiteRunnerWorkerPoolPOSTOnlyLayer{}).
 			WithLayer("seer_websites.website_runner.worker_pool_stop", views.MethodLayer{

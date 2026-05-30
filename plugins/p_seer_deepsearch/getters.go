@@ -5,9 +5,9 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 	"maragu.dev/gomponents"
 	ghtml "maragu.dev/gomponents/html"
 )
@@ -25,7 +25,7 @@ func deepSearchPollingActive(status string) bool {
 // [components.FormListenBoostedPost] path checks pass (form pathname must match POST target).
 func deepSearchHomeFormAttr() getters.Getter[gomponents.Node] {
 	return func(ctx context.Context) (gomponents.Node, error) {
-		actionURL, err := lago.RoutePath("seer_deepsearch.StartRoute", nil)(ctx)
+		actionURL, err := lamu.RoutePath("seer_deepsearch.StartRoute", nil)(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -73,7 +73,7 @@ func deepSearchShowRestartActionGetter() getters.Getter[any] {
 }
 
 func deepSearchDetailPollURL(ctx context.Context, id uint) (string, error) {
-	return lago.RoutePath("seer_deepsearch.DetailRoute", map[string]getters.Getter[any]{
+	return lamu.RoutePath("seer_deepsearch.DetailRoute", map[string]getters.Getter[any]{
 		"id": getters.Any(getters.Static(strconv.FormatUint(uint64(id), 10))),
 	})(ctx)
 }

@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/views"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/views"
 )
 
 // deepSearchStartPostLayer creates a [DeepSearch] row and runs [runDeepSearchPipeline] in a background goroutine.
@@ -49,7 +49,7 @@ func (deepSearchStartPostLayer) Next(_ views.View, next http.Handler) http.Handl
 		dbCopy := db
 		BeginDeepSearchPipeline(dbCopy, id)
 
-		detailURL, err := lago.RoutePath("seer_deepsearch.DetailRoute", map[string]getters.Getter[any]{
+		detailURL, err := lamu.RoutePath("seer_deepsearch.DetailRoute", map[string]getters.Getter[any]{
 			"id": getters.Any(getters.Static(strconv.FormatUint(uint64(id), 10))),
 		})(r.Context())
 		if err != nil || detailURL == "" {

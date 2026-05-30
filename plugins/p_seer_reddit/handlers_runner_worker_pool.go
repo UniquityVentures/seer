@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/plugins/p_users"
-	"github.com/UniquityVentures/lago/views"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/plugins/p_users"
+	"github.com/UniquityVentures/lamu/views"
 )
 
 // redditRunnerWorkerPoolPOSTOnlyLayer rejects non-POST for worker-pool action routes.
@@ -44,7 +44,7 @@ func redditRunnerWorkerPoolStartHandler(_ *views.View) http.Handler {
 			return
 		}
 		ScheduleRedditRunnerWorkerPoolStart(db, runnerID)
-		detailURL, err := lago.RoutePath("seer_reddit.RedditRunnerDetailRoute", map[string]getters.Getter[any]{
+		detailURL, err := lamu.RoutePath("seer_reddit.RedditRunnerDetailRoute", map[string]getters.Getter[any]{
 			"id": getters.Any(getters.Static(idStr)),
 		})(r.Context())
 		if err != nil || detailURL == "" {
@@ -69,7 +69,7 @@ func redditRunnerWorkerPoolStopHandler(_ *views.View) http.Handler {
 			return
 		}
 		StopRedditRunnerWorkerPool(uint(id64))
-		detailURL, err := lago.RoutePath("seer_reddit.RedditRunnerDetailRoute", map[string]getters.Getter[any]{
+		detailURL, err := lamu.RoutePath("seer_reddit.RedditRunnerDetailRoute", map[string]getters.Getter[any]{
 			"id": getters.Any(getters.Static(idStr)),
 		})(r.Context())
 		if err != nil || detailURL == "" {
@@ -82,8 +82,8 @@ func redditRunnerWorkerPoolStopHandler(_ *views.View) http.Handler {
 }
 
 func registerRedditRunnerWorkerPoolViews() {
-	lago.RegistryView.Register("seer_reddit.RedditRunnerWorkerPoolStartView",
-		lago.GetPageView("seer_reddit.RedditRunnerDetail").
+	registerPluginView("seer_reddit.RedditRunnerWorkerPoolStartView",
+		lamu.GetPageView("seer_reddit.RedditRunnerDetail").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.reddit_runner.worker_pool_start_post", redditRunnerWorkerPoolPOSTOnlyLayer{}).
 			WithLayer("seer_reddit.reddit_runner.worker_pool_start", views.MethodLayer{
@@ -91,8 +91,8 @@ func registerRedditRunnerWorkerPoolViews() {
 				Handler: redditRunnerWorkerPoolStartHandler,
 			}))
 
-	lago.RegistryView.Register("seer_reddit.RedditRunnerWorkerPoolStopView",
-		lago.GetPageView("seer_reddit.RedditRunnerDetail").
+	registerPluginView("seer_reddit.RedditRunnerWorkerPoolStopView",
+		lamu.GetPageView("seer_reddit.RedditRunnerDetail").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.reddit_runner.worker_pool_stop_post", redditRunnerWorkerPoolPOSTOnlyLayer{}).
 			WithLayer("seer_reddit.reddit_runner.worker_pool_stop", views.MethodLayer{

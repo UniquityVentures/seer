@@ -3,15 +3,15 @@ package p_seer_intel
 import (
 	"time"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 )
 
 func registerDetailPages() {
-	lago.RegistryPage.Register("seer_intel.IntelDetail", &components.ShellScaffold{
+	registerPluginPage("seer_intel.IntelDetail", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_intel.IntelDetailMenu"},
+			lamu.DynamicPage{Name: "seer_intel.IntelDetailMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.Detail[Intel]{

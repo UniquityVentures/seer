@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/UniquityVentures/lago/components"
+	"github.com/UniquityVentures/lamu/components"
 	"gorm.io/datatypes"
 )
 

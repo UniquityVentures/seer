@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
 )
 
 // workerRunLogsDataKey is the context key [views] layers set to

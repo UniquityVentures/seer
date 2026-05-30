@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/registry"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/registry"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -30,71 +30,71 @@ func init() {
 }
 
 func registerGDELTMenuPages() {
-	lago.RegistryPage.Register("seer_gdelt.Menu", &components.SidebarMenu{
+	registerPluginPage("seer_gdelt.Menu", &components.SidebarMenu{
 		Title: getters.Static("GDELT"),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to All Apps"),
-			Url:   lago.RoutePath("dashboard.AppsPage", nil),
+			Url:   lamu.RoutePath("dashboard.AppsPage", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("Sources"),
-				Url:   lago.RoutePath("seer_gdelt.DefaultRoute", nil),
+				Url:   lamu.RoutePath("seer_gdelt.DefaultRoute", nil),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.Static("Search"),
-				Url:   lago.RoutePath("seer_gdelt.SearchRoute", nil),
+				Url:   lamu.RoutePath("seer_gdelt.SearchRoute", nil),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.Static("Workers"),
-				Url:   lago.RoutePath("seer_gdelt.GDELTWorkerListRoute", nil),
+				Url:   lamu.RoutePath("seer_gdelt.GDELTWorkerListRoute", nil),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.Static("Events"),
-				Url:   lago.RoutePath("seer_gdelt.EventListRoute", nil),
+				Url:   lamu.RoutePath("seer_gdelt.EventListRoute", nil),
 			},
 			&gdeltMapSidebarLink{Page: components.Page{Key: "seer_gdelt.MenuMapLink"}},
 		},
 	})
 
-	lago.RegistryPage.Register("seer_gdelt.GDELTSourceDetailMenu", &components.SidebarMenu{
+	registerPluginPage("seer_gdelt.GDELTSourceDetailMenu", &components.SidebarMenu{
 		Title: getters.Format("GDELT source #%d", getters.Any(getters.Key[uint]("gdeltSource.ID"))),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Sources"),
-			Url:   lago.RoutePath("seer_gdelt.DefaultRoute", nil),
+			Url:   lamu.RoutePath("seer_gdelt.DefaultRoute", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("Detail"),
-				Url: lago.RoutePath("seer_gdelt.GDELTSourceDetailRoute", map[string]getters.Getter[any]{
+				Url: lamu.RoutePath("seer_gdelt.GDELTSourceDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("gdeltSource.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.Static("Edit"),
-				Url: lago.RoutePath("seer_gdelt.GDELTSourceUpdateRoute", map[string]getters.Getter[any]{
+				Url: lamu.RoutePath("seer_gdelt.GDELTSourceUpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("gdeltSource.ID")),
 				}),
 			},
 		},
 	})
 
-	lago.RegistryPage.Register("seer_gdelt.GDELTWorkerDetailMenu", &components.SidebarMenu{
+	registerPluginPage("seer_gdelt.GDELTWorkerDetailMenu", &components.SidebarMenu{
 		Title: getters.Key[string]("gdeltWorker.Name"),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Workers"),
-			Url:   lago.RoutePath("seer_gdelt.GDELTWorkerListRoute", nil),
+			Url:   lamu.RoutePath("seer_gdelt.GDELTWorkerListRoute", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("Detail"),
-				Url: lago.RoutePath("seer_gdelt.GDELTWorkerDetailRoute", map[string]getters.Getter[any]{
+				Url: lamu.RoutePath("seer_gdelt.GDELTWorkerDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("gdeltWorker.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.Static("Edit"),
-				Url: lago.RoutePath("seer_gdelt.GDELTWorkerUpdateRoute", map[string]getters.Getter[any]{
+				Url: lamu.RoutePath("seer_gdelt.GDELTWorkerUpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("gdeltWorker.ID")),
 				}),
 			},
@@ -103,9 +103,9 @@ func registerGDELTMenuPages() {
 }
 
 func registerGDELTSearchPages() {
-	lago.RegistryPage.Register("seer_gdelt.SearchPage", &components.ShellScaffold{
+	registerPluginPage("seer_gdelt.SearchPage", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_gdelt.Menu"},
+			lamu.DynamicPage{Name: "seer_gdelt.Menu"},
 		},
 		Children: []components.PageInterface{
 			&components.ContainerColumn{
@@ -114,7 +114,7 @@ func registerGDELTSearchPages() {
 				Children: []components.PageInterface{
 					&components.FormComponent[map[string]any]{
 						Page:     components.Page{Key: "seer_gdelt.SearchForm"},
-						Attr:     getters.FormBoostedGet(lago.RoutePath("seer_gdelt.SearchRoute", nil)),
+						Attr:     getters.FormBoostedGet(lamu.RoutePath("seer_gdelt.SearchRoute", nil)),
 						Title:    "GDELT search",
 						Subtitle: "Search GDELT events in BigQuery with guided filters. Configure [Plugins.p_seer_gdelt] projectID and optional credentialsFile, then share searches by URL.",
 						Classes:  "@container rounded-box border border-base-300 bg-base-100 p-4",
@@ -129,7 +129,7 @@ func registerGDELTSearchPages() {
 									&components.ButtonSubmit{Label: "Search GDELT"},
 									&components.ButtonLink{
 										Label:   "Clear",
-										Link:    lago.RoutePath("seer_gdelt.SearchRoute", nil),
+										Link:    lamu.RoutePath("seer_gdelt.SearchRoute", nil),
 										Classes: "btn-ghost",
 									},
 								},

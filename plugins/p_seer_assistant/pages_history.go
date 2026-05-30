@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 )
 
 func assistantHistoryRowLabel(ctx context.Context) (string, error) {
@@ -29,10 +29,10 @@ func assistantHistoryRowLabel(ctx context.Context) (string, error) {
 }
 
 func registerAssistantHistoryPage() {
-	lago.RegistryPage.Register("seer_assistant.HistoryPage", &components.ShellScaffold{
+	registerPluginPage("seer_assistant.HistoryPage", &components.ShellScaffold{
 		Page: components.Page{Key: "seer_assistant.HistoryPage"},
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_assistant.AssistantMenu"},
+			lamu.DynamicPage{Name: "seer_assistant.AssistantMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[SeerAssistantSession]{
@@ -41,7 +41,7 @@ func registerAssistantHistoryPage() {
 				Classes: "w-full",
 				Data:    getters.Key[components.ObjectList[SeerAssistantSession]]("assistantSessions"),
 				RowAttr: getters.RowAttrNavigate(
-					lago.RoutePath("seer_assistant.ChatSessionRoute", map[string]getters.Getter[any]{
+					lamu.RoutePath("seer_assistant.ChatSessionRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					}),
 				),

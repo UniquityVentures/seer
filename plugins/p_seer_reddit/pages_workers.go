@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 	"github.com/UniquityVentures/seer/plugins/p_seer_workerregistry"
 	"gorm.io/gorm"
 )
@@ -46,7 +46,7 @@ func redditRunnerFormFields() components.PageInterface {
 						Label:       "Reddit sources without worker",
 						Name:        "RedditSourceIDs",
 						Getter:      redditSourcesForCurrentRunner,
-						Url:         lago.RoutePath("seer_reddit.RedditSourceUnsetSelectRoute", nil),
+						Url:         lamu.RoutePath("seer_reddit.RedditSourceUnsetSelectRoute", nil),
 						Display:     redditSourceSelectionDisplayFromIn,
 						Placeholder: "Select unassigned sources...",
 						Classes:     "w-full max-w-xl",
@@ -82,7 +82,7 @@ func redditRunnerDetailWorkerPoolActionsGetter() getters.Getter[components.PageI
 				Children: []components.PageInterface{
 					&components.ButtonPost{
 						Label: "Stop worker pool",
-						URL: lago.RoutePath("seer_reddit.RedditRunnerWorkerPoolStopRoute", map[string]getters.Getter[any]{
+						URL: lamu.RoutePath("seer_reddit.RedditRunnerWorkerPoolStopRoute", map[string]getters.Getter[any]{
 							"id": getters.Any(getters.Key[uint]("$in.ID")),
 						}),
 						Icon:    "stop",
@@ -97,7 +97,7 @@ func redditRunnerDetailWorkerPoolActionsGetter() getters.Getter[components.PageI
 			Children: []components.PageInterface{
 				&components.ButtonPost{
 					Label: "Start worker pool",
-					URL: lago.RoutePath("seer_reddit.RedditRunnerWorkerPoolStartRoute", map[string]getters.Getter[any]{
+					URL: lamu.RoutePath("seer_reddit.RedditRunnerWorkerPoolStartRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$in.ID")),
 					}),
 					Icon:    "play",
@@ -113,9 +113,9 @@ func registerRedditRunnerPages() {
 	updateName := getters.Static("seer_reddit.RedditRunnerUpdateForm")
 	deleteName := getters.Static("seer_reddit.RedditRunnerDeleteForm")
 
-	lago.RegistryPage.Register("seer_reddit.RedditRunnerTable", &components.ShellScaffold{
+	registerPluginPage("seer_reddit.RedditRunnerTable", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_reddit.RedditMenu"},
+			lamu.DynamicPage{Name: "seer_reddit.RedditMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[RedditRunner]{
@@ -124,10 +124,10 @@ func registerRedditRunnerPages() {
 				Classes: "w-full",
 				Data:    getters.Key[components.ObjectList[RedditRunner]]("redditRunners"),
 				Actions: []components.PageInterface{
-					&components.TableButtonCreate{Link: lago.RoutePath("seer_reddit.RedditRunnerCreateRoute", nil)},
+					&components.TableButtonCreate{Link: lamu.RoutePath("seer_reddit.RedditRunnerCreateRoute", nil)},
 				},
 				RowAttr: getters.RowAttrNavigate(
-					lago.RoutePath("seer_reddit.RedditRunnerDetailRoute", map[string]getters.Getter[any]{
+					lamu.RoutePath("seer_reddit.RedditRunnerDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					}),
 				),
@@ -151,7 +151,7 @@ func registerRedditRunnerPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_reddit.RedditRunnerSelectionTable", &components.Modal{
+	registerPluginPage("seer_reddit.RedditRunnerSelectionTable", &components.Modal{
 		UID: "reddit-runner-selection-modal",
 		Children: []components.PageInterface{
 			&components.DataTable[RedditRunner]{
@@ -180,9 +180,9 @@ func registerRedditRunnerPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_reddit.RedditRunnerDetail", &components.ShellScaffold{
+	registerPluginPage("seer_reddit.RedditRunnerDetail", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_reddit.RedditRunnerDetailMenu"},
+			lamu.DynamicPage{Name: "seer_reddit.RedditRunnerDetailMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.Detail[RedditRunner]{
@@ -206,7 +206,7 @@ func registerRedditRunnerPages() {
 									&components.FieldManyToMany[RedditSource]{
 										Getter:  redditSourcesForCurrentRunner,
 										Display: redditSourceSelectionDisplayFromIn,
-										Link: lago.RoutePath("seer_reddit.RedditSourceDetailRoute", map[string]getters.Getter[any]{
+										Link: lamu.RoutePath("seer_reddit.RedditSourceDetailRoute", map[string]getters.Getter[any]{
 											"id": getters.Any(getters.Key[uint]("$in.ID")),
 										}),
 										Classes: "w-full max-w-xl",
@@ -222,14 +222,14 @@ func registerRedditRunnerPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_reddit.RedditRunnerCreateForm", &components.ShellScaffold{
+	registerPluginPage("seer_reddit.RedditRunnerCreateForm", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_reddit.RedditMenu"},
+			lamu.DynamicPage{Name: "seer_reddit.RedditMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
 				Name:      createName,
-				ActionURL: lago.RoutePath("seer_reddit.RedditRunnerCreateRoute", nil),
+				ActionURL: lamu.RoutePath("seer_reddit.RedditRunnerCreateRoute", nil),
 				Children: []components.PageInterface{
 					&components.FormComponent[RedditRunner]{
 						Getter:   getters.Static(RedditRunner{Name: "", Duration: time.Hour}),
@@ -249,14 +249,14 @@ func registerRedditRunnerPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_reddit.RedditRunnerUpdateForm", &components.ShellScaffold{
+	registerPluginPage("seer_reddit.RedditRunnerUpdateForm", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_reddit.RedditRunnerDetailMenu"},
+			lamu.DynamicPage{Name: "seer_reddit.RedditRunnerDetailMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
 				Name: updateName,
-				ActionURL: lago.RoutePath("seer_reddit.RedditRunnerUpdateRoute", map[string]getters.Getter[any]{
+				ActionURL: lamu.RoutePath("seer_reddit.RedditRunnerUpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("redditRunner.ID")),
 				}),
 				Children: []components.PageInterface{
@@ -281,8 +281,8 @@ func registerRedditRunnerPages() {
 												Label:       "Delete",
 												Icon:        "trash",
 												Name:        deleteName,
-												Url:         lago.RoutePath("seer_reddit.RedditRunnerDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("redditRunner.ID"))}),
-												FormPostURL: lago.RoutePath("seer_reddit.RedditRunnerDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("redditRunner.ID"))}),
+												Url:         lamu.RoutePath("seer_reddit.RedditRunnerDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("redditRunner.ID"))}),
+												FormPostURL: lamu.RoutePath("seer_reddit.RedditRunnerDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("redditRunner.ID"))}),
 												ModalUID:    "seer-reddit-runner-delete-modal",
 												Classes:     "btn-error",
 											},
@@ -297,7 +297,7 @@ func registerRedditRunnerPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_reddit.RedditRunnerDeleteForm", &components.Modal{
+	registerPluginPage("seer_reddit.RedditRunnerDeleteForm", &components.Modal{
 		UID: "seer-reddit-runner-delete-modal",
 		Children: []components.PageInterface{
 			&components.DeleteConfirmation{

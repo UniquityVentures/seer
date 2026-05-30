@@ -3,8 +3,8 @@ package p_seer_dashboard
 import (
 	"net/http"
 
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/plugins/p_users"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/plugins/p_users"
 )
 
 // Tiny same-origin SVG markers for MapDisplay (directed symbols rotate with bearing).
@@ -15,11 +15,11 @@ var (
 )
 
 func registerDashboardMarkerIconRoutes() {
-	_ = lago.RegistryRoute.Register("seer_dashboard.MapMarkerOpenSkyRoute", lago.Route{
+	registerPluginRoute("seer_dashboard.MapMarkerOpenSkyRoute", lamu.Route{
 		Path:    AppUrl + "map/icon/opensky.svg",
 		Handler: p_users.RequireAuth(serveMapMarkerSVG(mapMarkerOpenSkySVG)),
 	})
-	_ = lago.RegistryRoute.Register("seer_dashboard.MapMarkerAISStreamRoute", lago.Route{
+	registerPluginRoute("seer_dashboard.MapMarkerAISStreamRoute", lamu.Route{
 		Path:    AppUrl + "map/icon/aisstream.svg",
 		Handler: p_users.RequireAuth(serveMapMarkerSVG(mapMarkerAISStreamSVG)),
 	})

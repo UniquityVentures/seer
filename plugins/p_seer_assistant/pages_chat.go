@@ -5,28 +5,28 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
 
 func registerAssistantMenuPages() {
-	lago.RegistryPage.Register("seer_assistant.AssistantMenu", &components.SidebarMenu{
+	registerPluginPage("seer_assistant.AssistantMenu", &components.SidebarMenu{
 		Title: getters.Static("Assistant"),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to All Apps"),
-			Url:   lago.RoutePath("dashboard.AppsPage", nil),
+			Url:   lamu.RoutePath("dashboard.AppsPage", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("Chat"),
-				Url:   lago.RoutePath("seer_assistant.DefaultRoute", nil),
+				Url:   lamu.RoutePath("seer_assistant.DefaultRoute", nil),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.Static("History"),
-				Url:   lago.RoutePath("seer_assistant.HistoryRoute", nil),
+				Url:   lamu.RoutePath("seer_assistant.HistoryRoute", nil),
 			},
 		},
 	})
@@ -145,10 +145,10 @@ func (e *assistantChatRoot) GetKey() string { return e.Key }
 func (e *assistantChatRoot) GetRoles() []string { return e.Roles }
 
 func registerAssistantChatPage() {
-	lago.RegistryPage.Register("seer_assistant.ChatPage", &components.ShellScaffold{
+	registerPluginPage("seer_assistant.ChatPage", &components.ShellScaffold{
 		Page: components.Page{Key: "seer_assistant.ChatPage"},
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_assistant.AssistantMenu"},
+			lamu.DynamicPage{Name: "seer_assistant.AssistantMenu"},
 		},
 		Children: []components.PageInterface{
 			&assistantChatRoot{

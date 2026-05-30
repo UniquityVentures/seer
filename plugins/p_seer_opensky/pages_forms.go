@@ -1,9 +1,9 @@
 package p_seer_opensky
 
 import (
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 )
 
 func registerStateFormPages() {
@@ -11,14 +11,14 @@ func registerStateFormPages() {
 	updateName := getters.Static("seer_opensky.StateUpdateForm")
 	deleteName := getters.Static("seer_opensky.StateDeleteForm")
 
-	lago.RegistryPage.Register("seer_opensky.StateCreateForm", &components.ShellScaffold{
+	registerPluginPage("seer_opensky.StateCreateForm", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_opensky.AppMenu"},
+			lamu.DynamicPage{Name: "seer_opensky.AppMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
 				Name:      createName,
-				ActionURL: lago.RoutePath("seer_opensky.StateCreateRoute", nil),
+				ActionURL: lamu.RoutePath("seer_opensky.StateCreateRoute", nil),
 				Children: []components.PageInterface{
 					&components.FormComponent[OpenSkyState]{
 						Getter:   getters.Static(OpenSkyState{}),
@@ -42,14 +42,14 @@ func registerStateFormPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_opensky.StateUpdateForm", &components.ShellScaffold{
+	registerPluginPage("seer_opensky.StateUpdateForm", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_opensky.StateDetailMenu"},
+			lamu.DynamicPage{Name: "seer_opensky.StateDetailMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
 				Name: updateName,
-				ActionURL: lago.RoutePath("seer_opensky.StateUpdateRoute", map[string]getters.Getter[any]{
+				ActionURL: lamu.RoutePath("seer_opensky.StateUpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("openskyState.ID")),
 				}),
 				Children: []components.PageInterface{
@@ -74,8 +74,8 @@ func registerStateFormPages() {
 										Label:       "Delete",
 										Icon:        "trash",
 										Name:        deleteName,
-										Url:         lago.RoutePath("seer_opensky.StateDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("openskyState.ID"))}),
-										FormPostURL: lago.RoutePath("seer_opensky.StateDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("openskyState.ID"))}),
+										Url:         lamu.RoutePath("seer_opensky.StateDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("openskyState.ID"))}),
+										FormPostURL: lamu.RoutePath("seer_opensky.StateDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("openskyState.ID"))}),
 										ModalUID:    "seer-opensky-state-delete",
 										Classes:     "btn-outline btn-error btn-sm",
 									},
@@ -88,7 +88,7 @@ func registerStateFormPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_opensky.StateDeleteFormModal", &components.Modal{
+	registerPluginPage("seer_opensky.StateDeleteFormModal", &components.Modal{
 		UID: "seer-opensky-state-delete",
 		Children: []components.PageInterface{
 			&components.DeleteConfirmation{

@@ -1,9 +1,9 @@
 package p_seer_websites
 
 import (
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 )
 
 func registerWebsiteSourceFormPages() {
@@ -11,14 +11,14 @@ func registerWebsiteSourceFormPages() {
 	updateFormName := getters.Static("seer_websites.WebsiteSourceUpdateForm")
 	deleteFormName := getters.Static("seer_websites.WebsiteSourceDeleteForm")
 
-	lago.RegistryPage.Register("seer_websites.WebsiteSourceCreateForm", &components.ShellScaffold{
+	registerPluginPage("seer_websites.WebsiteSourceCreateForm", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_websites.WebsiteMenu"},
+			lamu.DynamicPage{Name: "seer_websites.WebsiteMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
 				Name:      createFormName,
-				ActionURL: lago.RoutePath("seer_websites.WebsiteSourceCreateRoute", nil),
+				ActionURL: lamu.RoutePath("seer_websites.WebsiteSourceCreateRoute", nil),
 				Children: []components.PageInterface{
 					&components.FormComponent[WebsiteSource]{
 						Getter:   getters.Static(WebsiteSource{}),
@@ -38,14 +38,14 @@ func registerWebsiteSourceFormPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_websites.WebsiteSourceUpdateForm", &components.ShellScaffold{
+	registerPluginPage("seer_websites.WebsiteSourceUpdateForm", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_websites.WebsiteSourceDetailMenu"},
+			lamu.DynamicPage{Name: "seer_websites.WebsiteSourceDetailMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
 				Name: updateFormName,
-				ActionURL: lago.RoutePath("seer_websites.WebsiteSourceUpdateRoute", map[string]getters.Getter[any]{
+				ActionURL: lamu.RoutePath("seer_websites.WebsiteSourceUpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("websiteSource.ID")),
 				}),
 				Children: []components.PageInterface{
@@ -70,8 +70,8 @@ func registerWebsiteSourceFormPages() {
 												Label:       "Delete",
 												Icon:        "trash",
 												Name:        deleteFormName,
-												Url:         lago.RoutePath("seer_websites.WebsiteSourceDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("websiteSource.ID"))}),
-												FormPostURL: lago.RoutePath("seer_websites.WebsiteSourceDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("websiteSource.ID"))}),
+												Url:         lamu.RoutePath("seer_websites.WebsiteSourceDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("websiteSource.ID"))}),
+												FormPostURL: lamu.RoutePath("seer_websites.WebsiteSourceDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("websiteSource.ID"))}),
 												ModalUID:    "seer-website-source-delete-modal",
 												Classes:     "btn-error",
 											},
@@ -86,7 +86,7 @@ func registerWebsiteSourceFormPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_websites.WebsiteSourceDeleteForm", &components.Modal{
+	registerPluginPage("seer_websites.WebsiteSourceDeleteForm", &components.Modal{
 		UID: "seer-website-source-delete-modal",
 		Children: []components.PageInterface{
 			&components.DeleteConfirmation{

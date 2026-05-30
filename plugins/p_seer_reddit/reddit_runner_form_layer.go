@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/views"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/views"
 )
 
 // redditRunnerEnrichSourceIDsLayer sets [RedditRunner.RedditSourceIDs] on GET for the worker

@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -15,7 +15,7 @@ import (
 // redditPostBulkAddIntelFormURL is the POST target for bulk intel ingest; preserves the list URL query string (e.g. page).
 func redditPostBulkAddIntelFormURL(routeName string, pathParams map[string]getters.Getter[any]) getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
-		base, err := lago.RoutePath(routeName, pathParams)(ctx)
+		base, err := lamu.RoutePath(routeName, pathParams)(ctx)
 		if err != nil {
 			return "", err
 		}
@@ -47,7 +47,7 @@ func redditPostListViewPollURL(ctx context.Context, bySource bool, sourceID uint
 			"source_id": getters.Any(getters.Static(strconv.FormatUint(uint64(sourceID), 10))),
 		}
 	}
-	base, err := lago.RoutePath(routeName, pathArgs)(ctx)
+	base, err := lamu.RoutePath(routeName, pathArgs)(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -60,7 +60,7 @@ func redditPostListViewPollURL(ctx context.Context, bySource bool, sourceID uint
 }
 
 func redditPostDetailPollURL(ctx context.Context, postID uint) (string, error) {
-	base, err := lago.RoutePath("seer_reddit.RedditPostDetailRoute", map[string]getters.Getter[any]{
+	base, err := lamu.RoutePath("seer_reddit.RedditPostDetailRoute", map[string]getters.Getter[any]{
 		"id": getters.Any(getters.Static(strconv.FormatUint(uint64(postID), 10))),
 	})(ctx)
 	if err != nil {

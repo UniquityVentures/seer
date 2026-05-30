@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/UniquityVentures/lago/syncmap"
+	"github.com/UniquityVentures/lamu/syncmap"
 	"github.com/UniquityVentures/seer/plugins/p_seer_workerregistry"
 	"gorm.io/gorm"
 )
@@ -36,7 +36,7 @@ func StopWebsiteRunnerWorkerPool(runnerID uint) {
 }
 
 // StartAllWebsiteRunnerWorkerPools schedules a worker pool goroutine for every [WebsiteRunner] row.
-// It is invoked from [lago.OnDBInit] after models register so the process autostarts pools on boot.
+// It is invoked from [lamu.OnDBInit] after models register so the process autostarts pools on boot.
 func StartAllWebsiteRunnerWorkerPools(db *gorm.DB) {
 	if db == nil {
 		return

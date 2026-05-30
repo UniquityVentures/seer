@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 )
 
 func gdeltSourceLabelFromParts(query, domain, actionCountry string) string {
@@ -110,9 +110,9 @@ func gdeltSourceDatePtrFmt(ctx context.Context, key string) (string, error) {
 }
 
 func registerGDELTSourcesPages() {
-	lago.RegistryPage.Register("seer_gdelt.GDELTSourceTable", &components.ShellScaffold{
+	registerPluginPage("seer_gdelt.GDELTSourceTable", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_gdelt.Menu"},
+			lamu.DynamicPage{Name: "seer_gdelt.Menu"},
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[GDELTSource]{
@@ -121,10 +121,10 @@ func registerGDELTSourcesPages() {
 				Classes: "w-full",
 				Data:    getters.Key[components.ObjectList[GDELTSource]]("gdeltSources"),
 				Actions: []components.PageInterface{
-					&components.TableButtonCreate{Link: lago.RoutePath("seer_gdelt.GDELTSourceCreateRoute", nil)},
+					&components.TableButtonCreate{Link: lamu.RoutePath("seer_gdelt.GDELTSourceCreateRoute", nil)},
 				},
 				RowAttr: getters.RowAttrNavigate(
-					lago.RoutePath("seer_gdelt.GDELTSourceDetailRoute", map[string]getters.Getter[any]{
+					lamu.RoutePath("seer_gdelt.GDELTSourceDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					}),
 				),
@@ -152,7 +152,7 @@ func registerGDELTSourcesPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_gdelt.GDELTSourceUnsetSelectionTable", &components.Modal{
+	registerPluginPage("seer_gdelt.GDELTSourceUnsetSelectionTable", &components.Modal{
 		UID: "gdelt-source-unset-selection-modal",
 		Children: []components.PageInterface{
 			&components.DataTable[GDELTSource]{
@@ -186,9 +186,9 @@ func registerGDELTSourcesPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_gdelt.GDELTSourceDetail", &components.ShellScaffold{
+	registerPluginPage("seer_gdelt.GDELTSourceDetail", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_gdelt.GDELTSourceDetailMenu"},
+			lamu.DynamicPage{Name: "seer_gdelt.GDELTSourceDetailMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.Detail[GDELTSource]{

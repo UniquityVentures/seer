@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 )
 
 // Anti-pattern (allowed only in this file): hand-built gdeltForm* wrappers plus long section lists
@@ -395,22 +395,22 @@ func registerGDELTEventPages() {
 }
 
 func registerGDELTEventMenus() {
-	lago.RegistryPage.Register("seer_gdelt.EventDetailMenu", &components.SidebarMenu{
+	registerPluginPage("seer_gdelt.EventDetailMenu", &components.SidebarMenu{
 		Title: getters.Format("Event #%d", getters.Any(getters.Key[uint]("gdeltEvent.ID"))),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("All events"),
-			Url:   lago.RoutePath("seer_gdelt.EventListRoute", nil),
+			Url:   lamu.RoutePath("seer_gdelt.EventListRoute", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("Detail"),
-				Url: lago.RoutePath("seer_gdelt.EventDetailRoute", map[string]getters.Getter[any]{
+				Url: lamu.RoutePath("seer_gdelt.EventDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("gdeltEvent.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.Static("Edit"),
-				Url: lago.RoutePath("seer_gdelt.EventUpdateRoute", map[string]getters.Getter[any]{
+				Url: lamu.RoutePath("seer_gdelt.EventUpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("gdeltEvent.ID")),
 				}),
 			},
@@ -419,9 +419,9 @@ func registerGDELTEventMenus() {
 }
 
 func registerGDELTEventListPage() {
-	lago.RegistryPage.Register("seer_gdelt.EventTable", &components.ShellScaffold{
+	registerPluginPage("seer_gdelt.EventTable", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_gdelt.Menu"},
+			lamu.DynamicPage{Name: "seer_gdelt.Menu"},
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[Event]{
@@ -430,10 +430,10 @@ func registerGDELTEventListPage() {
 				Classes: "w-full",
 				Data:    getters.Key[components.ObjectList[Event]]("gdeltEvents"),
 				Actions: []components.PageInterface{
-					&components.TableButtonCreate{Link: lago.RoutePath("seer_gdelt.EventCreateRoute", nil)},
+					&components.TableButtonCreate{Link: lamu.RoutePath("seer_gdelt.EventCreateRoute", nil)},
 				},
 				RowAttr: getters.RowAttrNavigate(
-					lago.RoutePath("seer_gdelt.EventDetailRoute", map[string]getters.Getter[any]{
+					lamu.RoutePath("seer_gdelt.EventDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					}),
 				),
@@ -444,9 +444,9 @@ func registerGDELTEventListPage() {
 }
 
 func registerGDELTEventDetailPage() {
-	lago.RegistryPage.Register("seer_gdelt.EventDetail", &components.ShellScaffold{
+	registerPluginPage("seer_gdelt.EventDetail", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_gdelt.EventDetailMenu"},
+			lamu.DynamicPage{Name: "seer_gdelt.EventDetailMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.Detail[Event]{
@@ -465,7 +465,7 @@ func registerGDELTEventDetailPage() {
 									},
 									&components.ButtonLink{
 										Label: "Edit",
-										Link: lago.RoutePath("seer_gdelt.EventUpdateRoute", map[string]getters.Getter[any]{
+										Link: lamu.RoutePath("seer_gdelt.EventUpdateRoute", map[string]getters.Getter[any]{
 											"id": getters.Any(getters.Key[uint]("$in.ID")),
 										}),
 										Classes: "btn-primary btn-sm",
@@ -485,14 +485,14 @@ func registerGDELTEventFormPages() {
 	updateFormName := getters.Static("seer_gdelt.EventUpdateForm")
 	deleteFormName := getters.Static("seer_gdelt.EventDeleteForm")
 
-	lago.RegistryPage.Register("seer_gdelt.EventCreateForm", &components.ShellScaffold{
+	registerPluginPage("seer_gdelt.EventCreateForm", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_gdelt.Menu"},
+			lamu.DynamicPage{Name: "seer_gdelt.Menu"},
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
 				Name:      createFormName,
-				ActionURL: lago.RoutePath("seer_gdelt.EventCreateRoute", nil),
+				ActionURL: lamu.RoutePath("seer_gdelt.EventCreateRoute", nil),
 				Children: []components.PageInterface{
 					&components.FormComponent[Event]{
 						Getter:   getters.Static(Event{}),
@@ -516,14 +516,14 @@ func registerGDELTEventFormPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_gdelt.EventUpdateForm", &components.ShellScaffold{
+	registerPluginPage("seer_gdelt.EventUpdateForm", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_gdelt.EventDetailMenu"},
+			lamu.DynamicPage{Name: "seer_gdelt.EventDetailMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
 				Name: updateFormName,
-				ActionURL: lago.RoutePath("seer_gdelt.EventUpdateRoute", map[string]getters.Getter[any]{
+				ActionURL: lamu.RoutePath("seer_gdelt.EventUpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("gdeltEvent.ID")),
 				}),
 				Children: []components.PageInterface{
@@ -549,10 +549,10 @@ func registerGDELTEventFormPages() {
 										Label: "Delete",
 										Icon:  "trash",
 										Name:  deleteFormName,
-										Url: lago.RoutePath("seer_gdelt.EventDeleteRoute", map[string]getters.Getter[any]{
+										Url: lamu.RoutePath("seer_gdelt.EventDeleteRoute", map[string]getters.Getter[any]{
 											"id": getters.Any(getters.Key[uint]("gdeltEvent.ID")),
 										}),
-										FormPostURL: lago.RoutePath("seer_gdelt.EventDeleteRoute", map[string]getters.Getter[any]{
+										FormPostURL: lamu.RoutePath("seer_gdelt.EventDeleteRoute", map[string]getters.Getter[any]{
 											"id": getters.Any(getters.Key[uint]("gdeltEvent.ID")),
 										}),
 										ModalUID: "seer-gdelt-event-delete-modal",
@@ -567,7 +567,7 @@ func registerGDELTEventFormPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_gdelt.EventDeleteForm", &components.Modal{
+	registerPluginPage("seer_gdelt.EventDeleteForm", &components.Modal{
 		UID: "seer-gdelt-event-delete-modal",
 		Children: []components.PageInterface{
 			&components.DeleteConfirmation{

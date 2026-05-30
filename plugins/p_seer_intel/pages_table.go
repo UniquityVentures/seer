@@ -3,15 +3,15 @@ package p_seer_intel
 import (
 	"time"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 )
 
 func registerTablePages() {
-	lago.RegistryPage.Register("seer_intel.IntelTable", &components.ShellScaffold{
+	registerPluginPage("seer_intel.IntelTable", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_intel.IntelMenu"},
+			lamu.DynamicPage{Name: "seer_intel.IntelMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[Intel]{
@@ -20,7 +20,7 @@ func registerTablePages() {
 				Classes: "w-full",
 				Data:    getters.Key[components.ObjectList[Intel]]("intels"),
 				RowAttr: getters.RowAttrNavigate(
-					lago.RoutePath("seer_intel.DetailRoute", map[string]getters.Getter[any]{
+					lamu.RoutePath("seer_intel.DetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					}),
 				),

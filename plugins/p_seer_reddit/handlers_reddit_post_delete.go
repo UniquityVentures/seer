@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/views"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/views"
 )
 
 // redditPostSoftDeleteLayer handles POST to wipe and soft-delete a [RedditPost] by path id.
@@ -42,7 +42,7 @@ func (redditPostSoftDeleteLayer) Next(_ views.View, next http.Handler) http.Hand
 			http.Error(w, "Delete failed", http.StatusBadGateway)
 			return
 		}
-		listURL, err := lago.RoutePath("seer_reddit.RedditPostListRoute", nil)(r.Context())
+		listURL, err := lamu.RoutePath("seer_reddit.RedditPostListRoute", nil)(r.Context())
 		if err != nil || listURL == "" {
 			slog.Error("p_seer_reddit: soft delete redirect URL", "error", err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)

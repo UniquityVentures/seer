@@ -6,37 +6,56 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/plugins/p_dashboard"
+	"github.com/UniquityVentures/lamu/plugins/p_filesystem"
+	"github.com/UniquityVentures/lamu/plugins/p_google_genai"
+	"github.com/UniquityVentures/lamu/plugins/p_pwa"
+	"github.com/UniquityVentures/lamu/plugins/p_users"
+	"github.com/UniquityVentures/lamu/registry"
+	"github.com/UniquityVentures/seer/plugins/p_seer_aisstream"
+	"github.com/UniquityVentures/seer/plugins/p_seer_assistant"
+	"github.com/UniquityVentures/seer/plugins/p_seer_dashboard"
+	"github.com/UniquityVentures/seer/plugins/p_seer_deepsearch"
+	"github.com/UniquityVentures/seer/plugins/p_seer_gdelt"
+	"github.com/UniquityVentures/seer/plugins/p_seer_intel"
+	"github.com/UniquityVentures/seer/plugins/p_seer_node_fleet"
+	"github.com/UniquityVentures/seer/plugins/p_seer_opensky"
+	"github.com/UniquityVentures/seer/plugins/p_seer_reddit"
+	"github.com/UniquityVentures/seer/plugins/p_seer_websites"
 	"github.com/UniquityVentures/seer/plugins/p_seer_workerregistry"
-
-	_ "github.com/UniquityVentures/lago/plugins/p_dashboard"
-	_ "github.com/UniquityVentures/lago/plugins/p_filesystem"
-	_ "github.com/UniquityVentures/lago/plugins/p_google_genai"
-	_ "github.com/UniquityVentures/lago/plugins/p_pwa"
-	_ "github.com/UniquityVentures/lago/plugins/p_users"
-	_ "github.com/UniquityVentures/seer/plugins/p_seer_aisstream"
-	_ "github.com/UniquityVentures/seer/plugins/p_seer_assistant"
-	_ "github.com/UniquityVentures/seer/plugins/p_seer_dashboard"
-	_ "github.com/UniquityVentures/seer/plugins/p_seer_deepsearch"
-	_ "github.com/UniquityVentures/seer/plugins/p_seer_gdelt"
-	_ "github.com/UniquityVentures/seer/plugins/p_seer_intel"
-	_ "github.com/UniquityVentures/seer/plugins/p_seer_node_fleet"
-	_ "github.com/UniquityVentures/seer/plugins/p_seer_opensky"
-	_ "github.com/UniquityVentures/seer/plugins/p_seer_reddit"
-	_ "github.com/UniquityVentures/seer/plugins/p_seer_runners"
-	_ "github.com/UniquityVentures/seer/plugins/p_seer_websites"
 )
 
 func main() {
 	go func() {
 		log.Fatal(http.ListenAndServe(":7777", nil))
 	}()
+
+	plugins := []registry.Pair[string, lamu.Plugin]{
+		p_dashboard.GetPlugin(),
+		p_filesystem.GetPlugin(),
+		p_google_genai.GetPlugin(),
+		p_users.GetPlugin(),
+		p_pwa.GetPlugin(),
+		p_seer_workerregistry.GetPlugin(),
+		p_seer_intel.GetPlugin(),
+		p_seer_dashboard.GetPlugin(),
+		p_seer_reddit.GetPlugin(),
+		p_seer_websites.GetPlugin(),
+		p_seer_gdelt.GetPlugin(),
+		p_seer_opensky.GetPlugin(),
+		p_seer_aisstream.GetPlugin(),
+		p_seer_deepsearch.GetPlugin(),
+		p_seer_assistant.GetPlugin(),
+		p_seer_node_fleet.GetPlugin(),
+	}
 	p_seer_workerregistry.BuildAllRegistries()
-	config, err := lago.LoadConfigFromFile("seer.toml")
+
+	config, err := lamu.LoadConfigFromFile("seer.toml", plugins)
 	if err != nil {
 		panic(err)
 	}
-	if err := lago.Start(config); err != nil {
+	if err := lamu.Start(config, plugins); err != nil {
 		slog.Error(err.Error())
 	}
 }

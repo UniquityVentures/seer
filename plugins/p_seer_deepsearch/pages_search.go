@@ -1,42 +1,42 @@
 package p_seer_deepsearch
 
 import (
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 )
 
 var deepSearchHomeFormName = getters.Static("seer_deepsearch.HomeSearchForm")
 
 func registerDeepSearchMenuPages() {
-	lago.RegistryPage.Register("seer_deepsearch.DeepSearchMenu", &components.SidebarMenu{
+	registerPluginPage("seer_deepsearch.DeepSearchMenu", &components.SidebarMenu{
 		Title: getters.Static("Deep search"),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to All Apps"),
-			Url:   lago.RoutePath("dashboard.AppsPage", nil),
+			Url:   lamu.RoutePath("dashboard.AppsPage", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("New search"),
-				Url:   lago.RoutePath("seer_deepsearch.DefaultRoute", nil),
+				Url:   lamu.RoutePath("seer_deepsearch.DefaultRoute", nil),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.Static("History"),
-				Url:   lago.RoutePath("seer_deepsearch.HistoryRoute", nil),
+				Url:   lamu.RoutePath("seer_deepsearch.HistoryRoute", nil),
 			},
 		},
 	})
 }
 
 func registerDeepSearchSearchPages() {
-	lago.RegistryPage.Register("seer_deepsearch.DeepSearchHome", &components.ShellScaffold{
+	registerPluginPage("seer_deepsearch.DeepSearchHome", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_deepsearch.DeepSearchMenu"},
+			lamu.DynamicPage{Name: "seer_deepsearch.DeepSearchMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
 				Name:      deepSearchHomeFormName,
-				ActionURL: lago.RoutePath("seer_deepsearch.StartRoute", nil),
+				ActionURL: lamu.RoutePath("seer_deepsearch.StartRoute", nil),
 				Children: []components.PageInterface{
 					&components.FormComponent[DeepSearch]{
 						Getter:   getters.Static(DeepSearch{}),
@@ -63,7 +63,7 @@ func registerDeepSearchSearchPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_deepsearch.StartBlank", &components.ContainerColumn{
+	registerPluginPage("seer_deepsearch.StartBlank", &components.ContainerColumn{
 		Page: components.Page{Key: "seer_deepsearch.StartBlankRoot"},
 	})
 }

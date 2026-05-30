@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 	"gorm.io/gorm"
 )
 
@@ -19,7 +19,7 @@ const IntelsTable = "intels"
 // intelMapMaxMarkers caps dashboard map payloads for intel-derived points.
 const intelMapMaxMarkers = 5000
 
-// MapDisplayPointWire is one CBOR marker for [github.com/UniquityVentures/lago/components.MapDisplay]
+// MapDisplayPointWire is one CBOR marker for [github.com/UniquityVentures/lamu/components.MapDisplay]
 // (intel events with geocoded locations; optional layer for merged dashboards).
 type MapDisplayPointWire struct {
 	Position struct {
@@ -91,7 +91,7 @@ func intelDetailPath(ctx context.Context, intelID uint) string {
 	if intelID == 0 {
 		return ""
 	}
-	href, err := lago.RoutePath("seer_intel.DetailRoute", map[string]getters.Getter[any]{
+	href, err := lamu.RoutePath("seer_intel.DetailRoute", map[string]getters.Getter[any]{
 		"id": getters.Any(getters.Static(strconv.FormatUint(uint64(intelID), 10))),
 	})(ctx)
 	if err != nil || href == "" {

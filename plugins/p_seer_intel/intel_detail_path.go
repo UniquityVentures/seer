@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 	"gorm.io/gorm"
 )
 
@@ -27,7 +27,7 @@ func IntelDetailPathForSource(ctx context.Context, kind string, kindID uint) (st
 		}
 		return "", err
 	}
-	return lago.RoutePath("seer_intel.DetailRoute", map[string]getters.Getter[any]{
+	return lamu.RoutePath("seer_intel.DetailRoute", map[string]getters.Getter[any]{
 		"id": getters.Any(getters.Static(strconv.FormatUint(uint64(row.ID), 10))),
 	})(ctx)
 }

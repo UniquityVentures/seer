@@ -1,9 +1,9 @@
 package p_seer_websites
 
 import (
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 )
 
 func websiteDetailContentColumn() components.PageInterface {
@@ -22,7 +22,7 @@ func websiteDetailContentColumn() components.PageInterface {
 							&components.ButtonPost{
 								Page:    components.Page{Key: "seer_websites.WebsiteDetailAddIntelBtn"},
 								Label:   "Add to Intel",
-								URL:     lago.RoutePath("seer_websites.WebsiteAddIntelRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
+								URL:     lamu.RoutePath("seer_websites.WebsiteAddIntelRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
 								Icon:    "document-plus",
 								Classes: "btn-outline btn-primary btn-sm shrink-0",
 							},
@@ -33,8 +33,8 @@ func websiteDetailContentColumn() components.PageInterface {
 						Label:       "Delete",
 						Icon:        "trash",
 						Name:        getters.Static("seer_websites.WebsiteDeleteForm"),
-						Url:         lago.RoutePath("seer_websites.WebsiteDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("website.ID"))}),
-						FormPostURL: lago.RoutePath("seer_websites.WebsiteDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("website.ID"))}),
+						Url:         lamu.RoutePath("seer_websites.WebsiteDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("website.ID"))}),
+						FormPostURL: lamu.RoutePath("seer_websites.WebsiteDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("website.ID"))}),
 						ModalUID:    "seer-website-delete-modal",
 						Classes:     "btn-outline btn-error btn-sm shrink-0",
 					},
@@ -71,9 +71,9 @@ func websiteDetailContentColumn() components.PageInterface {
 }
 
 func registerWebsiteDetailPages() {
-	lago.RegistryPage.Register("seer_websites.WebsiteDetail", &components.ShellScaffold{
+	registerPluginPage("seer_websites.WebsiteDetail", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_websites.WebsiteDetailMenu"},
+			lamu.DynamicPage{Name: "seer_websites.WebsiteDetailMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.Detail[Website]{
@@ -85,7 +85,7 @@ func registerWebsiteDetailPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_websites.WebsiteDeleteForm", &components.Modal{
+	registerPluginPage("seer_websites.WebsiteDeleteForm", &components.Modal{
 		UID: "seer-website-delete-modal",
 		Children: []components.PageInterface{
 			&components.DeleteConfirmation{

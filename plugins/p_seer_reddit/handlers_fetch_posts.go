@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/views"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/views"
 	"gorm.io/gorm"
 )
 
@@ -58,7 +58,7 @@ func (redditSourceFetchPostsActionLayer) Next(_ views.View, _ http.Handler) http
 				}
 			}()
 		}
-		backURL, err := lago.RoutePath("seer_reddit.RedditPostListBySourceRoute", map[string]getters.Getter[any]{
+		backURL, err := lamu.RoutePath("seer_reddit.RedditPostListBySourceRoute", map[string]getters.Getter[any]{
 			"source_id": getters.Any(getters.Static(raw)),
 		})(r.Context())
 		if err != nil || backURL == "" {

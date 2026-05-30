@@ -3,9 +3,9 @@ package p_seer_reddit
 import (
 	"context"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 	"gorm.io/datatypes"
 )
 
@@ -25,7 +25,7 @@ func redditSourceCreateFormFields() components.PageInterface {
 					&components.InputForeignKey[RedditRunner]{
 						Label:       "Worker",
 						Name:        "RedditRunnerID",
-						Url:         lago.RoutePath("seer_reddit.RedditRunnerSelectRoute", nil),
+						Url:         lamu.RoutePath("seer_reddit.RedditRunnerSelectRoute", nil),
 						Display:     getters.Key[string]("$in.Name"),
 						Placeholder: "Optional worker…",
 						Required:    false,
@@ -143,14 +143,14 @@ func registerRedditSourceUpdatePages() {
 	updateFormName := getters.Static("seer_reddit.RedditSourceUpdateForm")
 	deleteFormName := getters.Static("seer_reddit.RedditSourceDeleteForm")
 
-	lago.RegistryPage.Register("seer_reddit.RedditSourceUpdateForm", &components.ShellScaffold{
+	registerPluginPage("seer_reddit.RedditSourceUpdateForm", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_reddit.RedditSourceDetailMenu"},
+			lamu.DynamicPage{Name: "seer_reddit.RedditSourceDetailMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
 				Name: updateFormName,
-				ActionURL: lago.RoutePath("seer_reddit.RedditSourceUpdateRoute", map[string]getters.Getter[any]{
+				ActionURL: lamu.RoutePath("seer_reddit.RedditSourceUpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("redditSource.ID")),
 				}),
 				Children: []components.PageInterface{
@@ -175,8 +175,8 @@ func registerRedditSourceUpdatePages() {
 												Label:       "Delete",
 												Icon:        "trash",
 												Name:        deleteFormName,
-												Url:         lago.RoutePath("seer_reddit.RedditSourceDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("redditSource.ID"))}),
-												FormPostURL: lago.RoutePath("seer_reddit.RedditSourceDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("redditSource.ID"))}),
+												Url:         lamu.RoutePath("seer_reddit.RedditSourceDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("redditSource.ID"))}),
+												FormPostURL: lamu.RoutePath("seer_reddit.RedditSourceDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("redditSource.ID"))}),
 												ModalUID:    "seer-reddit-source-delete-modal",
 												Classes:     "btn-error",
 											},
@@ -191,7 +191,7 @@ func registerRedditSourceUpdatePages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_reddit.RedditSourceDeleteForm", &components.Modal{
+	registerPluginPage("seer_reddit.RedditSourceDeleteForm", &components.Modal{
 		UID: "seer-reddit-source-delete-modal",
 		Children: []components.PageInterface{
 			&components.DeleteConfirmation{
@@ -206,14 +206,14 @@ func registerRedditSourceUpdatePages() {
 func registerRedditSourceCreatePages() {
 	createFormName := getters.Static("seer_reddit.RedditSourceCreateForm")
 
-	lago.RegistryPage.Register("seer_reddit.RedditSourceCreateForm", &components.ShellScaffold{
+	registerPluginPage("seer_reddit.RedditSourceCreateForm", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_reddit.RedditMenu"},
+			lamu.DynamicPage{Name: "seer_reddit.RedditMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
 				Name:      createFormName,
-				ActionURL: lago.RoutePath("seer_reddit.RedditSourceCreateRoute", nil),
+				ActionURL: lamu.RoutePath("seer_reddit.RedditSourceCreateRoute", nil),
 				Children: []components.PageInterface{
 					&components.FormComponent[RedditSource]{
 						Getter:   getters.Static(redditSourceCreateFormDefaults),

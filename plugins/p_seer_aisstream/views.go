@@ -1,10 +1,10 @@
 package p_seer_aisstream
 
 import (
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/plugins/p_users"
-	"github.com/UniquityVentures/lago/views"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/plugins/p_users"
+	"github.com/UniquityVentures/lamu/views"
 )
 
 var aisStreamMessageListQueryPatchers = views.QueryPatchers[AISStreamMessage]{
@@ -12,12 +12,12 @@ var aisStreamMessageListQueryPatchers = views.QueryPatchers[AISStreamMessage]{
 }
 
 func init() {
-	lago.RegistryView.Register("seer_aisstream.MapView",
-		lago.GetPageView("seer_aisstream.MapPage").
+	registerPluginView("seer_aisstream.MapView",
+		lamu.GetPageView("seer_aisstream.MapPage").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}))
 
-	lago.RegistryView.Register("seer_aisstream.MessageListView",
-		lago.GetPageView("seer_aisstream.MessageTablePage").
+	registerPluginView("seer_aisstream.MessageListView",
+		lamu.GetPageView("seer_aisstream.MessageTablePage").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_aisstream.message.list", views.LayerList[AISStreamMessage]{
 				Key:           getters.Static("aisStreamMessages"),
@@ -25,8 +25,8 @@ func init() {
 				QueryPatchers: aisStreamMessageListQueryPatchers,
 			}))
 
-	lago.RegistryView.Register("seer_aisstream.MessageDetailView",
-		lago.GetPageView("seer_aisstream.MessageDetailPage").
+	registerPluginView("seer_aisstream.MessageDetailView",
+		lamu.GetPageView("seer_aisstream.MessageDetailPage").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_aisstream.message.detail", views.LayerDetail[AISStreamMessage]{
 				Key:          getters.Static("aisStreamMessage"),

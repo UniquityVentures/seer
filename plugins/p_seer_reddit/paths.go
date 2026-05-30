@@ -1,118 +1,118 @@
 package p_seer_reddit
 
 import (
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/lamu"
 )
 
 func registerRoutes() {
-	_ = lago.RegistryRoute.Register("seer_reddit.DefaultRoute", lago.Route{
+	registerPluginRoute("seer_reddit.DefaultRoute", lamu.Route{
 		Path:    AppUrl,
-		Handler: lago.NewDynamicView("seer_reddit.RedditSourceListView"),
+		Handler: lamu.NewDynamicView("seer_reddit.RedditSourceListView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_reddit.RedditSourceCreateRoute", lago.Route{
+	registerPluginRoute("seer_reddit.RedditSourceCreateRoute", lamu.Route{
 		Path:    AppUrl + "sources/create/",
-		Handler: lago.NewDynamicView("seer_reddit.RedditSourceCreateView"),
+		Handler: lamu.NewDynamicView("seer_reddit.RedditSourceCreateView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_reddit.RedditSourceUnsetSelectRoute", lago.Route{
+	registerPluginRoute("seer_reddit.RedditSourceUnsetSelectRoute", lamu.Route{
 		Path:    AppUrl + "sources/unset/select/",
-		Handler: lago.NewDynamicView("seer_reddit.RedditSourceUnsetSelectView"),
+		Handler: lamu.NewDynamicView("seer_reddit.RedditSourceUnsetSelectView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_reddit.RedditPostListBySourceRoute", lago.Route{
+	registerPluginRoute("seer_reddit.RedditPostListBySourceRoute", lamu.Route{
 		Path:    AppUrl + "sources/{source_id}/posts/",
-		Handler: lago.NewDynamicView("seer_reddit.RedditPostListBySourceView"),
+		Handler: lamu.NewDynamicView("seer_reddit.RedditPostListBySourceView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_reddit.RedditPostListBySourceBulkAddIntelRoute", lago.Route{
+	registerPluginRoute("seer_reddit.RedditPostListBySourceBulkAddIntelRoute", lamu.Route{
 		Path:    AppUrl + "sources/{source_id}/posts/bulk-add-intel/",
-		Handler: lago.NewDynamicView("seer_reddit.RedditPostListBySourceBulkAddIntelView"),
+		Handler: lamu.NewDynamicView("seer_reddit.RedditPostListBySourceBulkAddIntelView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_reddit.RedditSourceFetchPostsRoute", lago.Route{
+	registerPluginRoute("seer_reddit.RedditSourceFetchPostsRoute", lamu.Route{
 		Path:    AppUrl + "sources/{source_id}/fetch-posts/",
-		Handler: lago.NewDynamicView("seer_reddit.RedditSourceFetchPostsView"),
+		Handler: lamu.NewDynamicView("seer_reddit.RedditSourceFetchPostsView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_reddit.RedditSourceDetailRoute", lago.Route{
+	registerPluginRoute("seer_reddit.RedditSourceDetailRoute", lamu.Route{
 		Path:    AppUrl + "sources/{id}/",
-		Handler: lago.NewDynamicView("seer_reddit.RedditSourceDetailView"),
+		Handler: lamu.NewDynamicView("seer_reddit.RedditSourceDetailView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_reddit.RedditSourceUpdateRoute", lago.Route{
+	registerPluginRoute("seer_reddit.RedditSourceUpdateRoute", lamu.Route{
 		Path:    AppUrl + "sources/{id}/edit/",
-		Handler: lago.NewDynamicView("seer_reddit.RedditSourceUpdateView"),
+		Handler: lamu.NewDynamicView("seer_reddit.RedditSourceUpdateView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_reddit.RedditSourceDeleteRoute", lago.Route{
+	registerPluginRoute("seer_reddit.RedditSourceDeleteRoute", lamu.Route{
 		Path:    AppUrl + "sources/{id}/delete/",
-		Handler: lago.NewDynamicView("seer_reddit.RedditSourceDeleteView"),
+		Handler: lamu.NewDynamicView("seer_reddit.RedditSourceDeleteView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_reddit.RedditPostListRoute", lago.Route{
+	registerPluginRoute("seer_reddit.RedditPostListRoute", lamu.Route{
 		Path:    AppUrl + "posts/",
-		Handler: lago.NewDynamicView("seer_reddit.RedditPostListView"),
+		Handler: lamu.NewDynamicView("seer_reddit.RedditPostListView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_reddit.RedditPostListBulkAddIntelRoute", lago.Route{
+	registerPluginRoute("seer_reddit.RedditPostListBulkAddIntelRoute", lamu.Route{
 		Path:    AppUrl + "posts/bulk-add-intel/",
-		Handler: lago.NewDynamicView("seer_reddit.RedditPostListBulkAddIntelView"),
+		Handler: lamu.NewDynamicView("seer_reddit.RedditPostListBulkAddIntelView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_reddit.RedditPostDetailRoute", lago.Route{
+	registerPluginRoute("seer_reddit.RedditPostDetailRoute", lamu.Route{
 		Path:    AppUrl + "posts/{id}/",
-		Handler: lago.NewDynamicView("seer_reddit.RedditPostDetailView"),
+		Handler: lamu.NewDynamicView("seer_reddit.RedditPostDetailView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_reddit.RedditPostDeleteRoute", lago.Route{
+	registerPluginRoute("seer_reddit.RedditPostDeleteRoute", lamu.Route{
 		Path:    AppUrl + "posts/{id}/delete/",
-		Handler: lago.NewDynamicView("seer_reddit.RedditPostSoftDeleteView"),
+		Handler: lamu.NewDynamicView("seer_reddit.RedditPostSoftDeleteView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_reddit.RedditPostAddIntelRoute", lago.Route{
+	registerPluginRoute("seer_reddit.RedditPostAddIntelRoute", lamu.Route{
 		Path:    AppUrl + "posts/{id}/add-intel/",
-		Handler: lago.NewDynamicView("seer_reddit.RedditPostAddIntelView"),
+		Handler: lamu.NewDynamicView("seer_reddit.RedditPostAddIntelView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_reddit.RedditRunnerListRoute", lago.Route{
+	registerPluginRoute("seer_reddit.RedditRunnerListRoute", lamu.Route{
 		Path:    AppUrl + "workers/",
-		Handler: lago.NewDynamicView("seer_reddit.RedditRunnerListView"),
+		Handler: lamu.NewDynamicView("seer_reddit.RedditRunnerListView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_reddit.RedditRunnerCreateRoute", lago.Route{
+	registerPluginRoute("seer_reddit.RedditRunnerCreateRoute", lamu.Route{
 		Path:    AppUrl + "workers/create/",
-		Handler: lago.NewDynamicView("seer_reddit.RedditRunnerCreateView"),
+		Handler: lamu.NewDynamicView("seer_reddit.RedditRunnerCreateView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_reddit.RedditRunnerSelectRoute", lago.Route{
+	registerPluginRoute("seer_reddit.RedditRunnerSelectRoute", lamu.Route{
 		Path:    AppUrl + "workers/select/",
-		Handler: lago.NewDynamicView("seer_reddit.RedditRunnerSelectView"),
+		Handler: lamu.NewDynamicView("seer_reddit.RedditRunnerSelectView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_reddit.RedditRunnerWorkerPoolStartRoute", lago.Route{
+	registerPluginRoute("seer_reddit.RedditRunnerWorkerPoolStartRoute", lamu.Route{
 		Path:    AppUrl + "workers/{id}/worker-pool/start/",
-		Handler: lago.NewDynamicView("seer_reddit.RedditRunnerWorkerPoolStartView"),
+		Handler: lamu.NewDynamicView("seer_reddit.RedditRunnerWorkerPoolStartView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_reddit.RedditRunnerWorkerPoolStopRoute", lago.Route{
+	registerPluginRoute("seer_reddit.RedditRunnerWorkerPoolStopRoute", lamu.Route{
 		Path:    AppUrl + "workers/{id}/worker-pool/stop/",
-		Handler: lago.NewDynamicView("seer_reddit.RedditRunnerWorkerPoolStopView"),
+		Handler: lamu.NewDynamicView("seer_reddit.RedditRunnerWorkerPoolStopView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_reddit.RedditRunnerDetailRoute", lago.Route{
+	registerPluginRoute("seer_reddit.RedditRunnerDetailRoute", lamu.Route{
 		Path:    AppUrl + "workers/{id}/",
-		Handler: lago.NewDynamicView("seer_reddit.RedditRunnerDetailView"),
+		Handler: lamu.NewDynamicView("seer_reddit.RedditRunnerDetailView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_reddit.RedditRunnerUpdateRoute", lago.Route{
+	registerPluginRoute("seer_reddit.RedditRunnerUpdateRoute", lamu.Route{
 		Path:    AppUrl + "workers/{id}/edit/",
-		Handler: lago.NewDynamicView("seer_reddit.RedditRunnerUpdateView"),
+		Handler: lamu.NewDynamicView("seer_reddit.RedditRunnerUpdateView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_reddit.RedditRunnerDeleteRoute", lago.Route{
+	registerPluginRoute("seer_reddit.RedditRunnerDeleteRoute", lamu.Route{
 		Path:    AppUrl + "workers/{id}/delete/",
-		Handler: lago.NewDynamicView("seer_reddit.RedditRunnerDeleteView"),
+		Handler: lamu.NewDynamicView("seer_reddit.RedditRunnerDeleteView"),
 	})
 }
 

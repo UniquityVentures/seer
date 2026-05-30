@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"github.com/UniquityVentures/lamu/fields"
 
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/registry"
+	"github.com/UniquityVentures/lamu/registry"
 	aisstream "github.com/aisstream/ais-message-models/golang/aisStream"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
@@ -28,7 +28,7 @@ type AISStreamMessage struct {
 	ReceivedAt  time.Time  `gorm:"not null;index"`
 	TimeUTC     *time.Time `gorm:"index"`
 
-	Position  lago.PGPoint `gorm:"type:point"`
+	Position  fields.PGPoint `gorm:"type:point"`
 	Longitude float64      `gorm:"-"`
 	Latitude  float64      `gorm:"-"`
 	SOG       *float64
@@ -59,9 +59,9 @@ func (m *AISStreamMessage) BeforeSave(_ *gorm.DB) error {
 		return nil
 	}
 	if aisValidLatLng(m.Latitude, m.Longitude) {
-		m.Position = lago.NewPGPoint(m.Longitude, m.Latitude)
+		m.Position = fields.NewPGPoint(m.Longitude, m.Latitude)
 	} else {
-		m.Position = lago.PGPoint{}
+		m.Position = fields.PGPoint{}
 	}
 	return nil
 }

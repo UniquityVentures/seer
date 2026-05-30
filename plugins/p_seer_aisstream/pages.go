@@ -8,10 +8,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"github.com/UniquityVentures/lamu/fields"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 	"gorm.io/datatypes"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
@@ -24,16 +25,16 @@ func init() {
 }
 
 func registerAISStreamMenuPages() {
-	lago.RegistryPage.Register("seer_aisstream.AppMenu", &components.SidebarMenu{
+	registerPluginPage("seer_aisstream.AppMenu", &components.SidebarMenu{
 		Title: getters.Static("AISstream"),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to All Apps"),
-			Url:   lago.RoutePath("dashboard.AppsPage", nil),
+			Url:   lamu.RoutePath("dashboard.AppsPage", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("Messages"),
-				Url:   lago.RoutePath("seer_aisstream.DefaultRoute", nil),
+				Url:   lamu.RoutePath("seer_aisstream.DefaultRoute", nil),
 			},
 			&aisStreamMapMenuLink{Page: components.Page{Key: "seer_aisstream.AppMenuMapLink"}},
 		},
@@ -41,9 +42,9 @@ func registerAISStreamMenuPages() {
 }
 
 func registerAISStreamTableAndDetail() {
-	lago.RegistryPage.Register("seer_aisstream.MessageTablePage", &components.ShellScaffold{
+	registerPluginPage("seer_aisstream.MessageTablePage", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_aisstream.AppMenu"},
+			lamu.DynamicPage{Name: "seer_aisstream.AppMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[AISStreamMessage]{
@@ -52,7 +53,7 @@ func registerAISStreamTableAndDetail() {
 				Classes: "w-full",
 				Data:    getters.Key[components.ObjectList[AISStreamMessage]]("aisStreamMessages"),
 				RowAttr: getters.RowAttrNavigate(
-					lago.RoutePath("seer_aisstream.MessageDetailRoute", map[string]getters.Getter[any]{
+					lamu.RoutePath("seer_aisstream.MessageDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					}),
 				),
@@ -67,10 +68,10 @@ func registerAISStreamTableAndDetail() {
 						&components.FieldText{Getter: getters.Key[string]("$row.ShipName")},
 					}},
 					{Label: "Lon", Name: "Longitude", Children: []components.PageInterface{
-						&components.FieldText{Getter: aisPointAxisString(getters.Key[lago.PGPoint]("$row.Position"), true)},
+						&components.FieldText{Getter: aisPointAxisString(getters.Key[fields.PGPoint]("$row.Position"), true)},
 					}},
 					{Label: "Lat", Name: "Latitude", Children: []components.PageInterface{
-						&components.FieldText{Getter: aisPointAxisString(getters.Key[lago.PGPoint]("$row.Position"), false)},
+						&components.FieldText{Getter: aisPointAxisString(getters.Key[fields.PGPoint]("$row.Position"), false)},
 					}},
 					{Label: "Received", Name: "ReceivedAt", Children: []components.PageInterface{
 						&components.FieldText{Getter: aisTimeString(getters.Key[time.Time]("$row.ReceivedAt"))},
@@ -80,25 +81,25 @@ func registerAISStreamTableAndDetail() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_aisstream.MessageDetailMenu", &components.SidebarMenu{
+	registerPluginPage("seer_aisstream.MessageDetailMenu", &components.SidebarMenu{
 		Title: getters.Static("AIS Message"),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("All messages"),
-			Url:   lago.RoutePath("seer_aisstream.MessageListRoute", nil),
+			Url:   lamu.RoutePath("seer_aisstream.MessageListRoute", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("View"),
-				Url: lago.RoutePath("seer_aisstream.MessageDetailRoute", map[string]getters.Getter[any]{
+				Url: lamu.RoutePath("seer_aisstream.MessageDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("aisStreamMessage.ID")),
 				}),
 			},
 		},
 	})
 
-	lago.RegistryPage.Register("seer_aisstream.MessageDetailPage", &components.ShellScaffold{
+	registerPluginPage("seer_aisstream.MessageDetailPage", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_aisstream.MessageDetailMenu"},
+			lamu.DynamicPage{Name: "seer_aisstream.MessageDetailMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.Detail[AISStreamMessage]{
@@ -115,8 +116,8 @@ func registerAISStreamTableAndDetail() {
 							aisLbl("Ship name", getters.Key[string]("$in.ShipName")),
 							aisLbl("Received (UTC)", aisTimeString(getters.Key[time.Time]("$in.ReceivedAt"))),
 							aisLbl("AIS time (UTC)", aisTimePtrString(getters.Key[*time.Time]("$in.TimeUTC"))),
-							aisLbl("Longitude", aisPointAxisString(getters.Key[lago.PGPoint]("$in.Position"), true)),
-							aisLbl("Latitude", aisPointAxisString(getters.Key[lago.PGPoint]("$in.Position"), false)),
+							aisLbl("Longitude", aisPointAxisString(getters.Key[fields.PGPoint]("$in.Position"), true)),
+							aisLbl("Latitude", aisPointAxisString(getters.Key[fields.PGPoint]("$in.Position"), false)),
 							aisLbl("SOG (kn)", aisFloatPtrString(getters.Key[*float64]("$in.SOG"))),
 							aisLbl("COG (deg)", aisFloatPtrString(getters.Key[*float64]("$in.COG"))),
 							aisLbl("Heading (deg)", aisFloatPtrString(getters.Key[*float64]("$in.Heading"))),
@@ -167,7 +168,7 @@ func aisTimePtrString(g getters.Getter[*time.Time]) getters.Getter[string] {
 	}
 }
 
-func aisPointAxisString(g getters.Getter[lago.PGPoint], longitude bool) getters.Getter[string] {
+func aisPointAxisString(g getters.Getter[fields.PGPoint], longitude bool) getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
 		p, err := g(ctx)
 		if err != nil || !p.Valid {

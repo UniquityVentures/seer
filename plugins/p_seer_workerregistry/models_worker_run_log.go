@@ -4,7 +4,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/UniquityVentures/lago/lago"
 	"gorm.io/gorm"
 )
 
@@ -50,8 +49,10 @@ func (WorkerRunLog) TableName() string {
 }
 
 func init() {
-	lago.OnDBInit("p_seer_workerregistry.models", func(db *gorm.DB) *gorm.DB {
-		lago.RegisterModel[WorkerRunLog](db)
+	registerPluginDBInitHook("p_seer_workerregistry.models", func(db *gorm.DB) *gorm.DB {
+		if err := db.AutoMigrate(&WorkerRunLog{}); err != nil {
+			panic(err)
+		}
 		return db
 	})
 }

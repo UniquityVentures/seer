@@ -3,7 +3,7 @@ package p_seer_runners
 import (
 	"context"
 
-	"github.com/UniquityVentures/lago/registry"
+	"github.com/UniquityVentures/lamu/registry"
 	"gorm.io/gorm"
 )
 

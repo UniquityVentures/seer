@@ -1,111 +1,111 @@
 package p_seer_gdelt
 
-import "github.com/UniquityVentures/lago/lago"
+import "github.com/UniquityVentures/lamu/lamu"
 
 func registerRoutes() {
-	_ = lago.RegistryRoute.Register("seer_gdelt.DefaultRoute", lago.Route{
+	registerPluginRoute("seer_gdelt.DefaultRoute", lamu.Route{
 		Path:    AppUrl,
-		Handler: lago.NewDynamicView("seer_gdelt.GDELTSourceListView"),
+		Handler: lamu.NewDynamicView("seer_gdelt.GDELTSourceListView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_gdelt.SearchRoute", lago.Route{
+	registerPluginRoute("seer_gdelt.SearchRoute", lamu.Route{
 		Path:    AppUrl + "search/",
-		Handler: lago.NewDynamicView("seer_gdelt.SearchView"),
+		Handler: lamu.NewDynamicView("seer_gdelt.SearchView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_gdelt.GDELTSourceCreateRoute", lago.Route{
+	registerPluginRoute("seer_gdelt.GDELTSourceCreateRoute", lamu.Route{
 		Path:    AppUrl + "sources/create/",
-		Handler: lago.NewDynamicView("seer_gdelt.GDELTSourceCreateView"),
+		Handler: lamu.NewDynamicView("seer_gdelt.GDELTSourceCreateView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_gdelt.GDELTSourceUnsetSelectRoute", lago.Route{
+	registerPluginRoute("seer_gdelt.GDELTSourceUnsetSelectRoute", lamu.Route{
 		Path:    AppUrl + "sources/unset/select/",
-		Handler: lago.NewDynamicView("seer_gdelt.GDELTSourceUnsetSelectView"),
+		Handler: lamu.NewDynamicView("seer_gdelt.GDELTSourceUnsetSelectView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_gdelt.GDELTSourceDetailRoute", lago.Route{
+	registerPluginRoute("seer_gdelt.GDELTSourceDetailRoute", lamu.Route{
 		Path:    AppUrl + "sources/{id}/",
-		Handler: lago.NewDynamicView("seer_gdelt.GDELTSourceDetailView"),
+		Handler: lamu.NewDynamicView("seer_gdelt.GDELTSourceDetailView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_gdelt.GDELTSourceUpdateRoute", lago.Route{
+	registerPluginRoute("seer_gdelt.GDELTSourceUpdateRoute", lamu.Route{
 		Path:    AppUrl + "sources/{id}/edit/",
-		Handler: lago.NewDynamicView("seer_gdelt.GDELTSourceUpdateView"),
+		Handler: lamu.NewDynamicView("seer_gdelt.GDELTSourceUpdateView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_gdelt.GDELTSourceDeleteRoute", lago.Route{
+	registerPluginRoute("seer_gdelt.GDELTSourceDeleteRoute", lamu.Route{
 		Path:    AppUrl + "sources/{id}/delete/",
-		Handler: lago.NewDynamicView("seer_gdelt.GDELTSourceDeleteView"),
+		Handler: lamu.NewDynamicView("seer_gdelt.GDELTSourceDeleteView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_gdelt.GDELTWorkerListRoute", lago.Route{
+	registerPluginRoute("seer_gdelt.GDELTWorkerListRoute", lamu.Route{
 		Path:    AppUrl + "workers/",
-		Handler: lago.NewDynamicView("seer_gdelt.GDELTWorkerListView"),
+		Handler: lamu.NewDynamicView("seer_gdelt.GDELTWorkerListView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_gdelt.GDELTWorkerCreateRoute", lago.Route{
+	registerPluginRoute("seer_gdelt.GDELTWorkerCreateRoute", lamu.Route{
 		Path:    AppUrl + "workers/create/",
-		Handler: lago.NewDynamicView("seer_gdelt.GDELTWorkerCreateView"),
+		Handler: lamu.NewDynamicView("seer_gdelt.GDELTWorkerCreateView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_gdelt.GDELTWorkerSelectRoute", lago.Route{
+	registerPluginRoute("seer_gdelt.GDELTWorkerSelectRoute", lamu.Route{
 		Path:    AppUrl + "workers/select/",
-		Handler: lago.NewDynamicView("seer_gdelt.GDELTWorkerSelectView"),
+		Handler: lamu.NewDynamicView("seer_gdelt.GDELTWorkerSelectView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_gdelt.GDELTWorkerPoolStartRoute", lago.Route{
+	registerPluginRoute("seer_gdelt.GDELTWorkerPoolStartRoute", lamu.Route{
 		Path:    AppUrl + "workers/{id}/worker-pool/start/",
-		Handler: lago.NewDynamicView("seer_gdelt.GDELTWorkerPoolStartView"),
+		Handler: lamu.NewDynamicView("seer_gdelt.GDELTWorkerPoolStartView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_gdelt.GDELTWorkerPoolStopRoute", lago.Route{
+	registerPluginRoute("seer_gdelt.GDELTWorkerPoolStopRoute", lamu.Route{
 		Path:    AppUrl + "workers/{id}/worker-pool/stop/",
-		Handler: lago.NewDynamicView("seer_gdelt.GDELTWorkerPoolStopView"),
+		Handler: lamu.NewDynamicView("seer_gdelt.GDELTWorkerPoolStopView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_gdelt.GDELTWorkerDetailRoute", lago.Route{
+	registerPluginRoute("seer_gdelt.GDELTWorkerDetailRoute", lamu.Route{
 		Path:    AppUrl + "workers/{id}/",
-		Handler: lago.NewDynamicView("seer_gdelt.GDELTWorkerDetailView"),
+		Handler: lamu.NewDynamicView("seer_gdelt.GDELTWorkerDetailView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_gdelt.GDELTWorkerUpdateRoute", lago.Route{
+	registerPluginRoute("seer_gdelt.GDELTWorkerUpdateRoute", lamu.Route{
 		Path:    AppUrl + "workers/{id}/edit/",
-		Handler: lago.NewDynamicView("seer_gdelt.GDELTWorkerUpdateView"),
+		Handler: lamu.NewDynamicView("seer_gdelt.GDELTWorkerUpdateView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_gdelt.GDELTWorkerDeleteRoute", lago.Route{
+	registerPluginRoute("seer_gdelt.GDELTWorkerDeleteRoute", lamu.Route{
 		Path:    AppUrl + "workers/{id}/delete/",
-		Handler: lago.NewDynamicView("seer_gdelt.GDELTWorkerDeleteView"),
+		Handler: lamu.NewDynamicView("seer_gdelt.GDELTWorkerDeleteView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_gdelt.EventListRoute", lago.Route{
+	registerPluginRoute("seer_gdelt.EventListRoute", lamu.Route{
 		Path:    AppUrl + "events/",
-		Handler: lago.NewDynamicView("seer_gdelt.EventListView"),
+		Handler: lamu.NewDynamicView("seer_gdelt.EventListView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_gdelt.EventCreateRoute", lago.Route{
+	registerPluginRoute("seer_gdelt.EventCreateRoute", lamu.Route{
 		Path:    AppUrl + "events/create/",
-		Handler: lago.NewDynamicView("seer_gdelt.EventCreateView"),
+		Handler: lamu.NewDynamicView("seer_gdelt.EventCreateView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_gdelt.EventDetailRoute", lago.Route{
+	registerPluginRoute("seer_gdelt.EventDetailRoute", lamu.Route{
 		Path:    AppUrl + "events/{id}/",
-		Handler: lago.NewDynamicView("seer_gdelt.EventDetailView"),
+		Handler: lamu.NewDynamicView("seer_gdelt.EventDetailView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_gdelt.EventUpdateRoute", lago.Route{
+	registerPluginRoute("seer_gdelt.EventUpdateRoute", lamu.Route{
 		Path:    AppUrl + "events/{id}/edit/",
-		Handler: lago.NewDynamicView("seer_gdelt.EventUpdateView"),
+		Handler: lamu.NewDynamicView("seer_gdelt.EventUpdateView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_gdelt.EventDeleteRoute", lago.Route{
+	registerPluginRoute("seer_gdelt.EventDeleteRoute", lamu.Route{
 		Path:    AppUrl + "events/{id}/delete/",
-		Handler: lago.NewDynamicView("seer_gdelt.EventDeleteView"),
+		Handler: lamu.NewDynamicView("seer_gdelt.EventDeleteView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_gdelt.MapRoute", lago.Route{
+	registerPluginRoute("seer_gdelt.MapRoute", lamu.Route{
 		Path:    AppUrl + "map/",
-		Handler: lago.NewDynamicView("seer_gdelt.MapView"),
+		Handler: lamu.NewDynamicView("seer_gdelt.MapView"),
 	})
 }
 

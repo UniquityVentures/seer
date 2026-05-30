@@ -1,10 +1,10 @@
 package p_seer_assistant
 
 import (
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/plugins/p_users"
-	"github.com/UniquityVentures/lago/views"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/plugins/p_users"
+	"github.com/UniquityVentures/lamu/views"
 )
 
 func init() {
@@ -16,20 +16,20 @@ func init() {
 		{Key: "seer_assistant.session.user_scope", Value: assistantSessionUserScope{}},
 	}
 
-	lago.RegistryView.Register("seer_assistant.ChatView",
-		lago.GetPageView("seer_assistant.ChatPage").
+	registerPluginView("seer_assistant.ChatView",
+		lamu.GetPageView("seer_assistant.ChatPage").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}))
 
-	lago.RegistryView.Register("seer_assistant.HistoryView",
-		lago.GetPageView("seer_assistant.HistoryPage").
+	registerPluginView("seer_assistant.HistoryView",
+		lamu.GetPageView("seer_assistant.HistoryPage").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_assistant.session.list", views.LayerList[SeerAssistantSession]{
 				Key:           getters.Static("assistantSessions"),
 				QueryPatchers: sessionListPatchers,
 			}))
 
-	lago.RegistryView.Register("seer_assistant.ChatSessionView",
-		lago.GetPageView("seer_assistant.ChatPage").
+	registerPluginView("seer_assistant.ChatSessionView",
+		lamu.GetPageView("seer_assistant.ChatPage").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_assistant.session.detail", views.LayerDetail[SeerAssistantSession]{
 				Key:           getters.Static("assistantSession"),

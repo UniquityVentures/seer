@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/views"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/views"
 	"github.com/UniquityVentures/seer/plugins/p_seer_intel"
 )
 
@@ -43,7 +43,7 @@ func (redditPostAddIntelLayer) Next(_ views.View, _ http.Handler) http.Handler {
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
-		detailURL, err := lago.RoutePath("seer_reddit.RedditPostDetailRoute", map[string]getters.Getter[any]{
+		detailURL, err := lamu.RoutePath("seer_reddit.RedditPostDetailRoute", map[string]getters.Getter[any]{
 			"id": getters.Any(getters.Static(strconv.FormatUint(uint64(post.ID), 10))),
 		})(r.Context())
 		if err != nil || detailURL == "" {

@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 )
 
 // newRedditPostDataTable builds the shared Reddit post [components.DataTable] for global and by-source lists;
@@ -30,7 +30,7 @@ func newRedditPostDataTable() *components.DataTable[RedditPost] {
 							&components.ButtonPost{
 								Page:    components.Page{Key: "seer_reddit.RedditPostTableFetchFromReddit"},
 								Label:   "Load",
-								URL:     lago.RoutePath("seer_reddit.RedditSourceFetchPostsRoute", map[string]getters.Getter[any]{"source_id": sourceID}),
+								URL:     lamu.RoutePath("seer_reddit.RedditSourceFetchPostsRoute", map[string]getters.Getter[any]{"source_id": sourceID}),
 								Icon:    "arrow-path",
 								Classes: "btn-outline btn-sm w-24",
 								Attr:    redditPostToolbarBusyGetter(),
@@ -62,7 +62,7 @@ func newRedditPostDataTable() *components.DataTable[RedditPost] {
 			},
 		},
 		RowAttr: getters.RowAttrNavigate(
-			lago.RoutePath("seer_reddit.RedditPostDetailRoute", map[string]getters.Getter[any]{
+			lamu.RoutePath("seer_reddit.RedditPostDetailRoute", map[string]getters.Getter[any]{
 				"id": getters.Any(getters.Key[uint]("$row.ID")),
 			}),
 		),
@@ -87,7 +87,7 @@ func redditPostDetailContentColumn() components.PageInterface {
 							&components.ButtonPost{
 								Page:    components.Page{Key: "seer_reddit.RedditPostDetailAddIntelBtn"},
 								Label:   "Add to Intel",
-								URL:     lago.RoutePath("seer_reddit.RedditPostAddIntelRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
+								URL:     lamu.RoutePath("seer_reddit.RedditPostAddIntelRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
 								Icon:    "document-plus",
 								Classes: "btn-outline btn-primary btn-sm shrink-0",
 								Attr:    redditPostToolbarBusyGetter(),
@@ -99,8 +99,8 @@ func redditPostDetailContentColumn() components.PageInterface {
 						Label:       "Delete",
 						Icon:        "trash",
 						Name:        getters.Static("seer_reddit.RedditPostDeleteForm"),
-						Url:         lago.RoutePath("seer_reddit.RedditPostDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("redditPost.ID"))}),
-						FormPostURL: lago.RoutePath("seer_reddit.RedditPostDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("redditPost.ID"))}),
+						Url:         lamu.RoutePath("seer_reddit.RedditPostDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("redditPost.ID"))}),
+						FormPostURL: lamu.RoutePath("seer_reddit.RedditPostDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("redditPost.ID"))}),
 						ModalUID:    "seer-reddit-post-delete-modal",
 						Classes:     "btn-outline btn-error btn-sm shrink-0",
 					},

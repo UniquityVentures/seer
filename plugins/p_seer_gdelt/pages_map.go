@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"log/slog"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -46,7 +46,7 @@ func (e *gdeltMapSidebarLink) GetKey() string     { return e.Key }
 func (e *gdeltMapSidebarLink) GetRoles() []string { return e.Roles }
 
 func (e *gdeltMapSidebarLink) Build(ctx context.Context) Node {
-	href, err := lago.RoutePath("seer_gdelt.MapRoute", nil)(ctx)
+	href, err := lamu.RoutePath("seer_gdelt.MapRoute", nil)(ctx)
 	if err != nil || href == "" {
 		slog.Error("p_seer_gdelt: MapRoute path failed", "error", err)
 		href = AppUrl + "map/"
@@ -331,13 +331,13 @@ func (e *gdeltMapLibreMount) Build(ctx context.Context) Node {
 }
 
 func registerGDELTMapPages() {
-	lago.RegistryPage.Register("seer_gdelt.MapPage", &components.ShellScaffold{
+	registerPluginPage("seer_gdelt.MapPage", &components.ShellScaffold{
 		Page: components.Page{Key: "seer_gdelt.MapPageShell"},
 		ExtraHead: []components.PageInterface{
 			&gdeltMapLibreExtraHead{Page: components.Page{Key: "seer_gdelt.MapLibreHead"}},
 		},
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_gdelt.Menu"},
+			lamu.DynamicPage{Name: "seer_gdelt.Menu"},
 		},
 		Children: []components.PageInterface{
 			&components.ContainerColumn{

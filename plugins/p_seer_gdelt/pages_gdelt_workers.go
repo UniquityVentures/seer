@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 	"github.com/UniquityVentures/seer/plugins/p_seer_workerregistry"
 	"gorm.io/gorm"
 )
@@ -46,7 +46,7 @@ func gdeltWorkerFormFields() components.PageInterface {
 						Label:       "GDELT sources without worker",
 						Name:        "GDELTSourceIDs",
 						Getter:      gdeltSourcesForCurrentWorker,
-						Url:         lago.RoutePath("seer_gdelt.GDELTSourceUnsetSelectRoute", nil),
+						Url:         lamu.RoutePath("seer_gdelt.GDELTSourceUnsetSelectRoute", nil),
 						Display:     gdeltSourceSelectionDisplayFromIn,
 						Placeholder: "Select unassigned sources…",
 						Classes:     "w-full max-w-xl",
@@ -82,7 +82,7 @@ func gdeltWorkerDetailWorkerPoolActionsGetter() getters.Getter[components.PageIn
 				Children: []components.PageInterface{
 					&components.ButtonPost{
 						Label: "Stop worker pool",
-						URL: lago.RoutePath("seer_gdelt.GDELTWorkerPoolStopRoute", map[string]getters.Getter[any]{
+						URL: lamu.RoutePath("seer_gdelt.GDELTWorkerPoolStopRoute", map[string]getters.Getter[any]{
 							"id": getters.Any(getters.Key[uint]("$in.ID")),
 						}),
 						Icon:    "stop",
@@ -97,7 +97,7 @@ func gdeltWorkerDetailWorkerPoolActionsGetter() getters.Getter[components.PageIn
 			Children: []components.PageInterface{
 				&components.ButtonPost{
 					Label: "Start worker pool",
-					URL: lago.RoutePath("seer_gdelt.GDELTWorkerPoolStartRoute", map[string]getters.Getter[any]{
+					URL: lamu.RoutePath("seer_gdelt.GDELTWorkerPoolStartRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$in.ID")),
 					}),
 					Icon:    "play",
@@ -113,9 +113,9 @@ func registerGDELTWorkerPages() {
 	updateName := getters.Static("seer_gdelt.GDELTWorkerUpdateForm")
 	deleteName := getters.Static("seer_gdelt.GDELTWorkerDeleteForm")
 
-	lago.RegistryPage.Register("seer_gdelt.GDELTWorkerTable", &components.ShellScaffold{
+	registerPluginPage("seer_gdelt.GDELTWorkerTable", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_gdelt.Menu"},
+			lamu.DynamicPage{Name: "seer_gdelt.Menu"},
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[GDELTWorker]{
@@ -124,10 +124,10 @@ func registerGDELTWorkerPages() {
 				Classes: "w-full",
 				Data:    getters.Key[components.ObjectList[GDELTWorker]]("gdeltWorkers"),
 				Actions: []components.PageInterface{
-					&components.TableButtonCreate{Link: lago.RoutePath("seer_gdelt.GDELTWorkerCreateRoute", nil)},
+					&components.TableButtonCreate{Link: lamu.RoutePath("seer_gdelt.GDELTWorkerCreateRoute", nil)},
 				},
 				RowAttr: getters.RowAttrNavigate(
-					lago.RoutePath("seer_gdelt.GDELTWorkerDetailRoute", map[string]getters.Getter[any]{
+					lamu.RoutePath("seer_gdelt.GDELTWorkerDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					}),
 				),
@@ -151,7 +151,7 @@ func registerGDELTWorkerPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_gdelt.GDELTWorkerSelectionTable", &components.Modal{
+	registerPluginPage("seer_gdelt.GDELTWorkerSelectionTable", &components.Modal{
 		UID: "gdelt-worker-selection-modal",
 		Children: []components.PageInterface{
 			&components.DataTable[GDELTWorker]{
@@ -180,9 +180,9 @@ func registerGDELTWorkerPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_gdelt.GDELTWorkerDetail", &components.ShellScaffold{
+	registerPluginPage("seer_gdelt.GDELTWorkerDetail", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_gdelt.GDELTWorkerDetailMenu"},
+			lamu.DynamicPage{Name: "seer_gdelt.GDELTWorkerDetailMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.Detail[GDELTWorker]{
@@ -206,7 +206,7 @@ func registerGDELTWorkerPages() {
 									&components.FieldManyToMany[GDELTSource]{
 										Getter:  gdeltSourcesForCurrentWorker,
 										Display: gdeltSourceSelectionDisplayFromIn,
-										Link: lago.RoutePath("seer_gdelt.GDELTSourceDetailRoute", map[string]getters.Getter[any]{
+										Link: lamu.RoutePath("seer_gdelt.GDELTSourceDetailRoute", map[string]getters.Getter[any]{
 											"id": getters.Any(getters.Key[uint]("$in.ID")),
 										}),
 										Classes: "w-full max-w-xl",
@@ -222,14 +222,14 @@ func registerGDELTWorkerPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_gdelt.GDELTWorkerCreateForm", &components.ShellScaffold{
+	registerPluginPage("seer_gdelt.GDELTWorkerCreateForm", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_gdelt.Menu"},
+			lamu.DynamicPage{Name: "seer_gdelt.Menu"},
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
 				Name:      createName,
-				ActionURL: lago.RoutePath("seer_gdelt.GDELTWorkerCreateRoute", nil),
+				ActionURL: lamu.RoutePath("seer_gdelt.GDELTWorkerCreateRoute", nil),
 				Children: []components.PageInterface{
 					&components.FormComponent[GDELTWorker]{
 						Getter:   getters.Static(GDELTWorker{Name: "", Duration: time.Hour}),
@@ -249,14 +249,14 @@ func registerGDELTWorkerPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_gdelt.GDELTWorkerUpdateForm", &components.ShellScaffold{
+	registerPluginPage("seer_gdelt.GDELTWorkerUpdateForm", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_gdelt.GDELTWorkerDetailMenu"},
+			lamu.DynamicPage{Name: "seer_gdelt.GDELTWorkerDetailMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
 				Name: updateName,
-				ActionURL: lago.RoutePath("seer_gdelt.GDELTWorkerUpdateRoute", map[string]getters.Getter[any]{
+				ActionURL: lamu.RoutePath("seer_gdelt.GDELTWorkerUpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("gdeltWorker.ID")),
 				}),
 				Children: []components.PageInterface{
@@ -281,8 +281,8 @@ func registerGDELTWorkerPages() {
 												Label:       "Delete",
 												Icon:        "trash",
 												Name:        deleteName,
-												Url:         lago.RoutePath("seer_gdelt.GDELTWorkerDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("gdeltWorker.ID"))}),
-												FormPostURL: lago.RoutePath("seer_gdelt.GDELTWorkerDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("gdeltWorker.ID"))}),
+												Url:         lamu.RoutePath("seer_gdelt.GDELTWorkerDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("gdeltWorker.ID"))}),
+												FormPostURL: lamu.RoutePath("seer_gdelt.GDELTWorkerDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("gdeltWorker.ID"))}),
 												ModalUID:    "seer-gdelt-worker-delete-modal",
 												Classes:     "btn-error",
 											},
@@ -297,7 +297,7 @@ func registerGDELTWorkerPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_gdelt.GDELTWorkerDeleteForm", &components.Modal{
+	registerPluginPage("seer_gdelt.GDELTWorkerDeleteForm", &components.Modal{
 		UID: "seer-gdelt-worker-delete-modal",
 		Children: []components.PageInterface{
 			&components.DeleteConfirmation{

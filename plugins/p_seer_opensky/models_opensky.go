@@ -2,8 +2,8 @@ package p_seer_opensky
 
 import (
 	"encoding/json"
+	"github.com/UniquityVentures/lamu/fields"
 
-	"github.com/UniquityVentures/lago/lago"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -23,7 +23,7 @@ type OpenSkyState struct {
 	OriginCountry *string `gorm:"size:64"`
 	TimePosition  *int64
 	// Position is WGS84 (lng, lat); persisted as PostgreSQL point. Use [Longitude]/[Latitude] for forms and API mapping.
-	Position     lago.PGPoint `gorm:"type:point"`
+	Position     fields.PGPoint `gorm:"type:point"`
 	Longitude    float64      `gorm:"-"` // form roundtrip; see [OpenSkyState.syncPositionFromPoint] / [BeforeSave]
 	Latitude     float64      `gorm:"-"`
 	BaroAltitude *float64
@@ -75,9 +75,9 @@ func (m *OpenSkyState) BeforeSave(_ *gorm.DB) error {
 		m.Sensors = datatypes.JSON(b)
 	}
 	if openskyValidLatLng(m.Latitude, m.Longitude) {
-		m.Position = lago.NewPGPoint(m.Longitude, m.Latitude)
+		m.Position = fields.NewPGPoint(m.Longitude, m.Latitude)
 	} else {
-		m.Position = lago.PGPoint{}
+		m.Position = fields.PGPoint{}
 	}
 	return nil
 }

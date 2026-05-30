@@ -5,8 +5,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-
-	"github.com/UniquityVentures/lago/lago"
 )
 
 // WebsiteRodConfig is retained for future node-side browser configuration.
@@ -47,5 +45,5 @@ func init() {
 	if d := defaultChromiumUserDataDir(); d != "" {
 		WebsiteRod.UserDataDir = d
 	}
-	lago.RegistryConfig.Register("p_seer_websites", WebsiteRod)
+	registerPluginConfig("p_seer_websites", WebsiteRod)
 }

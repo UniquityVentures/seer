@@ -54,7 +54,7 @@ const redditRSSFetchLimit = 100
 var htmlTagStripRe = regexp.MustCompile(`(?i)<[^>]+>`)
 
 func redditUserAgent() string {
-	return "lago:p_seer_reddit:1.0 (by /u/local)"
+	return "lamu:p_seer_reddit:1.0 (by /u/local)"
 }
 
 // redditSubPathSegment escapes a subreddit path segment; preserves "+" for multireddits.

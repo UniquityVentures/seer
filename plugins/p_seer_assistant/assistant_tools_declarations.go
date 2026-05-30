@@ -1,7 +1,7 @@
 package p_seer_assistant
 
 import (
-	"github.com/UniquityVentures/lago/plugins/p_google_genai"
+	"github.com/UniquityVentures/lamu/plugins/p_google_genai"
 	"google.golang.org/genai"
 )
 
@@ -85,7 +85,7 @@ func assistantGeminiTools() []*genai.Tool {
 		},
 		{
 			Name:        "google_search",
-			Description: "Search the public web via Google Custom Search (configured in Lago). Use before adding Reddit sources when you need to discover or verify names on the web.",
+			Description: "Search the public web via Google Custom Search (configured in Lamu). Use before adding Reddit sources when you need to discover or verify names on the web.",
 			Parameters:  p_google_genai.NewSchema[googleSearchArgs](),
 		},
 		{

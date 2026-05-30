@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 	"github.com/UniquityVentures/seer/plugins/p_seer_node_fleet/messages"
 )
 
@@ -23,23 +23,23 @@ func init() {
 }
 
 func registerNodeFleetPages() {
-	lago.RegistryPage.Register("seer_node_fleet.NodeFleetMenu", &components.SidebarMenu{
+	registerPluginPage("seer_node_fleet.NodeFleetMenu", &components.SidebarMenu{
 		Title: getters.Static("Node fleet"),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to All Apps"),
-			Url:   lago.RoutePath("dashboard.AppsPage", nil),
+			Url:   lamu.RoutePath("dashboard.AppsPage", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("Connected scrapers"),
-				Url:   lago.RoutePath("seer_node_fleet.DefaultRoute", nil),
+				Url:   lamu.RoutePath("seer_node_fleet.DefaultRoute", nil),
 			},
 		},
 	})
 
-	lago.RegistryPage.Register("seer_node_fleet.ConnectedNodesTable", &components.ShellScaffold{
+	registerPluginPage("seer_node_fleet.ConnectedNodesTable", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_node_fleet.NodeFleetMenu"},
+			lamu.DynamicPage{Name: "seer_node_fleet.NodeFleetMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[ConnectedNode]{

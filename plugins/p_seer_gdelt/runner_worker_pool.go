@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/UniquityVentures/lago/syncmap"
+	"github.com/UniquityVentures/lamu/syncmap"
 	"github.com/UniquityVentures/seer/plugins/p_seer_workerregistry"
 	"gorm.io/gorm"
 )
@@ -37,7 +37,7 @@ func StopGDELTWorkerPool(workerID uint) {
 }
 
 // StartAllGDELTWorkerPools schedules a worker pool goroutine for every [GDELTWorker] row.
-// It is invoked from [lago.OnDBInit] after models register so the process autostarts pools on boot.
+// It is invoked from [lamu.OnDBInit] after models register so the process autostarts pools on boot.
 func StartAllGDELTWorkerPools(db *gorm.DB) {
 	if db == nil {
 		return

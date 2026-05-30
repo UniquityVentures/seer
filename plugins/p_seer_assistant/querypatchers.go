@@ -3,8 +3,8 @@ package p_seer_assistant
 import (
 	"net/http"
 
-	"github.com/UniquityVentures/lago/plugins/p_users"
-	"github.com/UniquityVentures/lago/views"
+	"github.com/UniquityVentures/lamu/plugins/p_users"
+	"github.com/UniquityVentures/lamu/views"
 	"gorm.io/gorm"
 )
 

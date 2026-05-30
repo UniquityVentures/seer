@@ -6,14 +6,14 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/views"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/views"
 	"gorm.io/gorm"
 )
 
 func deepSearchDetailRedirectURL(r *http.Request, id uint) (string, error) {
-	return lago.RoutePath("seer_deepsearch.DetailRoute", map[string]getters.Getter[any]{
+	return lamu.RoutePath("seer_deepsearch.DetailRoute", map[string]getters.Getter[any]{
 		"id": getters.Any(getters.Static(strconv.FormatUint(uint64(id), 10))),
 	})(r.Context())
 }

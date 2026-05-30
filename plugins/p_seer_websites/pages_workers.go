@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 	"github.com/UniquityVentures/seer/plugins/p_seer_workerregistry"
 )
 
@@ -47,9 +47,9 @@ func registerWebsiteRunnerPages() {
 	updateName := getters.Static("seer_websites.WebsiteRunnerUpdateForm")
 	deleteName := getters.Static("seer_websites.WebsiteRunnerDeleteForm")
 
-	lago.RegistryPage.Register("seer_websites.WebsiteRunnerTable", &components.ShellScaffold{
+	registerPluginPage("seer_websites.WebsiteRunnerTable", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_websites.WebsiteMenu"},
+			lamu.DynamicPage{Name: "seer_websites.WebsiteMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[WebsiteRunner]{
@@ -58,10 +58,10 @@ func registerWebsiteRunnerPages() {
 				Classes: "w-full",
 				Data:    getters.Key[components.ObjectList[WebsiteRunner]]("websiteRunners"),
 				Actions: []components.PageInterface{
-					&components.TableButtonCreate{Link: lago.RoutePath("seer_websites.WebsiteRunnerCreateRoute", nil)},
+					&components.TableButtonCreate{Link: lamu.RoutePath("seer_websites.WebsiteRunnerCreateRoute", nil)},
 				},
 				RowAttr: getters.RowAttrNavigate(
-					lago.RoutePath("seer_websites.WebsiteRunnerDetailRoute", map[string]getters.Getter[any]{
+					lamu.RoutePath("seer_websites.WebsiteRunnerDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					}),
 				),
@@ -85,7 +85,7 @@ func registerWebsiteRunnerPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_websites.WebsiteRunnerSelectionTable", &components.Modal{
+	registerPluginPage("seer_websites.WebsiteRunnerSelectionTable", &components.Modal{
 		UID: "website-runner-selection-modal",
 		Children: []components.PageInterface{
 			&components.DataTable[WebsiteRunner]{
@@ -114,9 +114,9 @@ func registerWebsiteRunnerPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_websites.WebsiteRunnerDetail", &components.ShellScaffold{
+	registerPluginPage("seer_websites.WebsiteRunnerDetail", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_websites.WebsiteRunnerDetailMenu"},
+			lamu.DynamicPage{Name: "seer_websites.WebsiteRunnerDetailMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.Detail[WebsiteRunner]{
@@ -144,7 +144,7 @@ func registerWebsiteRunnerPages() {
 										Children: []components.PageInterface{
 											&components.ButtonPost{
 												Label: "Stop worker pool",
-												URL: lago.RoutePath("seer_websites.WebsiteRunnerWorkerPoolStopRoute", map[string]getters.Getter[any]{
+												URL: lamu.RoutePath("seer_websites.WebsiteRunnerWorkerPoolStopRoute", map[string]getters.Getter[any]{
 													"id": getters.Any(getters.Key[uint]("$in.ID")),
 												}),
 												Icon:    "stop",
@@ -166,7 +166,7 @@ func registerWebsiteRunnerPages() {
 										Children: []components.PageInterface{
 											&components.ButtonPost{
 												Label: "Start worker pool",
-												URL: lago.RoutePath("seer_websites.WebsiteRunnerWorkerPoolStartRoute", map[string]getters.Getter[any]{
+												URL: lamu.RoutePath("seer_websites.WebsiteRunnerWorkerPoolStartRoute", map[string]getters.Getter[any]{
 													"id": getters.Any(getters.Key[uint]("$in.ID")),
 												}),
 												Icon:    "play",
@@ -184,14 +184,14 @@ func registerWebsiteRunnerPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_websites.WebsiteRunnerCreateForm", &components.ShellScaffold{
+	registerPluginPage("seer_websites.WebsiteRunnerCreateForm", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_websites.WebsiteMenu"},
+			lamu.DynamicPage{Name: "seer_websites.WebsiteMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
 				Name:      createName,
-				ActionURL: lago.RoutePath("seer_websites.WebsiteRunnerCreateRoute", nil),
+				ActionURL: lamu.RoutePath("seer_websites.WebsiteRunnerCreateRoute", nil),
 				Children: []components.PageInterface{
 					&components.FormComponent[WebsiteRunner]{
 						Getter:   getters.Static(WebsiteRunner{Name: "", Duration: time.Hour}),
@@ -211,14 +211,14 @@ func registerWebsiteRunnerPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_websites.WebsiteRunnerUpdateForm", &components.ShellScaffold{
+	registerPluginPage("seer_websites.WebsiteRunnerUpdateForm", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_websites.WebsiteRunnerDetailMenu"},
+			lamu.DynamicPage{Name: "seer_websites.WebsiteRunnerDetailMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
 				Name: updateName,
-				ActionURL: lago.RoutePath("seer_websites.WebsiteRunnerUpdateRoute", map[string]getters.Getter[any]{
+				ActionURL: lamu.RoutePath("seer_websites.WebsiteRunnerUpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("websiteRunner.ID")),
 				}),
 				Children: []components.PageInterface{
@@ -243,8 +243,8 @@ func registerWebsiteRunnerPages() {
 												Label:       "Delete",
 												Icon:        "trash",
 												Name:        deleteName,
-												Url:         lago.RoutePath("seer_websites.WebsiteRunnerDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("websiteRunner.ID"))}),
-												FormPostURL: lago.RoutePath("seer_websites.WebsiteRunnerDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("websiteRunner.ID"))}),
+												Url:         lamu.RoutePath("seer_websites.WebsiteRunnerDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("websiteRunner.ID"))}),
+												FormPostURL: lamu.RoutePath("seer_websites.WebsiteRunnerDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("websiteRunner.ID"))}),
 												ModalUID:    "seer-website-runner-delete-modal",
 												Classes:     "btn-error",
 											},
@@ -259,7 +259,7 @@ func registerWebsiteRunnerPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_websites.WebsiteRunnerDeleteForm", &components.Modal{
+	registerPluginPage("seer_websites.WebsiteRunnerDeleteForm", &components.Modal{
 		UID: "seer-website-runner-delete-modal",
 		Children: []components.PageInterface{
 			&components.DeleteConfirmation{

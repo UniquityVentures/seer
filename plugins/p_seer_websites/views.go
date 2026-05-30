@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/plugins/p_users"
-	"github.com/UniquityVentures/lago/views"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/plugins/p_users"
+	"github.com/UniquityVentures/lamu/views"
 	"github.com/UniquityVentures/seer/plugins/p_seer_intel"
 	"github.com/UniquityVentures/seer/plugins/p_seer_workerregistry"
 )
@@ -87,19 +87,19 @@ func init() {
 		{Key: "seer_websites.website_detail.not_deleted", Value: websiteActiveOnlyPatcher{}},
 	}
 
-	lago.RegistryView.Register("seer_websites.WebsiteListView",
-		lago.GetPageView("seer_websites.WebsiteTable").
+	registerPluginView("seer_websites.WebsiteListView",
+		lamu.GetPageView("seer_websites.WebsiteTable").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website.list", views.LayerList[Website]{
 				Key:           getters.Static("websites"),
 				QueryPatchers: websitePatchers,
 			}))
 
-	lago.RegistryView.Register("seer_websites.WebsiteAddView",
-		lago.GetPageView("seer_websites.WebsiteAddForm").
+	registerPluginView("seer_websites.WebsiteAddView",
+		lamu.GetPageView("seer_websites.WebsiteAddForm").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website.create", views.LayerCreate[Website]{
-				SuccessURL: lago.RoutePath("seer_websites.WebsiteDetailRoute", map[string]getters.Getter[any]{
+				SuccessURL: lamu.RoutePath("seer_websites.WebsiteDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),
 				}),
 				FormPatchers: views.FormPatchers{
@@ -107,8 +107,8 @@ func init() {
 				},
 			}))
 
-	lago.RegistryView.Register("seer_websites.WebsiteDetailView",
-		lago.GetPageView("seer_websites.WebsiteDetail").
+	registerPluginView("seer_websites.WebsiteDetailView",
+		lamu.GetPageView("seer_websites.WebsiteDetail").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website.detail", views.LayerDetail[Website]{
 				Key:           getters.Static("website"),
@@ -117,8 +117,8 @@ func init() {
 			}).
 			WithLayer("seer_websites.website.intel", websiteIntelContextLayer{}))
 
-	lago.RegistryView.Register("seer_websites.WebsiteAddIntelView",
-		lago.GetPageView("seer_websites.WebsiteDetail").
+	registerPluginView("seer_websites.WebsiteAddIntelView",
+		lamu.GetPageView("seer_websites.WebsiteDetail").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website.add_intel_detail", views.LayerDetail[Website]{
 				Key:           getters.Static("website"),
@@ -128,13 +128,13 @@ func init() {
 			WithLayer("seer_websites.website.add_intel", websiteAddIntelLayer{}).
 			WithLayer("seer_websites.website.intel", websiteIntelContextLayer{}))
 
-	lago.RegistryView.Register("seer_websites.WebsiteAddAllIntelView",
-		lago.GetPageView("seer_websites.WebsiteTable").
+	registerPluginView("seer_websites.WebsiteAddAllIntelView",
+		lamu.GetPageView("seer_websites.WebsiteTable").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website.add_all_intel", websiteAddAllIntelLayer{}))
 
-	lago.RegistryView.Register("seer_websites.WebsiteSoftDeleteView",
-		lago.GetPageView("seer_websites.WebsiteDeleteForm").
+	registerPluginView("seer_websites.WebsiteSoftDeleteView",
+		lamu.GetPageView("seer_websites.WebsiteDeleteForm").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website.delete_detail", views.LayerDetail[Website]{
 				Key:           getters.Static("website"),
@@ -155,16 +155,16 @@ func init() {
 		{Key: "seer_websites.website_runner.order", Value: views.QueryPatcherOrderBy[WebsiteRunner]{Order: "id DESC"}},
 	}
 
-	lago.RegistryView.Register("seer_websites.WebsiteSourceListView",
-		lago.GetPageView("seer_websites.WebsiteSourceTable").
+	registerPluginView("seer_websites.WebsiteSourceListView",
+		lamu.GetPageView("seer_websites.WebsiteSourceTable").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website_source.list", views.LayerList[WebsiteSource]{
 				Key:           getters.Static("websiteSources"),
 				QueryPatchers: websiteSourcePatchers,
 			}))
 
-	lago.RegistryView.Register("seer_websites.WebsiteSourceDetailView",
-		lago.GetPageView("seer_websites.WebsiteSourceDetail").
+	registerPluginView("seer_websites.WebsiteSourceDetailView",
+		lamu.GetPageView("seer_websites.WebsiteSourceDetail").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website_source.detail", views.LayerDetail[WebsiteSource]{
 				Key:           getters.Static("websiteSource"),
@@ -172,11 +172,11 @@ func init() {
 				QueryPatchers: websiteSourceDetailPatchers,
 			}))
 
-	lago.RegistryView.Register("seer_websites.WebsiteSourceCreateView",
-		lago.GetPageView("seer_websites.WebsiteSourceCreateForm").
+	registerPluginView("seer_websites.WebsiteSourceCreateView",
+		lamu.GetPageView("seer_websites.WebsiteSourceCreateForm").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website_source.create", views.LayerCreate[WebsiteSource]{
-				SuccessURL: lago.RoutePath("seer_websites.WebsiteSourceDetailRoute", map[string]getters.Getter[any]{
+				SuccessURL: lamu.RoutePath("seer_websites.WebsiteSourceDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),
 				}),
 				FormPatchers: views.FormPatchers{
@@ -185,8 +185,8 @@ func init() {
 				},
 			}))
 
-	lago.RegistryView.Register("seer_websites.WebsiteSourceUpdateView",
-		lago.GetPageView("seer_websites.WebsiteSourceUpdateForm").
+	registerPluginView("seer_websites.WebsiteSourceUpdateView",
+		lamu.GetPageView("seer_websites.WebsiteSourceUpdateForm").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website_source.detail_for_update", views.LayerDetail[WebsiteSource]{
 				Key:           getters.Static("websiteSource"),
@@ -195,7 +195,7 @@ func init() {
 			}).
 			WithLayer("seer_websites.website_source.update", views.LayerUpdate[WebsiteSource]{
 				Key: getters.Static("websiteSource"),
-				SuccessURL: lago.RoutePath("seer_websites.WebsiteSourceDetailRoute", map[string]getters.Getter[any]{
+				SuccessURL: lamu.RoutePath("seer_websites.WebsiteSourceDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("websiteSource.ID")),
 				}),
 				FormPatchers: views.FormPatchers{
@@ -204,8 +204,8 @@ func init() {
 				},
 			}))
 
-	lago.RegistryView.Register("seer_websites.WebsiteSourceDeleteView",
-		lago.GetPageView("seer_websites.WebsiteSourceDeleteForm").
+	registerPluginView("seer_websites.WebsiteSourceDeleteView",
+		lamu.GetPageView("seer_websites.WebsiteSourceDeleteForm").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website_source.delete_detail", views.LayerDetail[WebsiteSource]{
 				Key:           getters.Static("websiteSource"),
@@ -214,11 +214,11 @@ func init() {
 			}).
 			WithLayer("seer_websites.website_source.delete", views.LayerDelete[WebsiteSource]{
 				Key:        getters.Static("websiteSource"),
-				SuccessURL: lago.RoutePath("seer_websites.WebsiteSourceListRoute", nil),
+				SuccessURL: lamu.RoutePath("seer_websites.WebsiteSourceListRoute", nil),
 			}))
 
-	lago.RegistryView.Register("seer_websites.WebsiteSourceFetchView",
-		lago.GetPageView("seer_websites.WebsiteSourceDetail").
+	registerPluginView("seer_websites.WebsiteSourceFetchView",
+		lamu.GetPageView("seer_websites.WebsiteSourceDetail").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website_source.fetch_detail", views.LayerDetail[WebsiteSource]{
 				Key:           getters.Static("websiteSource"),
@@ -227,24 +227,24 @@ func init() {
 			}).
 			WithLayer("seer_websites.website_source.fetch_action", websiteSourceFetchActionLayer{}))
 
-	lago.RegistryView.Register("seer_websites.WebsiteRunnerListView",
-		lago.GetPageView("seer_websites.WebsiteRunnerTable").
+	registerPluginView("seer_websites.WebsiteRunnerListView",
+		lamu.GetPageView("seer_websites.WebsiteRunnerTable").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website_runner.list", views.LayerList[WebsiteRunner]{
 				Key:           getters.Static("websiteRunners"),
 				QueryPatchers: runnerPatchers,
 			}))
 
-	lago.RegistryView.Register("seer_websites.WebsiteRunnerSelectView",
-		lago.GetPageView("seer_websites.WebsiteRunnerSelectionTable").
+	registerPluginView("seer_websites.WebsiteRunnerSelectView",
+		lamu.GetPageView("seer_websites.WebsiteRunnerSelectionTable").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website_runner.select_list", views.LayerList[WebsiteRunner]{
 				Key:           getters.Static("websiteRunners"),
 				QueryPatchers: runnerPatchers,
 			}))
 
-	lago.RegistryView.Register("seer_websites.WebsiteRunnerDetailView",
-		lago.GetPageView("seer_websites.WebsiteRunnerDetail").
+	registerPluginView("seer_websites.WebsiteRunnerDetailView",
+		lamu.GetPageView("seer_websites.WebsiteRunnerDetail").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website_runner.detail", views.LayerDetail[WebsiteRunner]{
 				Key:          getters.Static("websiteRunner"),
@@ -256,11 +256,11 @@ func init() {
 				Kind:             p_seer_workerregistry.WorkerRunnerKindWebsite,
 			}))
 
-	lago.RegistryView.Register("seer_websites.WebsiteRunnerCreateView",
-		lago.GetPageView("seer_websites.WebsiteRunnerCreateForm").
+	registerPluginView("seer_websites.WebsiteRunnerCreateView",
+		lamu.GetPageView("seer_websites.WebsiteRunnerCreateForm").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website_runner.create", views.LayerCreate[WebsiteRunner]{
-				SuccessURL: lago.RoutePath("seer_websites.WebsiteRunnerDetailRoute", map[string]getters.Getter[any]{
+				SuccessURL: lamu.RoutePath("seer_websites.WebsiteRunnerDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),
 				}),
 				FormPatchers: views.FormPatchers{
@@ -268,8 +268,8 @@ func init() {
 				},
 			}))
 
-	lago.RegistryView.Register("seer_websites.WebsiteRunnerUpdateView",
-		lago.GetPageView("seer_websites.WebsiteRunnerUpdateForm").
+	registerPluginView("seer_websites.WebsiteRunnerUpdateView",
+		lamu.GetPageView("seer_websites.WebsiteRunnerUpdateForm").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website_runner.detail_update", views.LayerDetail[WebsiteRunner]{
 				Key:          getters.Static("websiteRunner"),
@@ -277,7 +277,7 @@ func init() {
 			}).
 			WithLayer("seer_websites.website_runner.update", views.LayerUpdate[WebsiteRunner]{
 				Key: getters.Static("websiteRunner"),
-				SuccessURL: lago.RoutePath("seer_websites.WebsiteRunnerDetailRoute", map[string]getters.Getter[any]{
+				SuccessURL: lamu.RoutePath("seer_websites.WebsiteRunnerDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("websiteRunner.ID")),
 				}),
 				FormPatchers: views.FormPatchers{
@@ -285,8 +285,8 @@ func init() {
 				},
 			}))
 
-	lago.RegistryView.Register("seer_websites.WebsiteRunnerDeleteView",
-		lago.GetPageView("seer_websites.WebsiteRunnerDeleteForm").
+	registerPluginView("seer_websites.WebsiteRunnerDeleteView",
+		lamu.GetPageView("seer_websites.WebsiteRunnerDeleteForm").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_websites.website_runner.delete_detail", views.LayerDetail[WebsiteRunner]{
 				Key:          getters.Static("websiteRunner"),
@@ -294,11 +294,11 @@ func init() {
 			}).
 			WithLayer("seer_websites.website_runner.delete", views.LayerDelete[WebsiteRunner]{
 				Key:        getters.Static("websiteRunner"),
-				SuccessURL: lago.RoutePath("seer_websites.WebsiteRunnerListRoute", nil),
+				SuccessURL: lamu.RoutePath("seer_websites.WebsiteRunnerListRoute", nil),
 			}))
 }
 
-// websiteSourcePageURLFormPatcher turns POSTed URL strings into [lago.PageURL] so
+// websiteSourcePageURLFormPatcher turns POSTed URL strings into [lamu.PageURL] so
 // [views.PopulateFromMap] / mapstructure do not try to decode into embedded [url.URL].
 type websiteSourcePageURLFormPatcher struct{}
 
@@ -310,7 +310,7 @@ func (websiteSourcePageURLFormPatcher) Patch(_ views.View, r *http.Request, form
 	if !ok || raw == nil {
 		return formData, formErrors
 	}
-	if _, ok := raw.(lago.PageURL); ok {
+	if _, ok := raw.(lamu.PageURL); ok {
 		return formData, formErrors
 	}
 	s, ok := raw.(string)
@@ -320,7 +320,7 @@ func (websiteSourcePageURLFormPatcher) Patch(_ views.View, r *http.Request, form
 	}
 	s = strings.TrimSpace(s)
 	if s == "" {
-		formData["URL"] = lago.PageURL{}
+		formData["URL"] = lamu.PageURL{}
 		return formData, formErrors
 	}
 	u, err := normalizeWebsiteURL(s)
@@ -332,7 +332,7 @@ func (websiteSourcePageURLFormPatcher) Patch(_ views.View, r *http.Request, form
 		formErrors["URL"] = fmt.Errorf("url blocked by ssrf guard")
 		return formData, formErrors
 	}
-	var pp lago.PageURL
+	var pp lamu.PageURL
 	pp.SetFromURL(u)
 	formData["URL"] = pp
 	return formData, formErrors

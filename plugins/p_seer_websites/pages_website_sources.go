@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 	gomponents "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -18,7 +18,7 @@ func websiteSourceFetchButtonRow() components.PageInterface {
 		Children: []components.PageInterface{
 			&components.ButtonPost{
 				Label: "Run crawl now",
-				URL: lago.RoutePath("seer_websites.WebsiteSourceFetchRoute", map[string]getters.Getter[any]{
+				URL: lamu.RoutePath("seer_websites.WebsiteSourceFetchRoute", map[string]getters.Getter[any]{
 					"source_id": getters.Any(getters.Key[uint]("websiteSource.ID")),
 				}),
 				Icon:    "arrow-path",
@@ -49,7 +49,7 @@ func (websiteSourceFetchArea) Build(ctx context.Context) gomponents.Node {
 	if err != nil {
 		return components.ContainerError{Error: getters.Static(err)}.Build(ctx)
 	}
-	urlStr, err := lago.RoutePath("seer_websites.WebsiteSourceDetailRoute", map[string]getters.Getter[any]{
+	urlStr, err := lamu.RoutePath("seer_websites.WebsiteSourceDetailRoute", map[string]getters.Getter[any]{
 		"id": getters.Any(getters.Key[uint]("websiteSource.ID")),
 	})(ctx)
 	if err != nil {
@@ -108,7 +108,7 @@ func websiteSourceFormFields() components.PageInterface {
 					&components.InputForeignKey[WebsiteRunner]{
 						Label:       "Worker",
 						Name:        "WebsiteRunnerID",
-						Url:         lago.RoutePath("seer_websites.WebsiteRunnerSelectRoute", nil),
+						Url:         lamu.RoutePath("seer_websites.WebsiteRunnerSelectRoute", nil),
 						Display:     getters.Key[string]("$in.Name"),
 						Placeholder: "Optional worker…",
 						Required:    false,
@@ -145,9 +145,9 @@ func websiteSourceFormFields() components.PageInterface {
 }
 
 func registerWebsiteSourcePages() {
-	lago.RegistryPage.Register("seer_websites.WebsiteSourceTable", &components.ShellScaffold{
+	registerPluginPage("seer_websites.WebsiteSourceTable", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_websites.WebsiteMenu"},
+			lamu.DynamicPage{Name: "seer_websites.WebsiteMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[WebsiteSource]{
@@ -156,10 +156,10 @@ func registerWebsiteSourcePages() {
 				Classes: "w-full",
 				Data:    getters.Key[components.ObjectList[WebsiteSource]]("websiteSources"),
 				Actions: []components.PageInterface{
-					&components.TableButtonCreate{Link: lago.RoutePath("seer_websites.WebsiteSourceCreateRoute", nil)},
+					&components.TableButtonCreate{Link: lamu.RoutePath("seer_websites.WebsiteSourceCreateRoute", nil)},
 				},
 				RowAttr: getters.RowAttrNavigate(
-					lago.RoutePath("seer_websites.WebsiteSourceDetailRoute", map[string]getters.Getter[any]{
+					lamu.RoutePath("seer_websites.WebsiteSourceDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					}),
 				),
@@ -184,9 +184,9 @@ func registerWebsiteSourcePages() {
 		},
 	})
 
-	lago.RegistryPage.Register("seer_websites.WebsiteSourceDetail", &components.ShellScaffold{
+	registerPluginPage("seer_websites.WebsiteSourceDetail", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "seer_websites.WebsiteSourceDetailMenu"},
+			lamu.DynamicPage{Name: "seer_websites.WebsiteSourceDetailMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.Detail[WebsiteSource]{

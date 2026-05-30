@@ -3,7 +3,6 @@ package p_seer_reddit
 import (
 	"strings"
 
-	"github.com/UniquityVentures/lago/lago"
 )
 
 // SeerRedditPlugin is TOML config for [p_seer_reddit] (e.g. Reddit source LLM filter).
@@ -32,7 +31,7 @@ func (c *SeerRedditPlugin) PostConfig() {
 }
 
 func init() {
-	lago.RegistryConfig.Register("p_seer_reddit", RedditPlugin)
+	registerPluginConfig("p_seer_reddit", RedditPlugin)
 }
 
 func redditFilterLlmModel() string {

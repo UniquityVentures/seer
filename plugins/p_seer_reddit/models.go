@@ -3,7 +3,6 @@ package p_seer_reddit
 import (
 	"time"
 
-	"github.com/UniquityVentures/lago/lago"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -120,13 +119,13 @@ func (RedditPost) TableName() string {
 }
 
 func init() {
-	lago.OnDBInit("p_seer_reddit.models", func(db *gorm.DB) *gorm.DB {
-		lago.RegisterModel[RedditRunner](db)
-		lago.RegisterModel[RedditSource](db)
-		lago.RegisterModel[RedditPost](db)
+	registerPluginDBInitHook("p_seer_reddit.models", func(db *gorm.DB) *gorm.DB {
+		if err := db.AutoMigrate(&RedditRunner{}, &RedditSource{}, &RedditPost{}); err != nil {
+			panic(err)
+		}
 		return db
 	})
-	lago.OnDBInit("p_seer_reddit.runner_pools_autostart", func(db *gorm.DB) *gorm.DB {
+	registerPluginDBInitHook("p_seer_reddit.runner_pools_autostart", func(db *gorm.DB) *gorm.DB {
 		StartAllRedditRunnerWorkerPools(db)
 		return db
 	})

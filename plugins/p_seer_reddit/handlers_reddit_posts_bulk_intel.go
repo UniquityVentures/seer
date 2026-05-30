@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/views"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/views"
 )
 
 // redditPostsBulkAddIntelLayer runs after [views.LayerList] has set `redditPosts` in context.
@@ -63,7 +63,7 @@ func (l redditPostsBulkAddIntelLayer) Next(_ views.View, _ http.Handler) http.Ha
 				"source_id": getters.Any(getters.Static(r.PathValue(p))),
 			}
 		}
-		baseURL, err := lago.RoutePath(l.redirectRouteName, redirectArgs)(r.Context())
+		baseURL, err := lamu.RoutePath(l.redirectRouteName, redirectArgs)(r.Context())
 		if err != nil || baseURL == "" {
 			slog.Error("p_seer_reddit: bulk add intel redirect URL", "error", err, "route", l.redirectRouteName)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)

@@ -3,7 +3,6 @@ package p_seer_deepsearch
 import (
 	"strings"
 
-	"github.com/UniquityVentures/lago/lago"
 )
 
 // DeepSearchConfig holds Google Programmable Search Engine (Custom Search JSON API) settings.
@@ -61,5 +60,5 @@ func (c *DeepSearchConfig) PostConfig() {
 }
 
 func init() {
-	lago.RegistryConfig.Register("p_seer_deepsearch", DeepSearchAppConfig)
+	registerPluginConfig("p_seer_deepsearch", DeepSearchAppConfig)
 }

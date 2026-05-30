@@ -1,110 +1,110 @@
 package p_seer_websites
 
 import (
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/lamu"
 )
 
 func registerRoutes() {
-	_ = lago.RegistryRoute.Register("seer_websites.WebsiteListRoute", lago.Route{
+	registerPluginRoute("seer_websites.WebsiteListRoute", lamu.Route{
 		Path:    AppUrl,
-		Handler: lago.NewDynamicView("seer_websites.WebsiteListView"),
+		Handler: lamu.NewDynamicView("seer_websites.WebsiteListView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_websites.WebsiteAddRoute", lago.Route{
+	registerPluginRoute("seer_websites.WebsiteAddRoute", lamu.Route{
 		Path:    AppUrl + "add/",
-		Handler: lago.NewDynamicView("seer_websites.WebsiteAddView"),
+		Handler: lamu.NewDynamicView("seer_websites.WebsiteAddView"),
 	})
 
 	// Saved scrape rows live under pages/ so /seer-websites/{id}/… does not collide with
 	// /seer-websites/workers/{id}/… (Go 1.22+ mux cannot rank those patterns).
-	_ = lago.RegistryRoute.Register("seer_websites.WebsiteDetailRoute", lago.Route{
+	registerPluginRoute("seer_websites.WebsiteDetailRoute", lamu.Route{
 		Path:    AppUrl + "pages/{id}/",
-		Handler: lago.NewDynamicView("seer_websites.WebsiteDetailView"),
+		Handler: lamu.NewDynamicView("seer_websites.WebsiteDetailView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_websites.WebsiteDeleteRoute", lago.Route{
+	registerPluginRoute("seer_websites.WebsiteDeleteRoute", lamu.Route{
 		Path:    AppUrl + "pages/{id}/delete/",
-		Handler: lago.NewDynamicView("seer_websites.WebsiteSoftDeleteView"),
+		Handler: lamu.NewDynamicView("seer_websites.WebsiteSoftDeleteView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_websites.WebsiteAddIntelRoute", lago.Route{
+	registerPluginRoute("seer_websites.WebsiteAddIntelRoute", lamu.Route{
 		Path:    AppUrl + "pages/{id}/add-intel/",
-		Handler: lago.NewDynamicView("seer_websites.WebsiteAddIntelView"),
+		Handler: lamu.NewDynamicView("seer_websites.WebsiteAddIntelView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_websites.WebsiteAddAllIntelRoute", lago.Route{
+	registerPluginRoute("seer_websites.WebsiteAddAllIntelRoute", lamu.Route{
 		Path:    AppUrl + "add-all-intel/",
-		Handler: lago.NewDynamicView("seer_websites.WebsiteAddAllIntelView"),
+		Handler: lamu.NewDynamicView("seer_websites.WebsiteAddAllIntelView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_websites.WebsiteSourceListRoute", lago.Route{
+	registerPluginRoute("seer_websites.WebsiteSourceListRoute", lamu.Route{
 		Path:    AppUrl + "sources/",
-		Handler: lago.NewDynamicView("seer_websites.WebsiteSourceListView"),
+		Handler: lamu.NewDynamicView("seer_websites.WebsiteSourceListView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_websites.WebsiteSourceCreateRoute", lago.Route{
+	registerPluginRoute("seer_websites.WebsiteSourceCreateRoute", lamu.Route{
 		Path:    AppUrl + "sources/create/",
-		Handler: lago.NewDynamicView("seer_websites.WebsiteSourceCreateView"),
+		Handler: lamu.NewDynamicView("seer_websites.WebsiteSourceCreateView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_websites.WebsiteSourceDetailRoute", lago.Route{
+	registerPluginRoute("seer_websites.WebsiteSourceDetailRoute", lamu.Route{
 		Path:    AppUrl + "sources/{id}/",
-		Handler: lago.NewDynamicView("seer_websites.WebsiteSourceDetailView"),
+		Handler: lamu.NewDynamicView("seer_websites.WebsiteSourceDetailView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_websites.WebsiteSourceUpdateRoute", lago.Route{
+	registerPluginRoute("seer_websites.WebsiteSourceUpdateRoute", lamu.Route{
 		Path:    AppUrl + "sources/{id}/edit/",
-		Handler: lago.NewDynamicView("seer_websites.WebsiteSourceUpdateView"),
+		Handler: lamu.NewDynamicView("seer_websites.WebsiteSourceUpdateView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_websites.WebsiteSourceDeleteRoute", lago.Route{
+	registerPluginRoute("seer_websites.WebsiteSourceDeleteRoute", lamu.Route{
 		Path:    AppUrl + "sources/{id}/delete/",
-		Handler: lago.NewDynamicView("seer_websites.WebsiteSourceDeleteView"),
+		Handler: lamu.NewDynamicView("seer_websites.WebsiteSourceDeleteView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_websites.WebsiteSourceFetchRoute", lago.Route{
+	registerPluginRoute("seer_websites.WebsiteSourceFetchRoute", lamu.Route{
 		Path:    AppUrl + "sources/{source_id}/fetch/",
-		Handler: lago.NewDynamicView("seer_websites.WebsiteSourceFetchView"),
+		Handler: lamu.NewDynamicView("seer_websites.WebsiteSourceFetchView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_websites.WebsiteRunnerListRoute", lago.Route{
+	registerPluginRoute("seer_websites.WebsiteRunnerListRoute", lamu.Route{
 		Path:    AppUrl + "workers/",
-		Handler: lago.NewDynamicView("seer_websites.WebsiteRunnerListView"),
+		Handler: lamu.NewDynamicView("seer_websites.WebsiteRunnerListView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_websites.WebsiteRunnerCreateRoute", lago.Route{
+	registerPluginRoute("seer_websites.WebsiteRunnerCreateRoute", lamu.Route{
 		Path:    AppUrl + "workers/create/",
-		Handler: lago.NewDynamicView("seer_websites.WebsiteRunnerCreateView"),
+		Handler: lamu.NewDynamicView("seer_websites.WebsiteRunnerCreateView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_websites.WebsiteRunnerSelectRoute", lago.Route{
+	registerPluginRoute("seer_websites.WebsiteRunnerSelectRoute", lamu.Route{
 		Path:    AppUrl + "workers/select/",
-		Handler: lago.NewDynamicView("seer_websites.WebsiteRunnerSelectView"),
+		Handler: lamu.NewDynamicView("seer_websites.WebsiteRunnerSelectView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_websites.WebsiteRunnerWorkerPoolStartRoute", lago.Route{
+	registerPluginRoute("seer_websites.WebsiteRunnerWorkerPoolStartRoute", lamu.Route{
 		Path:    AppUrl + "workers/{id}/worker-pool/start/",
-		Handler: lago.NewDynamicView("seer_websites.WebsiteRunnerWorkerPoolStartView"),
+		Handler: lamu.NewDynamicView("seer_websites.WebsiteRunnerWorkerPoolStartView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_websites.WebsiteRunnerWorkerPoolStopRoute", lago.Route{
+	registerPluginRoute("seer_websites.WebsiteRunnerWorkerPoolStopRoute", lamu.Route{
 		Path:    AppUrl + "workers/{id}/worker-pool/stop/",
-		Handler: lago.NewDynamicView("seer_websites.WebsiteRunnerWorkerPoolStopView"),
+		Handler: lamu.NewDynamicView("seer_websites.WebsiteRunnerWorkerPoolStopView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_websites.WebsiteRunnerDetailRoute", lago.Route{
+	registerPluginRoute("seer_websites.WebsiteRunnerDetailRoute", lamu.Route{
 		Path:    AppUrl + "workers/{id}/",
-		Handler: lago.NewDynamicView("seer_websites.WebsiteRunnerDetailView"),
+		Handler: lamu.NewDynamicView("seer_websites.WebsiteRunnerDetailView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_websites.WebsiteRunnerUpdateRoute", lago.Route{
+	registerPluginRoute("seer_websites.WebsiteRunnerUpdateRoute", lamu.Route{
 		Path:    AppUrl + "workers/{id}/edit/",
-		Handler: lago.NewDynamicView("seer_websites.WebsiteRunnerUpdateView"),
+		Handler: lamu.NewDynamicView("seer_websites.WebsiteRunnerUpdateView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_websites.WebsiteRunnerDeleteRoute", lago.Route{
+	registerPluginRoute("seer_websites.WebsiteRunnerDeleteRoute", lamu.Route{
 		Path:    AppUrl + "workers/{id}/delete/",
-		Handler: lago.NewDynamicView("seer_websites.WebsiteRunnerDeleteView"),
+		Handler: lamu.NewDynamicView("seer_websites.WebsiteRunnerDeleteView"),
 	})
 }
 

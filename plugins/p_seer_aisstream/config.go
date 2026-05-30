@@ -4,7 +4,6 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/UniquityVentures/lago/lago"
 )
 
 type AISStreamConfig struct {
@@ -63,5 +62,5 @@ func (c *AISStreamConfig) MapRefreshEvery() time.Duration {
 var Config = &AISStreamConfig{Enabled: true}
 
 func init() {
-	lago.RegistryConfig.Register("p_seer_aisstream", Config)
+	registerPluginConfig("p_seer_aisstream", Config)
 }

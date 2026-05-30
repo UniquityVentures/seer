@@ -3,7 +3,7 @@ package p_seer_websites
 import (
 	"net/http"
 
-	"github.com/UniquityVentures/lago/views"
+	"github.com/UniquityVentures/lamu/views"
 	"gorm.io/gorm"
 )
 

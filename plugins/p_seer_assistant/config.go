@@ -3,7 +3,6 @@ package p_seer_assistant
 import (
 	"strings"
 
-	"github.com/UniquityVentures/lago/lago"
 )
 
 // AssistantPluginConfig is loaded from TOML [Plugins.p_seer_assistant] when the app
@@ -57,5 +56,5 @@ var AssistantAppConfig = struct {
 }
 
 func init() {
-	lago.RegistryConfig.Register("p_seer_assistant", SeerAssistantPlugin)
+	registerPluginConfig("p_seer_assistant", SeerAssistantPlugin)
 }

@@ -1,32 +1,32 @@
 package p_seer_aisstream
 
 import (
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/plugins/p_users"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/plugins/p_users"
 )
 
 func registerRoutes() {
-	_ = lago.RegistryRoute.Register("seer_aisstream.DefaultRoute", lago.Route{
+	registerPluginRoute("seer_aisstream.DefaultRoute", lamu.Route{
 		Path:    AppUrl,
-		Handler: lago.NewDynamicView("seer_aisstream.MessageListView"),
+		Handler: lamu.NewDynamicView("seer_aisstream.MessageListView"),
 	})
-	_ = lago.RegistryRoute.Register("seer_aisstream.MessageListRoute", lago.Route{
+	registerPluginRoute("seer_aisstream.MessageListRoute", lamu.Route{
 		Path:    AppUrl + "messages/",
-		Handler: lago.NewDynamicView("seer_aisstream.MessageListView"),
+		Handler: lamu.NewDynamicView("seer_aisstream.MessageListView"),
 	})
-	_ = lago.RegistryRoute.Register("seer_aisstream.MessageDetailRoute", lago.Route{
+	registerPluginRoute("seer_aisstream.MessageDetailRoute", lamu.Route{
 		Path:    AppUrl + "messages/{id}/",
-		Handler: lago.NewDynamicView("seer_aisstream.MessageDetailView"),
+		Handler: lamu.NewDynamicView("seer_aisstream.MessageDetailView"),
 	})
-	_ = lago.RegistryRoute.Register("seer_aisstream.MapRouteUnderMessages", lago.Route{
+	registerPluginRoute("seer_aisstream.MapRouteUnderMessages", lamu.Route{
 		Path:    AppUrl + "messages/map/",
-		Handler: lago.NewDynamicView("seer_aisstream.MapView"),
+		Handler: lamu.NewDynamicView("seer_aisstream.MapView"),
 	})
-	_ = lago.RegistryRoute.Register("seer_aisstream.MapRoute", lago.Route{
+	registerPluginRoute("seer_aisstream.MapRoute", lamu.Route{
 		Path:    AppUrl + "map/",
-		Handler: lago.NewDynamicView("seer_aisstream.MapView"),
+		Handler: lamu.NewDynamicView("seer_aisstream.MapView"),
 	})
-	_ = lago.RegistryRoute.Register("seer_aisstream.MapDataRoute", lago.Route{
+	registerPluginRoute("seer_aisstream.MapDataRoute", lamu.Route{
 		Path:    AppUrl + "map/data/",
 		Handler: p_users.RequireAuth(aisStreamMapDataHandler{}),
 	})

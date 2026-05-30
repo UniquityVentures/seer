@@ -8,7 +8,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/UniquityVentures/lago/plugins/p_google_genai"
+	"github.com/UniquityVentures/lamu/plugins/p_google_genai"
 	"github.com/pgvector/pgvector-go"
 	"google.golang.org/genai"
 )

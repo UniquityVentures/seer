@@ -3,11 +3,11 @@ package p_seer_gdelt
 import (
 	"context"
 
-	"github.com/UniquityVentures/lago/getters"
+	"github.com/UniquityVentures/lamu/getters"
 	"gorm.io/gorm"
 )
 
-// MapDisplayPointWire is one CBOR marker for [github.com/UniquityVentures/lago/components.MapDisplay]
+// MapDisplayPointWire is one CBOR marker for [github.com/UniquityVentures/lamu/components.MapDisplay]
 // (GDELT events are undirected points; optional layer for merged dashboards).
 type MapDisplayPointWire struct {
 	Position struct {

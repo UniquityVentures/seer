@@ -1,7 +1,5 @@
 package p_seer_gdelt
 
-import "github.com/UniquityVentures/lago/lago"
-
 type GDELTConfig struct {
 	ProjectID         string `toml:"projectID"`
 	CredentialsFile   string `toml:"credentialsFile"`
@@ -39,5 +37,5 @@ func (c *GDELTConfig) PostConfig() {
 }
 
 func init() {
-	lago.RegistryConfig.Register("p_seer_gdelt", Config)
+	registerPluginConfig("p_seer_gdelt", Config)
 }

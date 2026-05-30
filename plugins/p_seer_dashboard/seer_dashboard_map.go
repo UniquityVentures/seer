@@ -7,8 +7,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -16,7 +16,7 @@ import (
 // seerDashboardMapDefaultSelectZoom is the zoom level applied when a region is picked.
 const seerDashboardMapDefaultSelectZoom = 8.0
 
-// seerDashboardMapIDSanitize mirrors lago/components.mapDisplayIDSanitize so the id suffix
+// seerDashboardMapIDSanitize mirrors lamu/components.mapDisplayIDSanitize so the id suffix
 // derived here matches the one MapDisplay computes from the same Page.Key.
 var seerDashboardMapIDSanitize = regexp.MustCompile(`[^a-zA-Z0-9-]+`)
 
@@ -96,13 +96,13 @@ func (e *SeerDashboardMap) Build(ctx context.Context) Node {
 	selectZoomBytes, _ := json.Marshal(selectZoom)
 
 	mapDisplay := &components.MapDisplay{
-		Page:                   components.Page{Key: innerKey},
-		DataURL:                e.DataURL,
-		RefreshMS:              e.RefreshMS,
-		Classes:                classes,
-		DeferStart:             getters.Static(true),
-		SkipAutoFitBounds:      getters.Static(true),
-		MarkerIconSizeDefault:  getters.Static(0.08),
+		Page:                  components.Page{Key: innerKey},
+		DataURL:               e.DataURL,
+		RefreshMS:             e.RefreshMS,
+		Classes:               classes,
+		DeferStart:            getters.Static(true),
+		SkipAutoFitBounds:     getters.Static(true),
+		MarkerIconSizeDefault: getters.Static(0.08),
 	}
 
 	initJS := `(function(){

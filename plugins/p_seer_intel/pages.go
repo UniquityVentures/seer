@@ -1,9 +1,9 @@
 package p_seer_intel
 
 import (
-	"github.com/UniquityVentures/lago/components"
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 )
 
 func init() {
@@ -13,30 +13,30 @@ func init() {
 }
 
 func registerMenuPages() {
-	lago.RegistryPage.Register("seer_intel.IntelMenu", &components.SidebarMenu{
+	registerPluginPage("seer_intel.IntelMenu", &components.SidebarMenu{
 		Title: getters.Static("Intel"),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to All Apps"),
-			Url:   lago.RoutePath("dashboard.AppsPage", nil),
+			Url:   lamu.RoutePath("dashboard.AppsPage", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("All Intel"),
-				Url:   lago.RoutePath("seer_intel.DefaultRoute", nil),
+				Url:   lamu.RoutePath("seer_intel.DefaultRoute", nil),
 			},
 		},
 	})
 
-	lago.RegistryPage.Register("seer_intel.IntelDetailMenu", &components.SidebarMenu{
+	registerPluginPage("seer_intel.IntelDetailMenu", &components.SidebarMenu{
 		Title: getters.Format("Intel: %s", getters.Any(getters.Key[string]("intel.Title"))),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("All Intel"),
-			Url:   lago.RoutePath("seer_intel.DefaultRoute", nil),
+			Url:   lamu.RoutePath("seer_intel.DefaultRoute", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("Detail"),
-				Url: lago.RoutePath("seer_intel.DetailRoute", map[string]getters.Getter[any]{
+				Url: lamu.RoutePath("seer_intel.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("intel.ID")),
 				}),
 			},

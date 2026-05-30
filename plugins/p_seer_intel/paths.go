@@ -1,18 +1,18 @@
 package p_seer_intel
 
 import (
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/lamu"
 )
 
 func registerRoutes() {
-	_ = lago.RegistryRoute.Register("seer_intel.DefaultRoute", lago.Route{
+	registerPluginRoute("seer_intel.DefaultRoute", lamu.Route{
 		Path:    AppUrl,
-		Handler: lago.NewDynamicView("seer_intel.ListView"),
+		Handler: lamu.NewDynamicView("seer_intel.ListView"),
 	})
 
-	_ = lago.RegistryRoute.Register("seer_intel.DetailRoute", lago.Route{
+	registerPluginRoute("seer_intel.DetailRoute", lamu.Route{
 		Path:    AppUrl + "{id}/",
-		Handler: lago.NewDynamicView("seer_intel.DetailView"),
+		Handler: lamu.NewDynamicView("seer_intel.DetailView"),
 	})
 }
 

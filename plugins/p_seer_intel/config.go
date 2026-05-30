@@ -3,7 +3,6 @@ package p_seer_intel
 import (
 	"strings"
 
-	"github.com/UniquityVentures/lago/lago"
 )
 
 // IntelConfig holds Intel-specific settings loaded from [Plugins.p_seer_intel].
@@ -24,5 +23,5 @@ func (c *IntelConfig) PostConfig() {
 }
 
 func init() {
-	lago.RegistryConfig.Register("p_seer_intel", IntelConfigValue)
+	registerPluginConfig("p_seer_intel", IntelConfigValue)
 }

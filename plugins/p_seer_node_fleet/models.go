@@ -6,7 +6,7 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/UniquityVentures/lago/registry"
+	"github.com/UniquityVentures/lamu/registry"
 	"github.com/UniquityVentures/seer/plugins/p_seer_node_fleet/messages"
 )
 
