@@ -3,12 +3,12 @@ module github.com/UniquityVentures/lago/deployments/seer
 go 1.26.1
 
 require (
-	github.com/UniquityVentures/lago/lago v0.2.0
-	github.com/UniquityVentures/lago/plugins/p_dashboard v0.2.0
-	github.com/UniquityVentures/lago/plugins/p_filesystem v0.2.0
-	github.com/UniquityVentures/lago/plugins/p_google_genai v0.2.0
-	github.com/UniquityVentures/lago/plugins/p_pwa v0.2.0
-	github.com/UniquityVentures/lago/plugins/p_users v0.2.0
+	github.com/UniquityVentures/lamu v0.4.11
+	github.com/UniquityVentures/lamu/plugins/p_dashboard v0.4.11
+	github.com/UniquityVentures/lamu/plugins/p_filesystem v0.4.11
+	github.com/UniquityVentures/lamu/plugins/p_google_genai v0.4.11
+	github.com/UniquityVentures/lamu/plugins/p_pwa v0.4.11
+	github.com/UniquityVentures/lamu/plugins/p_users v0.4.11
 )
 
 require (
