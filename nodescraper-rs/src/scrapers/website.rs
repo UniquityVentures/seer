@@ -71,7 +71,8 @@ impl ServoEngine {
         let delegate: Rc<dyn WebViewDelegate> = Rc::new(ScrapeDelegate);
         let webview = WebViewBuilder::new(&servo, rendering_context)
             .url(
-                Url::parse("about:blank").map_err(|err| format!("invalid about:blank url: {err}"))?,
+                Url::parse("about:blank")
+                    .map_err(|err| format!("invalid about:blank url: {err}"))?,
             )
             .hidpi_scale_factor(Scale::new(1.0))
             .delegate(delegate)
@@ -149,12 +150,13 @@ impl ServoEngine {
     }
 
     fn get_url_with_timeout(&mut self, timeout: Duration) -> Result<String, String> {
-        let (sender, receiver) = servo_base::generic_channel::channel()
-            .ok_or("failed to create url channel")?;
-        self.servo.execute_webdriver_command(WebDriverCommandMsg::ScriptCommand(
-            self.browsing_context_id,
-            WebDriverScriptCommand::GetUrl(sender),
-        ));
+        let (sender, receiver) =
+            servo_base::generic_channel::channel().ok_or("failed to create url channel")?;
+        self.servo
+            .execute_webdriver_command(WebDriverCommandMsg::ScriptCommand(
+                self.browsing_context_id,
+                WebDriverScriptCommand::GetUrl(sender),
+            ));
 
         let deadline = Instant::now() + timeout;
         loop {
@@ -174,12 +176,13 @@ impl ServoEngine {
     }
 
     fn get_page_source(&mut self) -> Result<String, String> {
-        let (sender, receiver) = servo_base::generic_channel::channel()
-            .ok_or("failed to create page source channel")?;
-        self.servo.execute_webdriver_command(WebDriverCommandMsg::ScriptCommand(
-            self.browsing_context_id,
-            WebDriverScriptCommand::GetPageSource(sender),
-        ));
+        let (sender, receiver) =
+            servo_base::generic_channel::channel().ok_or("failed to create page source channel")?;
+        self.servo
+            .execute_webdriver_command(WebDriverCommandMsg::ScriptCommand(
+                self.browsing_context_id,
+                WebDriverScriptCommand::GetPageSource(sender),
+            ));
 
         let deadline = Instant::now() + PAGE_LOAD_TIMEOUT;
         loop {
@@ -395,7 +398,10 @@ impl Scraper for WebsiteScraper {
 
         if self.request_tx.send(request).is_err() {
             let message = "servo scraper thread is unavailable".into();
-            log::error!("website scrape failed for {}: {message}", trigger.source_url);
+            log::error!(
+                "website scrape failed for {}: {message}",
+                trigger.source_url
+            );
             return website_scrape_error_response(command_id, message);
         }
 
@@ -411,7 +417,10 @@ impl Scraper for WebsiteScraper {
             },
             Err(_) => {
                 let message = "servo scraper thread dropped the response".into();
-                log::error!("website scrape failed for {}: {message}", trigger.source_url);
+                log::error!(
+                    "website scrape failed for {}: {message}",
+                    trigger.source_url
+                );
                 website_scrape_error_response(command_id, message)
             }
         }

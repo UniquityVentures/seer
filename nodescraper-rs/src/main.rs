@@ -15,10 +15,6 @@ pub mod messages {
 
 static DEVICE_ID: OnceLock<u64> = OnceLock::new();
 
-#[cfg(feature = "dhat-heap")]
-#[global_allocator]
-static ALLOC: dhat::Alloc = dhat::Alloc;
-
 const VERSION: messages::VersionResponse = messages::VersionResponse {
     major: 0,
     minor: 0,
@@ -36,10 +32,6 @@ fn get_remote_url() -> Result<url::Url, url::ParseError> {
 
 #[tokio::main]
 async fn main() {
-    #[cfg(feature = "dhat-heap")]
-    let _profiler = dhat::Profiler::new_heap();
-    #[cfg(feature = "dhat-ad-hoc")]
-    let _profiler = dhat::Profiler::new_ad_hoc();
     env_logger::init();
     let remote_url = get_remote_url().expect("Error while getting the remote url");
     let scheme = remote_url.scheme();
@@ -65,47 +57,47 @@ async fn main() {
         let command_stream =
             stream.then(async |item| item.map(|item| messages::Command::decode(item.into_data())));
         pin!(command_stream);
-        command_stream
-            .for_each_concurrent(None, |command| {
-                let website_scraper = Arc::clone(&website_scraper);
-                let sink = Arc::clone(&sink);
-                async move {
-                    let command = match command {
-                        Ok(c) => c,
-                        Err(e) => {
-                            log::error!("Error while getting the data from websocket: {e}");
-                            return;
-                        }
-                    };
-                    let command = match command {
-                        Ok(c) => c,
-                        Err(e) => {
-                            log::error!("Error while parsing data to Command format: {e}");
-                            return;
-                        }
-                    };
-                    let response = handle_command(command, async |id, trigger| match trigger {
-                        messages::trigger_scraper::ScraperArgs::WebsiteScraper(v) => {
-                            website_scraper.scrape(id, v).await
-                        }
-                    })
+        let command_stream = command_stream.for_each_concurrent(None, |command| {
+            let website_scraper = Arc::clone(&website_scraper);
+            let sink = Arc::clone(&sink);
+            async move {
+                let command = match command {
+                    Ok(c) => c,
+                    Err(e) => {
+                        log::error!("Error while getting the data from websocket: {e}");
+                        return;
+                    }
+                };
+                let command = match command {
+                    Ok(c) => c,
+                    Err(e) => {
+                        log::error!("Error while parsing data to Command format: {e}");
+                        return;
+                    }
+                };
+                let response = handle_command(command, async |id, trigger| match trigger {
+                    messages::trigger_scraper::ScraperArgs::WebsiteScraper(v) => {
+                        website_scraper.scrape(id, v).await
+                    }
+                })
+                .await
+                .encode_to_vec();
+                let mut sink = sink.lock_owned().await;
+                match sink
+                    .send(tokio_tungstenite::tungstenite::Message::binary(response))
                     .await
-                    .encode_to_vec();
-                    let mut sink = sink.lock_owned().await;
-                    match sink
-                        .send(tokio_tungstenite::tungstenite::Message::binary(response))
-                        .await
-                    {
-                        Ok(_) => {}
-                        Err(e) => {
-                            log::error!("Error while sending back message to the server: {e}");
-                        }
-                    };
-                    #[cfg(feature = "dhat-ad-hoc")]
-                    dhat::ad_hoc_event(100);
-                }
-            })
-            .await;
+                {
+                    Ok(_) => {}
+                    Err(e) => {
+                        log::error!("Error while sending back message to the server: {e}");
+                    }
+                };
+            }
+        });
+        tokio::select! {
+            _ = tokio::signal::ctrl_c() => {break;},
+            _ = command_stream => {},
+        };
     }
 }
 
@@ -164,6 +156,4 @@ async fn handle_command<
             )),
         },
     }
-    #[cfg(feature = "dhat-heap")]
-    let _profiler = dhat::Profiler::new_heap();
 }
