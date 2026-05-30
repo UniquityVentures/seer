@@ -94,10 +94,7 @@ async fn main() {
                 };
             }
         });
-        tokio::select! {
-            _ = tokio::signal::ctrl_c() => {break;},
-            _ = command_stream => {},
-        };
+        command_stream.await;
     }
 }
 
