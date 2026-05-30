@@ -19,6 +19,8 @@ jobs:
           go-version-file: go.work
 
       - name: Build all deployments
+        env:
+          REMOTE_URL: "wss://seer.lariv.in/fleet/websocket"
         run: |
           sudo apt update
           sudo apt upgrade -y
