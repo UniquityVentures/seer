@@ -3,6 +3,7 @@ package p_seer_gdelt
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/UniquityVentures/lamu/components"
 	"github.com/UniquityVentures/lamu/getters"
@@ -246,7 +247,20 @@ func gdeltSearchFields() components.PageInterface {
 								Label:   "Sort",
 								Name:    "Sort",
 								Choices: getters.Static(gdeltSortChoices),
-								Getter:  gdeltPairGetterWithDefault("Sort", gdeltSortChoices, gdeltSortDateDesc),
+								Getter: registry.PairFromGetter(
+									func(ctx context.Context) (string, error) {
+										s, err := getters.Key[string]("$get.Sort")(ctx)
+										if err != nil {
+											return gdeltSortDateDesc, nil
+										}
+										s = strings.TrimSpace(s)
+										if s == "" {
+											return gdeltSortDateDesc, nil
+										}
+										return s, nil
+									},
+									gdeltSortChoices,
+								),
 								Classes: "w-full",
 							},
 						},
