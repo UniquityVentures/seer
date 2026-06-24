@@ -11,6 +11,7 @@ import (
 	"github.com/UniquityVentures/lamu/plugins/p_google_genai"
 	"github.com/pgvector/pgvector-go"
 	"google.golang.org/genai"
+	"gorm.io/gorm"
 )
 
 const intelSummarySystemPrompt = `You write concise factual summaries for an intelligence ingest pipeline.
@@ -41,7 +42,7 @@ func normalizeIntelTitle(raw string) string {
 }
 
 func intelTitleFallback(content string) string {
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		t := strings.TrimSpace(line)
 		if t == "" || strings.HasPrefix(t, "---") {
 			continue
@@ -120,4 +121,50 @@ func NewFromIntelKind(ctx context.Context, k IntelKind) (Intel, error) {
 		Datetime:  time.Now().UTC(),
 		Embedding: &vec,
 	}, nil
+}
+
+type IngestRequest struct {
+	Kind IntelKind
+}
+
+var IntelChannel = make(chan IngestRequest, 1024)
+
+var intelDB *gorm.DB
+
+func StartIntelIngestWorker(db *gorm.DB) {
+	intelDB = db
+	go func() {
+		ctx := context.Background()
+		slog.Info("p_seer_intel: async ingest worker started")
+		for req := range IntelChannel {
+			if req.Kind == nil || intelDB == nil {
+				continue
+			}
+			kindLabel := req.Kind.Kind()
+			id := req.Kind.IntelID()
+			exists, err := IntelExistsForSource(ctx, intelDB, kindLabel, id)
+			if err != nil {
+				slog.Error("p_seer_intel: worker exists check error", "kind", kindLabel, "id", id, "error", err)
+				continue
+			}
+			if exists {
+				continue
+			}
+			intel, err := NewFromIntelKind(ctx, req.Kind)
+			if err != nil {
+				slog.Error("p_seer_intel: worker generate error", "kind", kindLabel, "id", id, "error", err)
+				continue
+			}
+			intelEventKind, ok := req.Kind.(IntelEventKind)
+			if ok {
+				if err := CreateIntelWithEvent(ctx, intelDB, &intel, intelEventKind); err != nil {
+					slog.Error("p_seer_intel: worker persist error while creating event explicitly", "kind", kindLabel, "id", id, "error", err)
+				}
+			} else {
+				if err := CreateIntelAndEvent(ctx, intelDB, &intel); err != nil {
+					slog.Error("p_seer_intel: worker persist error while creating event implicitly", "kind", kindLabel, "id", id, "error", err)
+				}
+			}
+		}
+	}()
 }

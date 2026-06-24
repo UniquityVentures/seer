@@ -33,6 +33,7 @@ func init() {
 		if err := db.AutoMigrate(&Intel{}, &IntelEvent{}); err != nil {
 			panic(err)
 		}
+		StartIntelIngestWorker(db)
 		return db
 	})
 }

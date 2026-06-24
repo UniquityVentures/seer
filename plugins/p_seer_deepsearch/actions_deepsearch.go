@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/UniquityVentures/seer/plugins/p_seer_intel"
 	"github.com/UniquityVentures/seer/plugins/p_seer_websites"
@@ -37,15 +38,30 @@ func deepSearchIntelIngestOne(ctx context.Context, db *gorm.DB, deepSearchID uin
 		slog.Warn("p_seer_deepsearch: intel exists", "website_id", w.ID, "error", errEx)
 		return
 	}
-	p_seer_websites.RunWebsiteSingleIntelIngest(ctx, db, w)
-	has, errAfter := p_seer_intel.IntelExistsForSource(ctx, db, kind, w.ID)
-	if errAfter != nil {
-		appendDeepSearchLog(ctx, db, deepSearchID, DeepSearchLogKindError, fmt.Sprintf("intel exists re-check website_id=%d: %v", w.ID, errAfter))
-		return
-	}
 	if had {
 		appendDeepSearchLog(ctx, db, deepSearchID, DeepSearchLogKindIntelUnchanged, fmt.Sprintf("website_id=%d url=%s (intel already existed)", w.ID, w.URL.String()))
 		return
+	}
+	p_seer_intel.IntelChannel <- p_seer_intel.IngestRequest{
+		Kind: &w,
+	}
+	start := time.Now()
+	var has bool
+	for time.Since(start) < 30*time.Second {
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(500 * time.Millisecond):
+		}
+		var errAfter error
+		has, errAfter = p_seer_intel.IntelExistsForSource(ctx, db, kind, w.ID)
+		if errAfter != nil {
+			appendDeepSearchLog(ctx, db, deepSearchID, DeepSearchLogKindError, fmt.Sprintf("intel exists re-check website_id=%d: %v", w.ID, errAfter))
+			return
+		}
+		if has {
+			break
+		}
 	}
 	if has {
 		var in p_seer_intel.Intel

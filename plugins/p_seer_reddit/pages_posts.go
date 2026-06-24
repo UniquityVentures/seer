@@ -62,10 +62,7 @@ func registerRedditPostPages() {
 			&components.Detail[RedditPost]{
 				Getter: getters.Key[RedditPost]("redditPost"),
 				Children: []components.PageInterface{
-					&components.GetterPage{
-						Page:   components.Page{Key: "seer_reddit.RedditPostDetailShell"},
-						Getter: redditPostDetailShellGetter(redditPostDetailContentColumn()),
-					},
+					redditPostDetailContentColumn(),
 				},
 			},
 		},

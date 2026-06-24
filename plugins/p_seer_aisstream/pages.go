@@ -21,7 +21,6 @@ import (
 func init() {
 	registerAISStreamMenuPages()
 	registerAISStreamTableAndDetail()
-	registerAISStreamMapPages()
 }
 
 func registerAISStreamMenuPages() {
@@ -36,7 +35,6 @@ func registerAISStreamMenuPages() {
 				Title: getters.Static("Messages"),
 				Url:   lamu.RoutePath("seer_aisstream.DefaultRoute", nil),
 			},
-			&aisStreamMapMenuLink{Page: components.Page{Key: "seer_aisstream.AppMenuMapLink"}},
 		},
 	})
 }

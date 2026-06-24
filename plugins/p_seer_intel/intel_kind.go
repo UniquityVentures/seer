@@ -16,3 +16,8 @@ type IntelKind interface {
 	// IntelDetail returns the app path to this kind's source detail page (e.g. Reddit post detail for "reddit").
 	IntelDetail(ctx context.Context) (string, error)
 }
+
+type IntelEventKind interface {
+	IntelKind
+	GetEvent(Intel) ([]IntelEvent, error)
+}

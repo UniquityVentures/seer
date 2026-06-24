@@ -200,36 +200,6 @@ func init() {
 				QueryPatchers: redditPostListQueryPatchersForSource(),
 			}))
 
-	registerPluginView("seer_reddit.RedditPostListBulkAddIntelView",
-		lamu.GetPageView("seer_reddit.RedditPostTable").
-			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("seer_reddit.post_list_by_source_flag", redditPostListBySourceFlagLayer{Value: false}).
-			WithLayer("seer_reddit.reddit_post.list", views.LayerList[RedditPost]{
-				Key:           getters.Static("redditPosts"),
-				QueryPatchers: postPatchers,
-			}).
-			WithLayer("seer_reddit.reddit_posts_bulk_intel_list", redditPostsBulkAddIntelLayer{
-				redirectRouteName: "seer_reddit.RedditPostListRoute",
-			}))
-
-	registerPluginView("seer_reddit.RedditPostListBySourceBulkAddIntelView",
-		lamu.GetPageView("seer_reddit.RedditPostTableBySource").
-			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("seer_reddit.post_list_by_source_flag", redditPostListBySourceFlagLayer{Value: true}).
-			WithLayer("seer_reddit.reddit_source.detail_by_source_id", views.LayerDetail[RedditSource]{
-				Key:           getters.Static("redditSource"),
-				PathParamKey:  getters.Static("source_id"),
-				QueryPatchers: sourceDetailPatchers,
-			}).
-			WithLayer("seer_reddit.reddit_post.list_by_source", views.LayerList[RedditPost]{
-				Key:           getters.Static("redditPosts"),
-				QueryPatchers: redditPostListQueryPatchersForSource(),
-			}).
-			WithLayer("seer_reddit.reddit_posts_bulk_intel_by_source", redditPostsBulkAddIntelLayer{
-				redirectRouteName: "seer_reddit.RedditPostListBySourceRoute",
-				sourceIDPathParam: "source_id",
-			}))
-
 	registerPluginView("seer_reddit.RedditSourceFetchPostsView",
 		lamu.GetPageView("seer_reddit.RedditPostTableBySource").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
@@ -244,17 +214,6 @@ func init() {
 				PathParamKey:  getters.Static("id"),
 				QueryPatchers: postDetailPatchers,
 			}).
-			WithLayer("seer_reddit.reddit_post.intel", redditPostIntelContextLayer{}))
-
-	registerPluginView("seer_reddit.RedditPostAddIntelView",
-		lamu.GetPageView("seer_reddit.RedditPostDetail").
-			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("seer_reddit.reddit_post.add_intel_detail", views.LayerDetail[RedditPost]{
-				Key:           getters.Static("redditPost"),
-				PathParamKey:  getters.Static("id"),
-				QueryPatchers: postDetailPatchers,
-			}).
-			WithLayer("seer_reddit.reddit_post.add_intel", redditPostAddIntelLayer{}).
 			WithLayer("seer_reddit.reddit_post.intel", redditPostIntelContextLayer{}))
 
 	registerPluginView("seer_reddit.RedditPostSoftDeleteView",

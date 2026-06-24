@@ -9,13 +9,14 @@ import (
 	"github.com/UniquityVentures/lamu/components"
 	"github.com/UniquityVentures/lamu/getters"
 	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/seer/plugins/p_seer_intel"
 )
 
 func init() {
 	registerOpenSkyMenuPages()
-	registerOpenSkyMapPages()
 	registerStateTableAndDetail()
 	registerStateFormPages()
+	registerTransitionTablePages()
 }
 
 func registerOpenSkyMenuPages() {
@@ -30,7 +31,39 @@ func registerOpenSkyMenuPages() {
 				Title: getters.Static("States"),
 				Url:   lamu.RoutePath("seer_opensky.DefaultRoute", nil),
 			},
-			&openskyMapMenuLink{Page: components.Page{Key: "seer_opensky.AppMenuMapLink"}},
+			&components.SidebarMenuItem{
+				Title: getters.Static("Transitions"),
+				Url:   lamu.RoutePath("seer_opensky.TransitionListRoute", nil),
+			},
+		},
+	})
+}
+
+func registerTransitionTablePages() {
+	registerPluginPage("seer_opensky.TransitionTablePage", &components.ShellScaffold{
+		Sidebar: []components.PageInterface{
+			lamu.DynamicPage{Name: "seer_opensky.AppMenu"},
+		},
+		Children: []components.PageInterface{
+			&components.DataTable[p_seer_intel.Intel]{
+				Page:    components.Page{Key: "seer_opensky.TransitionTableBody"},
+				UID:     "seer-opensky-transitions",
+				Classes: "w-full",
+				Data:    getters.Key[components.ObjectList[p_seer_intel.Intel]]("openskyTransitions"),
+				RowAttr: getters.RowAttrNavigate(
+					lamu.RoutePath("seer_opensky.StateDetailRoute", map[string]getters.Getter[any]{
+						"id": getters.Any(getters.Key[uint]("$row.KindID")),
+					}),
+				),
+				Columns: []components.TableColumn{
+					{Label: "Date/Time", Name: "Datetime", Children: []components.PageInterface{
+						&components.FieldText{Getter: timeString(getters.Key[time.Time]("$row.Datetime"))},
+					}},
+					{Label: "Description", Name: "Summary", Children: []components.PageInterface{
+						&components.FieldText{Getter: getters.Key[string]("$row.Summary")},
+					}},
+				},
+			},
 		},
 	})
 }

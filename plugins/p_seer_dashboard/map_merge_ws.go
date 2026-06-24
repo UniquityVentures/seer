@@ -17,11 +17,7 @@ import (
 
 	"github.com/UniquityVentures/lamu/components"
 	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/seer/plugins/p_seer_aisstream"
-	"github.com/UniquityVentures/seer/plugins/p_seer_gdelt"
 	"github.com/UniquityVentures/seer/plugins/p_seer_intel"
-	"github.com/UniquityVentures/seer/plugins/p_seer_opensky"
 	"github.com/fxamacker/cbor/v2"
 )
 
@@ -130,13 +126,6 @@ func (h dashboardMapDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 }
 
 func sendDashboardMergedMapPoints(ctx context.Context, ws *dashboardMapWSConn, writeMu *sync.Mutex, raw *viewportBounds) error {
-	db, err := getters.DBFromContext(ctx)
-	if err != nil {
-		return err
-	}
-
-	var osVp *p_seer_opensky.OpenSkyViewportBounds
-	var aiVp *p_seer_aisstream.AisstreamViewportBounds
 	var gdWest, gdSouth, gdEast, gdNorth float64
 	gdSkipBBox := true
 
@@ -146,88 +135,16 @@ func sendDashboardMergedMapPoints(ctx context.Context, ws *dashboardMapWSConn, w
 		gdSouth = raw.South - dashboardMapViewportMarginDeg
 		gdEast = raw.East + dashboardMapViewportMarginDeg
 		gdNorth = raw.North + dashboardMapViewportMarginDeg
-		osVp = &p_seer_opensky.OpenSkyViewportBounds{
-			West:  gdWest,
-			South: gdSouth,
-			East:  gdEast,
-			North: gdNorth,
-		}
-		if !osVp.IsValid() {
-			osVp = nil
-		}
-		aiVp = &p_seer_aisstream.AisstreamViewportBounds{
-			West:  gdWest,
-			South: gdSouth,
-			East:  gdEast,
-			North: gdNorth,
-		}
-		if !aiVp.IsValid() {
-			aiVp = nil
-		}
 	}
 
 	var merged []any
 
-	osPts, err := p_seer_opensky.MapDisplayPointsForBounds(ctx, db, osVp, "opensky")
-	if err != nil {
-		slog.Warn("p_seer_dashboard: opensky map points", "error", err)
-	} else {
-		osIcon, osIconErr := lamu.RoutePath("seer_dashboard.MapMarkerOpenSkyRoute", nil)(ctx)
-		for i := range osPts {
-			if osIconErr == nil && osIcon != "" {
-				osPts[i].Icon = osIcon
-			}
-			osPts[i].IconSize = dashboardMergedMapIconSize
-		}
-		for i := range osPts {
-			if len(merged) >= dashboardMapMaxMergedObjects {
-				break
-			}
-			merged = append(merged, osPts[i])
-		}
-	}
-
-	aiPts, err := p_seer_aisstream.MapDisplayPointsForBounds(ctx, db, aiVp, "aisstream")
-	if err != nil {
-		slog.Warn("p_seer_dashboard: aisstream map points", "error", err)
-	} else {
-		aiIcon, aiIconErr := lamu.RoutePath("seer_dashboard.MapMarkerAISStreamRoute", nil)(ctx)
-		for i := range aiPts {
-			if aiIconErr == nil && aiIcon != "" {
-				aiPts[i].Icon = aiIcon
-			}
-			aiPts[i].IconSize = dashboardMergedMapIconSize
-		}
-		for i := range aiPts {
-			if len(merged) >= dashboardMapMaxMergedObjects {
-				break
-			}
-			merged = append(merged, aiPts[i])
-		}
-	}
-
-	var gdPts []p_seer_gdelt.MapDisplayPointWire
-	if gdSkipBBox {
-		gdPts, err = p_seer_gdelt.MapDisplayPointsForBounds(ctx, nil, 0, 1, 0, -1, "gdelt")
-	} else {
-		gdPts, err = p_seer_gdelt.MapDisplayPointsForBounds(ctx, nil, gdWest, gdSouth, gdEast, gdNorth, "gdelt")
-	}
-	if err != nil {
-		slog.Warn("p_seer_dashboard: gdelt map points", "error", err)
-	} else {
-		for i := range gdPts {
-			if len(merged) >= dashboardMapMaxMergedObjects {
-				break
-			}
-			merged = append(merged, gdPts[i])
-		}
-	}
-
+	var err error
 	var intelPts []p_seer_intel.MapDisplayPointWire
 	if gdSkipBBox {
-		intelPts, err = p_seer_intel.MapDisplayPointsForBounds(ctx, nil, 0, 1, 0, -1, "intel_event")
+		intelPts, err = p_seer_intel.MapDisplayPointsForBounds(ctx, 0, 1, 0, -1, "intel_event")
 	} else {
-		intelPts, err = p_seer_intel.MapDisplayPointsForBounds(ctx, nil, gdWest, gdSouth, gdEast, gdNorth, "intel_event")
+		intelPts, err = p_seer_intel.MapDisplayPointsForBounds(ctx, gdWest, gdSouth, gdEast, gdNorth, "intel_event")
 	}
 	if err != nil {
 		slog.Warn("p_seer_dashboard: intel event map points", "error", err)

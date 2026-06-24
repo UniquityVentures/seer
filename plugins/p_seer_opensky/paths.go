@@ -2,7 +2,6 @@ package p_seer_opensky
 
 import (
 	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/plugins/p_users"
 )
 
 func registerRoutes() {
@@ -14,9 +13,9 @@ func registerRoutes() {
 		Path:    AppUrl + "states/",
 		Handler: lamu.NewDynamicView("seer_opensky.StateListView"),
 	})
-	registerPluginRoute("seer_opensky.MapRouteUnderStates", lamu.Route{
-		Path:    AppUrl + "states/map/",
-		Handler: lamu.NewDynamicView("seer_opensky.MapView"),
+	registerPluginRoute("seer_opensky.TransitionListRoute", lamu.Route{
+		Path:    AppUrl + "transitions/",
+		Handler: lamu.NewDynamicView("seer_opensky.TransitionListView"),
 	})
 	registerPluginRoute("seer_opensky.StateCreateRoute", lamu.Route{
 		Path:    AppUrl + "states/create/",
@@ -33,14 +32,6 @@ func registerRoutes() {
 	registerPluginRoute("seer_opensky.StateDeleteRoute", lamu.Route{
 		Path:    AppUrl + "states/{id}/delete/",
 		Handler: lamu.NewDynamicView("seer_opensky.StateDeleteView"),
-	})
-	registerPluginRoute("seer_opensky.MapRoute", lamu.Route{
-		Path:    AppUrl + "map/",
-		Handler: lamu.NewDynamicView("seer_opensky.MapView"),
-	})
-	registerPluginRoute("seer_opensky.MapDataRoute", lamu.Route{
-		Path:    AppUrl + "map/data/",
-		Handler: p_users.RequireAuth(openSkyMapDataHandler{}),
 	})
 }
 

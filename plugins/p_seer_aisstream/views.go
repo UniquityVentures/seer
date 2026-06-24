@@ -12,10 +12,6 @@ var aisStreamMessageListQueryPatchers = views.QueryPatchers[AISStreamMessage]{
 }
 
 func init() {
-	registerPluginView("seer_aisstream.MapView",
-		lamu.GetPageView("seer_aisstream.MapPage").
-			WithLayer("p_users.auth", p_users.AuthenticationLayer{}))
-
 	registerPluginView("seer_aisstream.MessageListView",
 		lamu.GetPageView("seer_aisstream.MessageTablePage").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).

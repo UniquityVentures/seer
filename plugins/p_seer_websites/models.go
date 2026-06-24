@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/seer/plugins/p_seer_intel"
 	"gorm.io/gorm"
 )
 
@@ -24,6 +25,13 @@ type Website struct {
 
 func (Website) TableName() string {
 	return WebsitesTable
+}
+
+func (w *Website) AfterCreate(tx *gorm.DB) error {
+	p_seer_intel.IntelChannel <- p_seer_intel.IngestRequest{
+		Kind: w,
+	}
+	return nil
 }
 
 // WebsiteRunner is a cadence bucket for scheduled website source crawls ([WebsiteSource.WebsiteRunnerID] optional).

@@ -1,15 +1,19 @@
 package p_seer_reddit
 
 import (
+	"context"
 	"log"
 	"log/slog"
 	"time"
 
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 	"github.com/UniquityVentures/seer/plugins/p_seer_workerregistry"
 	"gorm.io/gorm"
 )
 
 type redditWorkerInstance struct {
+	runnerID uint
 	name     string
 	interval time.Duration
 	lastRun  *time.Time
@@ -20,6 +24,16 @@ func (w *redditWorkerInstance) Name() string               { return w.name }
 func (w *redditWorkerInstance) Interval() time.Duration   { return w.interval }
 func (w *redditWorkerInstance) LastRun() *time.Time       { return w.lastRun }
 func (w *redditWorkerInstance) NextRun() *time.Time       { return w.nextRun }
+func (w *redditWorkerInstance) DetailURL(ctx context.Context) string {
+	u, err := lamu.RoutePath("seer_reddit.RedditRunnerDetailRoute", map[string]getters.Getter[any]{
+		"id": getters.Any(getters.Static(w.runnerID)),
+	})(ctx)
+	if err != nil {
+		return ""
+	}
+	return u
+}
+
 
 type redditActiveWorkersProvider struct{}
 
@@ -49,6 +63,7 @@ func (redditActiveWorkersProvider) FetchActiveWorkers(db *gorm.DB) []p_seer_work
 			}
 		}
 		out = append(out, &redditWorkerInstance{
+			runnerID: r.ID,
 			name:     r.Name,
 			interval: r.Duration,
 			lastRun:  lastRun,

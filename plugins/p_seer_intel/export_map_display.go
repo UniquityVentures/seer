@@ -7,7 +7,6 @@ import (
 
 	"github.com/UniquityVentures/lamu/getters"
 	"github.com/UniquityVentures/lamu/lamu"
-	"gorm.io/gorm"
 )
 
 // IntelEventsTable is the GORM/Postgres table for [IntelEvent].
@@ -47,7 +46,7 @@ func intelPointInMapViewport(lat, lng, west, south, east, north float64) bool {
 
 // MapDisplayPointsForBounds returns markers for [IntelEvent] rows that have a geocoded [IntelEvent.Location],
 // joined to a non–soft-deleted [Intel]. When south > north (sentinel), no lat/lng filtering is applied.
-func MapDisplayPointsForBounds(ctx context.Context, _ *gorm.DB, west, south, east, north float64, layer string) ([]MapDisplayPointWire, error) {
+func MapDisplayPointsForBounds(ctx context.Context, west, south, east, north float64, layer string) ([]MapDisplayPointWire, error) {
 	db, err := getters.DBFromContext(ctx)
 	if err != nil {
 		return nil, err

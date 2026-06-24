@@ -112,7 +112,7 @@ func runGDELTWorkerPool(db *gorm.DB, workerID uint, ctx context.Context) {
 				src := sources[i]
 				req := src.ToGDELTSearchRequest()
 				sid := src.ID
-				stored, err := FetchAndStoreGDELTEvents(ctx, db, req, &sid)
+				_, err := FetchAndStoreGDELTEvents(ctx, db, req, &sid)
 				if err != nil {
 					runErr = errors.Join(runErr, err)
 					slog.Error("p_seer_gdelt: worker pool fetch",
@@ -120,10 +120,6 @@ func runGDELTWorkerPool(db *gorm.DB, workerID uint, ctx context.Context) {
 						"worker_id", workerID,
 						"gdelt_source_id", src.ID,
 					)
-				} else if len(stored) > 0 {
-					rows := append([]Event(nil), stored...)
-					dbCopy := db
-					go RunGDELTEventsIntelIngest(context.Background(), dbCopy, rows)
 				}
 			}
 		}

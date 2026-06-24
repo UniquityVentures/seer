@@ -1,6 +1,7 @@
 package p_seer_workerregistry
 
 import (
+	"context"
 	"time"
 
 	"github.com/UniquityVentures/lamu/registry"
@@ -13,6 +14,7 @@ type WorkerInstance interface {
 	LastRun() *time.Time
 	NextRun() *time.Time
 	Interval() time.Duration
+	DetailURL(ctx context.Context) string
 }
 
 // ActiveWorkersProvider returns worker rows for one tab (e.g. Reddit, Website).

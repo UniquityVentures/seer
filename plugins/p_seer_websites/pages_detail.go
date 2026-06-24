@@ -15,19 +15,6 @@ func websiteDetailContentColumn() components.PageInterface {
 				Classes: "flex flex-wrap justify-between items-start gap-2 w-full",
 				Children: []components.PageInterface{
 					&components.FieldTitle{Getter: pageURLStringFromKey("$in.URL")},
-					&components.ShowIf{
-						Page:   components.Page{Key: "seer_websites.WebsiteDetailAddIntelWrap"},
-						Getter: getters.Any(getters.Key[bool]("websiteIntelAddVisible")),
-						Children: []components.PageInterface{
-							&components.ButtonPost{
-								Page:    components.Page{Key: "seer_websites.WebsiteDetailAddIntelBtn"},
-								Label:   "Add to Intel",
-								URL:     lamu.RoutePath("seer_websites.WebsiteAddIntelRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
-								Icon:    "document-plus",
-								Classes: "btn-outline btn-primary btn-sm shrink-0",
-							},
-						},
-					},
 					&components.ButtonModalForm{
 						Page:        components.Page{Key: "seer_websites.WebsiteDetailDeleteBtn"},
 						Label:       "Delete",

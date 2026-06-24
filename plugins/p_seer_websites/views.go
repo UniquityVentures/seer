@@ -117,22 +117,6 @@ func init() {
 			}).
 			WithLayer("seer_websites.website.intel", websiteIntelContextLayer{}))
 
-	registerPluginView("seer_websites.WebsiteAddIntelView",
-		lamu.GetPageView("seer_websites.WebsiteDetail").
-			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("seer_websites.website.add_intel_detail", views.LayerDetail[Website]{
-				Key:           getters.Static("website"),
-				PathParamKey:  getters.Static("id"),
-				QueryPatchers: websiteDetailPatchers,
-			}).
-			WithLayer("seer_websites.website.add_intel", websiteAddIntelLayer{}).
-			WithLayer("seer_websites.website.intel", websiteIntelContextLayer{}))
-
-	registerPluginView("seer_websites.WebsiteAddAllIntelView",
-		lamu.GetPageView("seer_websites.WebsiteTable").
-			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("seer_websites.website.add_all_intel", websiteAddAllIntelLayer{}))
-
 	registerPluginView("seer_websites.WebsiteSoftDeleteView",
 		lamu.GetPageView("seer_websites.WebsiteDeleteForm").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).

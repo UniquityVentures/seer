@@ -235,6 +235,30 @@ func geocodeGoogleMaps(ctx context.Context, apiKey, address string) (lat, lng fl
 	return 0, 0, fmt.Errorf("p_seer_intel: geocode: unreachable")
 }
 
+func CreateIntelWithEvent(ctx context.Context, db *gorm.DB, intel *Intel, evenKind IntelEventKind) error {
+	if db == nil {
+		return fmt.Errorf("p_seer_intel: CreateIntelWithEvent: db is nil")
+	}
+	if intel == nil {
+		return fmt.Errorf("p_seer_intel: CreateIntelWithEvent: intel is nil")
+	}
+	if err := db.WithContext(ctx).Create(intel).Error; err != nil {
+		return err
+	}
+	events, err := evenKind.GetEvent(*intel)
+	if err != nil {
+		return err
+	}
+	for i := range events {
+		events[i].IntelID = intel.ID
+		events[i].Intel = intel
+		if err := db.WithContext(ctx).Create(&events[i]).Error; err != nil {
+			slog.Warn("p_seer_intel: intel event persist failed", "intel_id", intel.ID, "error", err)
+		}
+	}
+	return nil
+}
+
 // CreateIntelAndEvent persists intel, then best-effort creates [IntelEvent] from [Intel.Summary] (LLM + geocode on insert).
 // Returns an error only if saving [Intel] fails.
 func CreateIntelAndEvent(ctx context.Context, db *gorm.DB, intel *Intel) error {

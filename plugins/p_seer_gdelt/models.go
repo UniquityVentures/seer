@@ -4,6 +4,7 @@ import (
 	"strings"
 	"time"
 	"github.com/UniquityVentures/lamu/fields"
+	"github.com/UniquityVentures/seer/plugins/p_seer_intel"
 
 	"gorm.io/gorm"
 )
@@ -192,8 +193,11 @@ func (Event) TableName() string {
 	return EventsTable
 }
 
-func (e *Event) AfterCreate(_ *gorm.DB) error {
+func (e *Event) AfterCreate(tx *gorm.DB) error {
 	EnqueueEventSourceURLForWebsiteScrape(e.SourceURL)
+	p_seer_intel.IntelChannel <- p_seer_intel.IngestRequest{
+		Kind: e,
+	}
 	return nil
 }
 

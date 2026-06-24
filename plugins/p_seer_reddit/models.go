@@ -3,6 +3,7 @@ package p_seer_reddit
 import (
 	"time"
 
+	"github.com/UniquityVentures/seer/plugins/p_seer_intel"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -116,6 +117,13 @@ type RedditPost struct {
 
 func (RedditPost) TableName() string {
 	return "seer_reddit_posts"
+}
+
+func (rp *RedditPost) AfterCreate(tx *gorm.DB) error {
+	p_seer_intel.IntelChannel <- p_seer_intel.IngestRequest{
+		Kind: rp,
+	}
+	return nil
 }
 
 func init() {

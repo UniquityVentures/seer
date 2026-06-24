@@ -1,15 +1,19 @@
 package p_seer_websites
 
 import (
+	"context"
 	"log"
 	"log/slog"
 	"time"
 
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
 	"github.com/UniquityVentures/seer/plugins/p_seer_workerregistry"
 	"gorm.io/gorm"
 )
 
 type websiteWorkerInstance struct {
+	runnerID uint
 	name     string
 	interval time.Duration
 	lastRun  *time.Time
@@ -20,6 +24,16 @@ func (w *websiteWorkerInstance) Name() string             { return w.name }
 func (w *websiteWorkerInstance) Interval() time.Duration { return w.interval }
 func (w *websiteWorkerInstance) LastRun() *time.Time      { return w.lastRun }
 func (w *websiteWorkerInstance) NextRun() *time.Time      { return w.nextRun }
+func (w *websiteWorkerInstance) DetailURL(ctx context.Context) string {
+	u, err := lamu.RoutePath("seer_websites.WebsiteRunnerDetailRoute", map[string]getters.Getter[any]{
+		"id": getters.Any(getters.Static(w.runnerID)),
+	})(ctx)
+	if err != nil {
+		return ""
+	}
+	return u
+}
+
 
 type websiteActiveWorkersProvider struct{}
 
@@ -49,6 +63,7 @@ func (websiteActiveWorkersProvider) FetchActiveWorkers(db *gorm.DB) []p_seer_wor
 			}
 		}
 		out = append(out, &websiteWorkerInstance{
+			runnerID: r.ID,
 			name:     r.Name,
 			interval: r.Duration,
 			lastRun:  lastRun,

@@ -27,16 +27,6 @@ func registerRoutes() {
 		Handler: lamu.NewDynamicView("seer_websites.WebsiteSoftDeleteView"),
 	})
 
-	registerPluginRoute("seer_websites.WebsiteAddIntelRoute", lamu.Route{
-		Path:    AppUrl + "pages/{id}/add-intel/",
-		Handler: lamu.NewDynamicView("seer_websites.WebsiteAddIntelView"),
-	})
-
-	registerPluginRoute("seer_websites.WebsiteAddAllIntelRoute", lamu.Route{
-		Path:    AppUrl + "add-all-intel/",
-		Handler: lamu.NewDynamicView("seer_websites.WebsiteAddAllIntelView"),
-	})
-
 	registerPluginRoute("seer_websites.WebsiteSourceListRoute", lamu.Route{
 		Path:    AppUrl + "sources/",
 		Handler: lamu.NewDynamicView("seer_websites.WebsiteSourceListView"),

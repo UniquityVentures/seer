@@ -35,28 +35,7 @@ func newRedditPostDataTable() *components.DataTable[RedditPost] {
 								Classes: "btn-outline btn-sm w-24",
 								Attr:    redditPostToolbarBusyGetter(),
 							},
-							&components.ButtonPost{
-								Page:    components.Page{Key: "seer_reddit.RedditPostTableBySourceBulkAddIntel"},
-								Label:   "Add to Intel",
-								URL:     redditPostBulkAddIntelFormURL("seer_reddit.RedditPostListBySourceBulkAddIntelRoute", map[string]getters.Getter[any]{"source_id": sourceID}),
-								Icon:    "document-plus",
-								Classes: "btn-outline btn-primary btn-sm shrink-0 w-32",
-								Attr:    redditPostToolbarBusyGetter(),
-							},
 						},
-					},
-				},
-			},
-			&components.ShowIf{
-				Getter: getters.BoolNot(bySource),
-				Children: []components.PageInterface{
-					&components.ButtonPost{
-						Page:    components.Page{Key: "seer_reddit.RedditPostTableBulkAddIntel"},
-						Label:   "Add to Intel",
-						URL:     redditPostBulkAddIntelFormURL("seer_reddit.RedditPostListBulkAddIntelRoute", nil),
-						Icon:    "document-plus",
-						Classes: "btn-outline btn-primary btn-sm shrink-0 w-32",
-						Attr:    redditPostToolbarBusyGetter(),
 					},
 				},
 			},
@@ -80,20 +59,6 @@ func redditPostDetailContentColumn() components.PageInterface {
 				Classes: "flex flex-wrap justify-between items-start gap-2 w-full",
 				Children: []components.PageInterface{
 					&components.FieldTitle{Getter: getters.Key[string]("$in.Title")},
-					&components.ShowIf{
-						Page:   components.Page{Key: "seer_reddit.RedditPostDetailAddIntelWrap"},
-						Getter: getters.Any(getters.Key[bool]("redditPostIntelAddVisible")),
-						Children: []components.PageInterface{
-							&components.ButtonPost{
-								Page:    components.Page{Key: "seer_reddit.RedditPostDetailAddIntelBtn"},
-								Label:   "Add to Intel",
-								URL:     lamu.RoutePath("seer_reddit.RedditPostAddIntelRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
-								Icon:    "document-plus",
-								Classes: "btn-outline btn-primary btn-sm shrink-0",
-								Attr:    redditPostToolbarBusyGetter(),
-							},
-						},
-					},
 					&components.ButtonModalForm{
 						Page:        components.Page{Key: "seer_reddit.RedditPostDetailDeleteBtn"},
 						Label:       "Delete",

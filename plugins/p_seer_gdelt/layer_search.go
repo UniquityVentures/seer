@@ -64,11 +64,6 @@ func (gdeltSearchLayer) Next(_ views.View, next http.Handler) http.Handler {
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
-		if len(results) > 0 {
-			rows := append([]Event(nil), results...)
-			dbCopy := db
-			go RunGDELTEventsIntelIngest(context.Background(), dbCopy, rows)
-		}
 		ctx = context.WithValue(ctx, gdeltResultsKey, components.ObjectList[Event]{
 			Items:    results,
 			Number:   1,

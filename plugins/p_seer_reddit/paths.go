@@ -25,11 +25,6 @@ func registerRoutes() {
 		Handler: lamu.NewDynamicView("seer_reddit.RedditPostListBySourceView"),
 	})
 
-	registerPluginRoute("seer_reddit.RedditPostListBySourceBulkAddIntelRoute", lamu.Route{
-		Path:    AppUrl + "sources/{source_id}/posts/bulk-add-intel/",
-		Handler: lamu.NewDynamicView("seer_reddit.RedditPostListBySourceBulkAddIntelView"),
-	})
-
 	registerPluginRoute("seer_reddit.RedditSourceFetchPostsRoute", lamu.Route{
 		Path:    AppUrl + "sources/{source_id}/fetch-posts/",
 		Handler: lamu.NewDynamicView("seer_reddit.RedditSourceFetchPostsView"),
@@ -55,11 +50,6 @@ func registerRoutes() {
 		Handler: lamu.NewDynamicView("seer_reddit.RedditPostListView"),
 	})
 
-	registerPluginRoute("seer_reddit.RedditPostListBulkAddIntelRoute", lamu.Route{
-		Path:    AppUrl + "posts/bulk-add-intel/",
-		Handler: lamu.NewDynamicView("seer_reddit.RedditPostListBulkAddIntelView"),
-	})
-
 	registerPluginRoute("seer_reddit.RedditPostDetailRoute", lamu.Route{
 		Path:    AppUrl + "posts/{id}/",
 		Handler: lamu.NewDynamicView("seer_reddit.RedditPostDetailView"),
@@ -68,11 +58,6 @@ func registerRoutes() {
 	registerPluginRoute("seer_reddit.RedditPostDeleteRoute", lamu.Route{
 		Path:    AppUrl + "posts/{id}/delete/",
 		Handler: lamu.NewDynamicView("seer_reddit.RedditPostSoftDeleteView"),
-	})
-
-	registerPluginRoute("seer_reddit.RedditPostAddIntelRoute", lamu.Route{
-		Path:    AppUrl + "posts/{id}/add-intel/",
-		Handler: lamu.NewDynamicView("seer_reddit.RedditPostAddIntelView"),
 	})
 
 	registerPluginRoute("seer_reddit.RedditRunnerListRoute", lamu.Route{
