@@ -9,6 +9,7 @@ import (
 	"github.com/UniquityVentures/lamu/components"
 	"github.com/UniquityVentures/lamu/getters"
 	"github.com/UniquityVentures/lamu/lamu"
+	p_dashboard_components "github.com/UniquityVentures/lamu/plugins/p_dashboard/components"
 	"github.com/UniquityVentures/lamu/registry"
 	"github.com/UniquityVentures/seer/plugins/p_seer_intel"
 	"github.com/UniquityVentures/seer/plugins/p_seer_workerregistry"
@@ -235,43 +236,48 @@ func registerSeerDashboardHomePagePatch() {
 				log.Panic("dashboard.AppsPageLayout: expected exactly one child (AppsGrid)")
 			}
 			appsGrid := layout.Children[0]
-			layout.Children = []components.PageInterface{
-				&components.ContainerRow{
-					Page:    components.Page{Key: "seer_dashboard.HomeRow"},
-					Classes: "flex flex-col xl:flex-row gap-4 w-full max-w-[1600px] mx-auto items-start",
-					Children: []components.PageInterface{
-						&components.ContainerColumn{
-							Page:    components.Page{Key: "seer_dashboard.LeftCol"},
-							Classes: "w-full xl:w-80 shrink-0",
-							Children: []components.PageInterface{
-								&components.FieldTitle{Getter: getters.Static("Intel")},
-								&seerDashboardIntelFeed{Page: components.Page{Key: "seer_dashboard.IntelFeed"}},
-							},
-						},
-						&components.ContainerColumn{
-							Page:    components.Page{Key: "seer_dashboard.CenterCol"},
-							Classes: "flex-1 min-w-0 gap-4",
-							Children: []components.PageInterface{
-								&SeerDashboardMap{
-									Page:    components.Page{Key: "seer_dashboard.DashboardMap"},
-									DataURL: lamu.RoutePath("seer_dashboard.MapDataRoute", nil),
-									Classes: "w-full h-[50vh] min-h-64 rounded-box border border-base-300 relative z-[1]",
+			if _, ok = appsGrid.(*p_dashboard_components.AppsGrid); !ok {
+				return layout
+			}
+			return &components.LayoutSimple{
+				Page: layout.Page,
+				Children: []components.PageInterface{
+					&components.ContainerRow{
+						Page:    components.Page{Key: "seer_dashboard.HomeRow"},
+						Classes: "flex flex-col xl:flex-row gap-4 w-full max-w-[1600px] mx-auto items-start",
+						Children: []components.PageInterface{
+							&components.ContainerColumn{
+								Page:    components.Page{Key: "seer_dashboard.LeftCol"},
+								Classes: "w-full xl:w-80 shrink-0",
+								Children: []components.PageInterface{
+									&components.FieldTitle{Getter: getters.Static("Intel")},
+									&seerDashboardIntelFeed{Page: components.Page{Key: "seer_dashboard.IntelFeed"}},
 								},
-								appsGrid,
 							},
-						},
-						&components.ContainerColumn{
-							Page:    components.Page{Key: "seer_dashboard.RightCol"},
-							Classes: "w-full xl:w-72 shrink-0",
-							Children: []components.PageInterface{
-								&components.FieldTitle{Getter: getters.Static("Workers")},
-								&seerDashboardWorkerTabs{Page: components.Page{Key: "seer_dashboard.WorkerTabs"}},
+							&components.ContainerColumn{
+								Page:    components.Page{Key: "seer_dashboard.CenterCol"},
+								Classes: "flex-1 min-w-0 gap-4",
+								Children: []components.PageInterface{
+									&SeerDashboardMap{
+										Page:    components.Page{Key: "seer_dashboard.DashboardMap"},
+										DataURL: lamu.RoutePath("seer_dashboard.MapDataRoute", nil),
+										Classes: "w-full h-[50vh] min-h-64 rounded-box border border-base-300 relative z-[1]",
+									},
+									appsGrid,
+								},
+							},
+							&components.ContainerColumn{
+								Page:    components.Page{Key: "seer_dashboard.RightCol"},
+								Classes: "w-full xl:w-72 shrink-0",
+								Children: []components.PageInterface{
+									&components.FieldTitle{Getter: getters.Static("Workers")},
+									&seerDashboardWorkerTabs{Page: components.Page{Key: "seer_dashboard.WorkerTabs"}},
+								},
 							},
 						},
 					},
 				},
 			}
-			return layout
 		})
 		return scaffold
 	})

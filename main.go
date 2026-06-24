@@ -1,10 +1,7 @@
 package main
 
 import (
-	"log"
 	"log/slog"
-	"net/http"
-	_ "net/http/pprof"
 
 	"github.com/UniquityVentures/lamu/lamu"
 	"github.com/UniquityVentures/lamu/plugins/p_dashboard"
@@ -27,10 +24,6 @@ import (
 )
 
 func main() {
-	go func() {
-		log.Fatal(http.ListenAndServe(":7777", nil))
-	}()
-
 	plugins := []registry.Pair[string, lamu.Plugin]{
 		p_dashboard.GetPlugin(),
 		p_filesystem.GetPlugin(),

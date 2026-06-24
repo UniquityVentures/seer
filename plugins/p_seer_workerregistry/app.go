@@ -9,6 +9,7 @@ func GetPlugin() registry.Pair[string, lamu.Plugin] {
 	return registry.Pair[string, lamu.Plugin]{
 		Key: "p_seer_workerregistry",
 		Value: lamu.Plugin{
+			Type:        lamu.PluginTypeAddon,
 			DBInitHooks: lamu.PluginStages(pluginDBInitHooks),
 		},
 	}

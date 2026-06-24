@@ -137,12 +137,19 @@ func (e *SeerDashboardMap) Build(ctx context.Context) Node {
     }, { once: true });
   }
 
+  if (window["seerDashboardMapCleanup_" + suffix]) {
+    try { window["seerDashboardMapCleanup_" + suffix](); } catch (e) {}
+  }
+
   function onReady(ev) {
     if (!ev || !ev.detail || ev.detail.suffix !== suffix) { return; }
     arm();
   }
 
   document.addEventListener("mapDisplayReady", onReady);
+  window["seerDashboardMapCleanup_" + suffix] = function () {
+    document.removeEventListener("mapDisplayReady", onReady);
+  };
 
   function pollArm() {
     if (armed) { return; }
