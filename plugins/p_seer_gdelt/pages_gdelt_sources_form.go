@@ -1,11 +1,14 @@
 package p_seer_gdelt
 
 import (
+	"context"
+	"strings"
 	"time"
 
 	"github.com/UniquityVentures/lamu/components"
 	"github.com/UniquityVentures/lamu/getters"
 	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/registry"
 )
 
 var gdeltSourceCreateFormDefaults = GDELTSource{
@@ -121,7 +124,16 @@ func gdeltSourceFormFields() components.PageInterface {
 								Label:   "Sort",
 								Name:    "Sort",
 								Choices: getters.Static(gdeltSortChoices),
-								Getter:  gdeltSourceSortPairGetter(),
+								Getter: registry.PairFromGetter(
+									getters.Map(getters.Key[string]("$in.Sort"), func(_ context.Context, s string) (string, error) {
+										s = strings.TrimSpace(s)
+										if s == "" {
+											return gdeltSortDateDesc, nil
+										}
+										return s, nil
+									}),
+									gdeltSortChoices,
+								),
 								Classes: "w-full",
 							},
 						},

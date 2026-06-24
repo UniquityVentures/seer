@@ -8,43 +8,7 @@ import (
 	"time"
 
 	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/registry"
 )
-
-// gdeltSourceSortPairGetter maps persisted [GDELTSource.Sort] string to a select pair for forms.
-func gdeltSourceSortPairGetter() getters.Getter[registry.Pair[string, string]] {
-	return func(ctx context.Context) (registry.Pair[string, string], error) {
-		s, err := getters.Key[string]("$in.Sort")(ctx)
-		if err != nil || strings.TrimSpace(s) == "" {
-			s = gdeltSortDateDesc
-		}
-		s = strings.TrimSpace(s)
-		if p, ok := registry.PairFromPairs(s, gdeltSortChoices); ok {
-			return p, nil
-		}
-		return registry.Pair[string, string]{Key: gdeltSortDateDesc, Value: "Newest first"}, nil
-	}
-}
-
-func gdeltPairGetterWithDefault(field string, choices []registry.Pair[string, string], fallback string) getters.Getter[registry.Pair[string, string]] {
-	return func(ctx context.Context) (registry.Pair[string, string], error) {
-		s, err := getters.Key[string]("$get." + field)(ctx)
-		if err != nil {
-			return registry.Pair[string, string]{}, nil
-		}
-		s = strings.TrimSpace(s)
-		if s == "" {
-			s = fallback
-		}
-		if s == "" {
-			return registry.Pair[string, string]{}, nil
-		}
-		if p, ok := registry.PairFromPairs(s, choices); ok {
-			return p, nil
-		}
-		return registry.Pair[string, string]{Key: s, Value: s}, nil
-	}
-}
 
 func gdeltDateGetter(field string) getters.Getter[time.Time] {
 	return func(ctx context.Context) (time.Time, error) {
