@@ -185,13 +185,21 @@ func (p *workerRegistryPage) Build(ctx context.Context) Node {
 	)
 }
 
+type DisplayWorker struct {
+	Name      string
+	Interval  string
+	LastRun   string
+	NextRun   string
+	DetailURL string
+}
+
 func renderWorkerList(ctx context.Context, workers []WorkerInstance) Node {
 	if len(workers) == 0 {
 		return Div(Class("text-center py-8 text-base-content/60 text-sm border border-base-300 rounded-box bg-base-100 shadow-sm"), Text("No workers registered for this type."))
 	}
 
-	workerNodes := []Node{}
-	for _, w := range workers {
+	displayWorkers := make([]DisplayWorker, len(workers))
+	for i, w := range workers {
 		lastRunStr := "—"
 		if lr := w.LastRun(); lr != nil && !lr.IsZero() {
 			lastRunStr = lr.UTC().Format(time.RFC3339)
@@ -200,38 +208,52 @@ func renderWorkerList(ctx context.Context, workers []WorkerInstance) Node {
 		if nr := w.NextRun(); nr != nil && !nr.IsZero() {
 			nextRunStr = nr.UTC().Format(time.RFC3339)
 		}
-
-		detailURL := w.DetailURL(ctx)
-
-		workerNodes = append(workerNodes, Div(
-			Class("flex flex-col md:flex-row md:items-center justify-between p-4 hover:bg-base-50/50 dark:hover:bg-base-900/10 transition-colors gap-4"),
-			Div(
-				Class("flex-1 min-w-0"),
-				If(detailURL != "", A(Href(detailURL), Class("link link-primary hover:underline text-sm font-semibold break-all"), Text(w.Name()))),
-				If(detailURL == "", Div(Class("text-sm font-semibold text-primary break-all"), Text(w.Name()))),
-				Div(Class("text-xs opacity-75 mt-0.5"), Text(fmt.Sprintf("Interval: %v", w.Interval()))),
-			),
-			Div(
-				Class("flex items-center gap-6 text-xs text-base-content/80 whitespace-nowrap"),
-				Div(
-					Class("flex flex-col items-start"),
-					Span(Class("opacity-60 text-[10px] uppercase font-bold tracking-wider mb-0.5"), Text("Last Run")),
-					Span(Class("font-mono"), Text(lastRunStr)),
-				),
-				Div(
-					Class("flex flex-col items-start"),
-					Span(Class("opacity-60 text-[10px] uppercase font-bold tracking-wider mb-0.5"), Text("Next Run")),
-					Span(Class("font-mono"), Text(nextRunStr)),
-				),
-			),
-		))
+		displayWorkers[i] = DisplayWorker{
+			Name:      w.Name(),
+			Interval:  w.Interval().String(),
+			LastRun:   lastRunStr,
+			NextRun:   nextRunStr,
+			DetailURL: w.DetailURL(ctx),
+		}
 	}
 
-	return Div(
-		Class("border border-base-300 rounded-box overflow-hidden bg-base-100 divide-y divide-base-200 shadow-sm"),
-		Group(workerNodes),
-	)
+	dataTable := &components.DataTable[DisplayWorker]{
+		Page:    components.Page{Key: "seer_workerregistry.WorkerTableBody"},
+		UID:     "seer-workerregistry-table",
+		Classes: "w-full",
+		Data:    getters.Static(components.ObjectList[DisplayWorker]{Items: displayWorkers}),
+		RowAttr: getters.RowAttrNavigate(getters.Key[string]("$row.DetailURL")),
+		Columns: []components.TableColumn{
+			{
+				Label: "Name",
+				Children: []components.PageInterface{
+					&components.FieldText{Getter: getters.Key[string]("$row.Name")},
+				},
+			},
+			{
+				Label: "Interval",
+				Children: []components.PageInterface{
+					&components.FieldText{Getter: getters.Key[string]("$row.Interval")},
+				},
+			},
+			{
+				Label: "Last Run",
+				Children: []components.PageInterface{
+					&components.FieldText{Getter: getters.Key[string]("$row.LastRun")},
+				},
+			},
+			{
+				Label: "Next Run",
+				Children: []components.PageInterface{
+					&components.FieldText{Getter: getters.Key[string]("$row.NextRun")},
+				},
+			},
+		},
+	}
+
+	return components.Render(dataTable, ctx)
 }
+
 
 type exportWorkersHandler struct{}
 
