@@ -35,11 +35,14 @@ jobs:
           go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
           go build -ldflags "-s -w" -o "main"
           cd nodescraper-rs && cargo build --release && cargo build --release --target=aarch64-unknown-linux-gnu
+          cp nodescraper-rs/target/aarch64-unknown-linux-gnu/release/nodescraper-rs nodescraper-linux-aarch64
+          cp nodescraper-rs/target/release/nodescraper-rs nodescraper-linux-amd64
 
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             main
-            nodescraper-rs/target/aarch64-unknown-linux-gnu/release/nodescraper-rs
+            nodescraper-linux-aarch64
+            nodescraper-linux-amd64
           generate_release_notes: true
