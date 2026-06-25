@@ -77,8 +77,7 @@ async fn main() {
                 };
                 let response = handle_command(command, async |id, trigger| match trigger {
                     messages::trigger_scraper::ScraperArgs::WebsiteScraper(v) => {
-                        let resp = website_scraper.scrape(id, v).await;
-                        resp
+                        website_scraper.scrape(id, v).await
                     }
                 })
                 .await

@@ -5,6 +5,7 @@ import (
 	"math/rand/v2"
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/UniquityVentures/lamu/registry"
 	"github.com/UniquityVentures/seer/plugins/p_seer_node_fleet/messages"
@@ -69,12 +70,13 @@ func ConnectedNodes() []ConnectedNode {
 }
 
 // DispatchCommand sends cmd to a randomly selected connected fleet node and returns its response.
+// Spinlocks when no node connections available
 func DispatchCommand(cmd *messages.Command) (*messages.Response, error) {
-	nodeConnectionsMu.RLock()
-	if len(nodeConnections) == 0 {
-		nodeConnectionsMu.RUnlock()
-		return nil, fmt.Errorf("no fleet nodes connected")
+	for len(nodeConnections) == 0 {
+		time.Sleep(time.Second)
 	}
+	nodeConnectionsMu.RLock()
+
 	ids := make([]uint64, 0, len(nodeConnections))
 	for id := range nodeConnections {
 		ids = append(ids, id)
