@@ -34,7 +34,7 @@ jobs:
         env:
           REMOTE_URL: "wss://seer.lariv.in/fleet/websocket"
         run: |
-          cd nodescraper-rs for amd64
+          cd nodescraper-rs
           cargo build --release 
           cd ..
       - name: Build nodescraper for arm64
@@ -45,6 +45,7 @@ jobs:
           PKG_CONFIG_SYSROOT_DIR: "/"
           PKG_CONFIG_ALLOW_CROSS: "1"
         run: |
+          cd nodescraper-rs
           cargo build --release --target=aarch64-unknown-linux-gnu
           cd ..
       - name: Prepare binaries for upload to release
