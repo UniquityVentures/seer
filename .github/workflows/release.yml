@@ -27,6 +27,8 @@ jobs:
           PKG_CONFIG_ALLOW_CROSS: "1"
         run: |
           sudo dpkg --add-architecture arm64
+          sudo sed -i '/^Types: deb/a Architectures: amd64' /etc/apt/sources.list.d/ubuntu.sources
+          echo -e "Types: deb\nURIs: http://ports.ubuntu.com/ubuntu-ports/\nSuites: $(lsb_release -cs) $(lsb_release -cs)-updates $(lsb_release -cs)-backports $(lsb_release -cs)-security\nComponents: main restricted universe multiverse\nArchitectures: arm64\nSigned-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg" | sudo tee /etc/apt/sources.list.d/arm64.sources > /dev/null
           sudo apt update
           sudo apt install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libfontconfig1-dev pkg-config fontconfig protobuf-compiler libfontconfig1-dev:arm64
           rustup target add aarch64-unknown-linux-gnu
