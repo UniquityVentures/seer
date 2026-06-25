@@ -4,18 +4,20 @@ use std::{
     sync::{
         Arc, Mutex,
         atomic::{AtomicBool, Ordering},
-        mpsc,
     },
     thread::{self, JoinHandle},
     time::{Duration, Instant},
 };
 
+use crossbeam::channel::{Receiver, SendError, Sender, select, unbounded};
+
 use dom_smoothie::{Config, Readability, TextMode};
 use dpi::PhysicalSize;
 use euclid::Scale;
 use servo::{
-    LoadStatus, Preferences, RenderingContext, Servo, ServoBuilder, SoftwareRenderingContext,
-    WebDriverCommandMsg, WebDriverScriptCommand, WebView, WebViewBuilder, WebViewDelegate,
+    EventLoopWaker, LoadStatus, Preferences, RenderingContext, Servo, ServoBuilder,
+    SoftwareRenderingContext, WebDriverCommandMsg, WebDriverScriptCommand, WebView, WebViewBuilder,
+    WebViewDelegate,
 };
 use url::Url;
 
@@ -33,6 +35,15 @@ const VIEWPORT_WIDTH: u32 = 390;
 const VIEWPORT_HEIGHT: u32 = 844;
 const WORKER_RESTART_DELAY: Duration = Duration::from_millis(250);
 const SERVO_UNAVAILABLE: &str = "servo scraper unavailable";
+const COOKIE_BANNER_TIMEOUT: Duration = Duration::from_secs(10);
+
+/// XPath to find "Reject All" buttons or links, case-insensitive.
+/// Uses translate() for case folding since XPath 1.0 lacks lower-case().
+const REJECT_BUTTON_XPATH: &str = concat!(
+    "//*[self::button or self::a or self::input[@type='button'] or self::input[@type='submit'] ",
+    "or self::div[@role='button'] or self::span[@role='button']][contains(",
+    "translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'reject all')]",
+);
 
 /// Servo initializes process-global options once; only one engine can exist per process.
 static SERVO_INITIALIZED: AtomicBool = AtomicBool::new(false);
@@ -50,9 +61,30 @@ struct ServoEngine {
     rendering_context: Rc<SoftwareRenderingContext>,
 }
 
+#[derive(Clone)]
+struct ScraperEventLoopWaker {
+    sender: Sender<()>,
+}
+
+impl EventLoopWaker for ScraperEventLoopWaker {
+    fn clone_box(&self) -> Box<dyn EventLoopWaker> {
+        Box::new(self.clone())
+    }
+
+    fn wake(&self) {
+        self.sender
+            .send(())
+            .expect("To be able to send the signal to wake the servo engine");
+    }
+}
+
 impl ServoEngine {
-    fn new() -> Result<Self, String> {
+    fn new() -> Result<(Self, Receiver<()>), String> {
         let size = PhysicalSize::new(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
+        let (waker_sender, waker_receiver) = unbounded::<()>();
+        let event_loop_waker = Box::new(ScraperEventLoopWaker {
+            sender: waker_sender,
+        });
         let rendering_context = Rc::new(
             SoftwareRenderingContext::new(size)
                 .map_err(|err| format!("creating SoftwareRenderingContext: {err:?}"))?,
@@ -69,17 +101,27 @@ impl ServoEngine {
             ..Default::default()
         };
 
-        let servo = ServoBuilder::default().preferences(prefs).build();
+        let servo = ServoBuilder::default()
+            .preferences(prefs)
+            .event_loop_waker(event_loop_waker)
+            .build();
+
         // Logging is initialized by the binary (`env_logger::init`); Servo's setup_logging
         // also calls log::set_logger and panics if one is already installed.
-
-        Ok(Self {
-            servo,
-            rendering_context,
-        })
+        Ok((
+            Self {
+                servo,
+                rendering_context,
+            },
+            waker_receiver,
+        ))
     }
 
-    fn scrape(&mut self, source_url: Url) -> Result<(String, String, String), String> {
+    fn scrape(
+        &mut self,
+        source_url: Url,
+        waker: &Receiver<()>,
+    ) -> Result<(String, String, String), String> {
         let delegate: Rc<dyn WebViewDelegate> = Rc::new(ScrapeDelegate);
         let webview = WebViewBuilder::new(&self.servo, self.rendering_context.clone())
             .url(
@@ -92,23 +134,28 @@ impl ServoEngine {
 
         wait_until(
             &self.servo,
+            waker,
             || webview.url().is_some(),
             Duration::from_secs(30),
             "initial webview url not ready",
         )?;
         wait_until(
             &self.servo,
+            waker,
             || webview.load_status() == LoadStatus::Complete,
             Duration::from_secs(30),
             "initial webview load not complete",
         )?;
 
         webview.load(source_url.clone());
-        wait_for_navigation(&self.servo, &webview, &source_url, PAGE_LOAD_TIMEOUT)?;
-        self.settle_rendering();
+        wait_for_navigation(&self.servo, waker, &webview, &source_url, PAGE_LOAD_TIMEOUT)?;
+        self.settle_rendering(waker);
 
-        let final_url = self.resolve_final_url(&source_url, &webview)?;
-        let html = self.get_page_source(&webview)?;
+        // Try to dismiss cookie consent banners before capturing page source.
+        self.try_dismiss_cookie_banner(&webview, waker);
+
+        let final_url = self.resolve_final_url(&source_url, &webview, waker)?;
+        let html = self.get_page_source(&webview, waker)?;
         if html.trim().is_empty() {
             return Err("rendered page source is empty".into());
         }
@@ -121,10 +168,12 @@ impl ServoEngine {
         Ok((final_url, content, rendered_html))
     }
 
-    fn settle_rendering(&mut self) {
-        for _ in 0..50 {
-            pump_event_loop(&self.servo, Duration::from_millis(20));
-            thread::sleep(Duration::from_millis(10));
+    fn settle_rendering(&mut self, waker: &Receiver<()>) {
+        // Give Servo time to finish any remaining rendering work by pumping
+        // the event loop for a fixed duration, driven by waker signals.
+        let deadline = Instant::now() + Duration::from_secs(5);
+        while Instant::now() < deadline {
+            pump_event_loop(&self.servo, waker, Duration::from_millis(50));
         }
     }
 
@@ -132,8 +181,9 @@ impl ServoEngine {
         &mut self,
         source_url: &Url,
         webview: &WebView,
+        waker: &Receiver<()>,
     ) -> Result<String, String> {
-        if let Ok(url) = self.get_url_with_timeout(Duration::from_secs(10), webview)
+        if let Ok(url) = self.get_url_with_timeout(Duration::from_secs(10), webview, waker)
             && is_usable_document_url(&url)
         {
             return Ok(url);
@@ -153,6 +203,7 @@ impl ServoEngine {
         &mut self,
         timeout: Duration,
         webview: &WebView,
+        waker: &Receiver<()>,
     ) -> Result<String, String> {
         let (sender, receiver) =
             servo_base::generic_channel::channel().ok_or("failed to create url channel")?;
@@ -171,7 +222,7 @@ impl ServoEngine {
             match receiver.try_recv_timeout(Duration::from_millis(50)) {
                 Ok(url) => return Ok(url),
                 Err(servo_base::generic_channel::TryReceiveError::Empty) => {
-                    pump_event_loop(&self.servo, Duration::from_millis(10));
+                    pump_event_loop(&self.servo, waker, Duration::from_millis(50));
                 }
                 Err(servo_base::generic_channel::TryReceiveError::ReceiveError(_)) => {
                     return Err("get url channel closed".into());
@@ -180,7 +231,11 @@ impl ServoEngine {
         }
     }
 
-    fn get_page_source(&mut self, webview: &WebView) -> Result<String, String> {
+    fn get_page_source(
+        &mut self,
+        webview: &WebView,
+        waker: &Receiver<()>,
+    ) -> Result<String, String> {
         let (sender, receiver) =
             servo_base::generic_channel::channel().ok_or("failed to create page source channel")?;
         self.servo
@@ -200,10 +255,117 @@ impl ServoEngine {
                     return Err(format!("get page source failed: {status:?}"));
                 }
                 Err(servo_base::generic_channel::TryReceiveError::Empty) => {
-                    pump_event_loop(&self.servo, Duration::from_millis(10));
+                    pump_event_loop(&self.servo, waker, Duration::from_millis(50));
                 }
                 Err(servo_base::generic_channel::TryReceiveError::ReceiveError(_)) => {
                     return Err("get page source channel closed".into());
+                }
+            }
+        }
+    }
+
+    /// Try to find and click a "Reject All" cookie consent button.
+    ///
+    /// This is best-effort: if no button is found or the click fails, the scrape
+    /// continues with the page as-is. After a successful click, the event loop is
+    /// pumped to let the page settle (banner animation/removal, DOM updates).
+    fn try_dismiss_cookie_banner(&mut self, webview: &WebView, waker: &Receiver<()>) {
+        let elements = match self.find_elements_xpath(webview, REJECT_BUTTON_XPATH, waker) {
+            Ok(ids) if !ids.is_empty() => ids,
+            Ok(_) => {
+                log::debug!("no 'Reject All' button found on page");
+                return;
+            }
+            Err(err) => {
+                log::debug!("failed to search for cookie banner button: {err}");
+                return;
+            }
+        };
+
+        // Click the first matching element.
+        let element_id = &elements[0];
+        log::info!(
+            "found {} 'Reject All' candidate(s), clicking first",
+            elements.len()
+        );
+        match self.click_element(webview, element_id, waker) {
+            Ok(_) => {
+                log::info!("clicked 'Reject All' button, settling page");
+                self.settle_rendering(waker);
+            }
+            Err(err) => {
+                log::warn!("failed to click 'Reject All' button: {err}");
+            }
+        }
+    }
+
+    /// Find elements matching an XPath selector in the given webview.
+    fn find_elements_xpath(
+        &mut self,
+        webview: &WebView,
+        xpath: &str,
+        waker: &Receiver<()>,
+    ) -> Result<Vec<String>, String> {
+        let (sender, receiver) = servo_base::generic_channel::channel()
+            .ok_or("failed to create find elements channel")?;
+
+        self.servo
+            .execute_webdriver_command(WebDriverCommandMsg::ScriptCommand(
+                webview.id().into(),
+                WebDriverScriptCommand::FindElementsXpathSelector(xpath.to_string(), sender),
+            ));
+
+        let deadline = Instant::now() + COOKIE_BANNER_TIMEOUT;
+        loop {
+            if Instant::now() >= deadline {
+                return Err("timed out waiting for find elements".into());
+            }
+            match receiver.try_recv_timeout(Duration::from_millis(50)) {
+                Ok(Ok(ids)) => return Ok(ids),
+                Ok(Err(status)) => {
+                    return Err(format!("find elements failed: {status:?}"));
+                }
+                Err(servo_base::generic_channel::TryReceiveError::Empty) => {
+                    pump_event_loop(&self.servo, waker, Duration::from_millis(50));
+                }
+                Err(servo_base::generic_channel::TryReceiveError::ReceiveError(_)) => {
+                    return Err("find elements channel closed".into());
+                }
+            }
+        }
+    }
+
+    /// Click an element by its WebDriver element ID.
+    fn click_element(
+        &mut self,
+        webview: &WebView,
+        element_id: &str,
+        waker: &Receiver<()>,
+    ) -> Result<(), String> {
+        let (sender, receiver) = servo_base::generic_channel::channel()
+            .ok_or("failed to create click element channel")?;
+
+        self.servo
+            .execute_webdriver_command(WebDriverCommandMsg::ScriptCommand(
+                webview.id().into(),
+                WebDriverScriptCommand::ElementClick(element_id.to_string(), sender),
+            ));
+
+        let deadline = Instant::now() + COOKIE_BANNER_TIMEOUT;
+        loop {
+            if Instant::now() >= deadline {
+                return Err("timed out waiting for element click".into());
+            }
+            match receiver.try_recv_timeout(Duration::from_millis(50)) {
+                Ok(Ok(_)) => return Ok(()),
+                Ok(Err(status)) => {
+                    return Err(format!("element click failed: {status:?}"));
+                }
+                Err(servo_base::generic_channel::TryReceiveError::Empty) => {
+                    pump_event_loop(&self.servo, waker, Duration::from_millis(50));
+                }
+                Err(servo_base::generic_channel::TryReceiveError::ReceiveError(_)) => {
+                    return Err("element click channel closed".into());
                 }
             }
         }
@@ -222,32 +384,19 @@ fn is_usable_document_url(url: &str) -> bool {
 
 fn wait_for_navigation(
     servo: &Servo,
+    waker: &Receiver<()>,
     webview: &WebView,
     target: &Url,
     timeout: Duration,
 ) -> Result<(), String> {
     let deadline = Instant::now() + timeout;
-    let mut saw_started = false;
     while Instant::now() < deadline {
-        match webview.load_status() {
-            LoadStatus::Started | LoadStatus::HeadParsed => saw_started = true,
-            LoadStatus::Complete if saw_started => {
-                if navigation_reached_target(webview, target) {
-                    return Ok(());
-                }
-            }
-            LoadStatus::Complete => {}
-        }
-
-        if saw_started
-            && webview.load_status() == LoadStatus::Complete
+        if webview.load_status() == LoadStatus::Complete
             && navigation_reached_target(webview, target)
         {
             return Ok(());
         }
-
-        pump_event_loop(servo, Duration::from_millis(10));
-        thread::sleep(Duration::from_millis(1));
+        pump_event_loop(servo, waker, Duration::from_millis(100));
     }
 
     Err("timed out waiting for page load".into())
@@ -268,6 +417,7 @@ fn navigation_reached_target(webview: &WebView, target: &Url) -> bool {
 
 fn wait_until<F>(
     servo: &Servo,
+    waker: &Receiver<()>,
     mut condition: F,
     timeout: Duration,
     error: &str,
@@ -280,17 +430,37 @@ where
         if Instant::now() >= deadline {
             return Err(error.into());
         }
-        pump_event_loop(servo, Duration::from_millis(10));
-        thread::sleep(Duration::from_millis(1));
+        pump_event_loop(servo, waker, Duration::from_millis(100));
     }
     Ok(())
 }
 
-fn pump_event_loop(servo: &Servo, duration: Duration) {
-    let deadline = Instant::now() + duration;
-    while Instant::now() < deadline {
+/// Pump Servo's event loop by waiting for waker signals.
+///
+/// Blocks on the waker channel up to `timeout`. Each received signal triggers
+/// one `spin_event_loop` call. If no signal arrives within the timeout, a
+/// single spin is performed as a fallback to avoid stalling on missed wakes.
+fn pump_event_loop(servo: &Servo, waker: &Receiver<()>, timeout: Duration) {
+    // Block until the first waker signal or timeout.
+    match waker.recv_timeout(timeout) {
+        Ok(()) => {
+            servo.spin_event_loop();
+        }
+        Err(crossbeam::channel::RecvTimeoutError::Timeout) => {
+            // No wake signal within the timeout — do a single defensive spin
+            // to handle any work that might have been queued without a wake.
+            servo.spin_event_loop();
+            return;
+        }
+        Err(crossbeam::channel::RecvTimeoutError::Disconnected) => {
+            return;
+        }
+    }
+
+    // Drain any additional signals that accumulated while we were spinning,
+    // so we process all pending work in one batch.
+    while waker.try_recv().is_ok() {
         servo.spin_event_loop();
-        thread::sleep(Duration::from_millis(1));
     }
 }
 
@@ -360,8 +530,8 @@ struct ScrapeRequest {
     reply: tokio::sync::oneshot::Sender<messages::Response>,
 }
 
-fn run_servo_worker(request_rx: mpsc::Receiver<ScrapeRequest>) {
-    let mut engine = match ServoEngine::new() {
+fn run_servo_worker(request_rx: Receiver<ScrapeRequest>) {
+    let (mut engine, event_waker) = match ServoEngine::new() {
         Ok(engine) => {
             SERVO_INITIALIZED.store(true, Ordering::Release);
             engine
@@ -373,31 +543,45 @@ fn run_servo_worker(request_rx: mpsc::Receiver<ScrapeRequest>) {
         }
     };
 
-    while let Ok(request) = request_rx.recv() {
-        let ScrapeRequest {
-            command_id,
-            url,
-            reply,
-        } = request;
-
-        let response = match panic::catch_unwind(panic::AssertUnwindSafe(|| engine.scrape(url))) {
-            Ok(Ok((source_url, content, rendered_html))) => {
-                website_ok_response(command_id, source_url, content, rendered_html)
-            }
-            Ok(Err(err)) => website_scrape_error_response(command_id, err),
-            Err(_) => {
-                log::error!("servo worker panicked during scrape");
-                website_scrape_error_response(
+    loop {
+        select! {
+            recv(event_waker) -> _ => {
+                engine.servo.spin_event_loop();
+            },
+            recv(request_rx) -> request => {
+                let request = if let Ok(request) = request {
+                    request
+                } else {
+                    break;
+                };
+                let ScrapeRequest {
                     command_id,
-                    "servo worker panicked during scrape".into(),
-                )
+                    url,
+                    reply,
+                } = request;
+
+                let response = match panic::catch_unwind(panic::AssertUnwindSafe(|| {
+                    engine.scrape(url, &event_waker)
+                })) {
+                    Ok(Ok((source_url, content, rendered_html))) => {
+                        website_ok_response(command_id, source_url, content, rendered_html)
+                    }
+                    Ok(Err(err)) => website_scrape_error_response(command_id, err),
+                    Err(_) => {
+                        log::error!("servo worker panicked during scrape");
+                        website_scrape_error_response(
+                            command_id,
+                            "servo worker panicked during scrape".into(),
+                        )
+                    }
+                };
+                let _ = reply.send(response);
             }
         };
-        let _ = reply.send(response);
     }
 }
 
-fn drain_requests_with_error(request_rx: mpsc::Receiver<ScrapeRequest>, message: String) {
+fn drain_requests_with_error(request_rx: Receiver<ScrapeRequest>, message: String) {
     while let Ok(request) = request_rx.recv() {
         let _ = request.reply.send(website_scrape_error_response(
             request.command_id,
@@ -406,11 +590,11 @@ fn drain_requests_with_error(request_rx: mpsc::Receiver<ScrapeRequest>, message:
     }
 }
 
-fn run_servo_supervisor(request_tx: Arc<Mutex<mpsc::Sender<ScrapeRequest>>>) {
+fn run_servo_supervisor(request_tx: Arc<Mutex<Sender<ScrapeRequest>>>) {
     let mut permanently_failed = false;
 
     loop {
-        let (tx, rx) = mpsc::channel();
+        let (tx, rx) = unbounded();
         {
             let mut sender = request_tx
                 .lock()
@@ -425,6 +609,7 @@ fn run_servo_supervisor(request_tx: Arc<Mutex<mpsc::Sender<ScrapeRequest>>>) {
 
         let worker = match thread::Builder::new()
             .name("servo-scraper".into())
+            .stack_size(32 * 1024 * 1024)
             .spawn(move || run_servo_worker(rx))
         {
             Ok(worker) => worker,
@@ -456,13 +641,13 @@ fn run_servo_supervisor(request_tx: Arc<Mutex<mpsc::Sender<ScrapeRequest>>>) {
 }
 
 struct ServoThread {
-    request_tx: Arc<Mutex<mpsc::Sender<ScrapeRequest>>>,
+    request_tx: Arc<Mutex<Sender<ScrapeRequest>>>,
     _supervisor: JoinHandle<()>,
 }
 
 impl ServoThread {
     fn start() -> Result<Self, String> {
-        let (request_tx, _request_rx) = mpsc::channel();
+        let (request_tx, _request_rx) = unbounded();
         let request_tx = Arc::new(Mutex::new(request_tx));
         let supervisor = thread::Builder::new()
             .name("servo-scraper-supervisor".into())
@@ -480,7 +665,7 @@ impl ServoThread {
         })
     }
 
-    fn dispatch(&self, request: ScrapeRequest) -> Result<(), mpsc::SendError<ScrapeRequest>> {
+    fn dispatch(&self, request: ScrapeRequest) -> Result<(), SendError<ScrapeRequest>> {
         let sender = self
             .request_tx
             .lock()

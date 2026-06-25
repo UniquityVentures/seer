@@ -139,7 +139,7 @@ func seerDashboardWorkerTabPage(tabKey string, workers []p_seer_workerregistry.W
 	}
 	return &components.ContainerColumn{
 		Page:     components.Page{Key: "seer_dashboard.workers." + tabKey},
-		Classes:  "gap-2 w-full min-w-0",
+		Classes:  "gap-2 w-full min-w-0 max-h-[60vh] overflow-y-auto pr-1",
 		Children: children,
 	}
 }
