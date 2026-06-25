@@ -149,6 +149,7 @@ impl ServoEngine {
 
         webview.load(source_url.clone());
         wait_for_navigation(&self.servo, waker, &webview, &source_url, PAGE_LOAD_TIMEOUT)?;
+
         self.settle_rendering(waker);
 
         // Try to dismiss cookie consent banners before capturing page source.
@@ -171,7 +172,8 @@ impl ServoEngine {
     fn settle_rendering(&mut self, waker: &Receiver<()>) {
         // Give Servo time to finish any remaining rendering work by pumping
         // the event loop for a fixed duration, driven by waker signals.
-        let deadline = Instant::now() + Duration::from_secs(5);
+        let start = Instant::now();
+        let deadline = start + Duration::from_secs(5);
         while Instant::now() < deadline {
             pump_event_loop(&self.servo, waker, Duration::from_millis(50));
         }
@@ -214,13 +216,16 @@ impl ServoEngine {
                 WebDriverScriptCommand::GetUrl(sender),
             ));
 
-        let deadline = Instant::now() + timeout;
+        let start = Instant::now();
+        let deadline = start + timeout;
         loop {
             if Instant::now() >= deadline {
                 return Err("timed out waiting for get url".into());
             }
             match receiver.try_recv_timeout(Duration::from_millis(50)) {
-                Ok(url) => return Ok(url),
+                Ok(url) => {
+                    return Ok(url);
+                }
                 Err(servo_base::generic_channel::TryReceiveError::Empty) => {
                     pump_event_loop(&self.servo, waker, Duration::from_millis(50));
                 }
@@ -238,19 +243,23 @@ impl ServoEngine {
     ) -> Result<String, String> {
         let (sender, receiver) =
             servo_base::generic_channel::channel().ok_or("failed to create page source channel")?;
+
         self.servo
             .execute_webdriver_command(WebDriverCommandMsg::ScriptCommand(
                 webview.id().into(),
                 WebDriverScriptCommand::GetPageSource(sender),
             ));
 
-        let deadline = Instant::now() + PAGE_LOAD_TIMEOUT;
+        let start = Instant::now();
+        let deadline = start + PAGE_LOAD_TIMEOUT;
         loop {
             if Instant::now() >= deadline {
                 return Err("timed out waiting for get page source".into());
             }
             match receiver.try_recv_timeout(Duration::from_millis(50)) {
-                Ok(Ok(html)) => return Ok(html),
+                Ok(Ok(html)) => {
+                    return Ok(html);
+                }
                 Ok(Err(status)) => {
                     return Err(format!("get page source failed: {status:?}"));
                 }
@@ -273,29 +282,20 @@ impl ServoEngine {
         let elements = match self.find_elements_xpath(webview, REJECT_BUTTON_XPATH, waker) {
             Ok(ids) if !ids.is_empty() => ids,
             Ok(_) => {
-                log::debug!("no 'Reject All' button found on page");
                 return;
             }
-            Err(err) => {
-                log::debug!("failed to search for cookie banner button: {err}");
+            Err(_) => {
                 return;
             }
         };
 
         // Click the first matching element.
         let element_id = &elements[0];
-        log::info!(
-            "found {} 'Reject All' candidate(s), clicking first",
-            elements.len()
-        );
         match self.click_element(webview, element_id, waker) {
             Ok(_) => {
-                log::info!("clicked 'Reject All' button, settling page");
                 self.settle_rendering(waker);
             }
-            Err(err) => {
-                log::warn!("failed to click 'Reject All' button: {err}");
-            }
+            Err(_) => {}
         }
     }
 
@@ -315,13 +315,16 @@ impl ServoEngine {
                 WebDriverScriptCommand::FindElementsXpathSelector(xpath.to_string(), sender),
             ));
 
-        let deadline = Instant::now() + COOKIE_BANNER_TIMEOUT;
+        let start = Instant::now();
+        let deadline = start + COOKIE_BANNER_TIMEOUT;
         loop {
             if Instant::now() >= deadline {
                 return Err("timed out waiting for find elements".into());
             }
             match receiver.try_recv_timeout(Duration::from_millis(50)) {
-                Ok(Ok(ids)) => return Ok(ids),
+                Ok(Ok(ids)) => {
+                    return Ok(ids);
+                }
                 Ok(Err(status)) => {
                     return Err(format!("find elements failed: {status:?}"));
                 }
@@ -351,13 +354,16 @@ impl ServoEngine {
                 WebDriverScriptCommand::ElementClick(element_id.to_string(), sender),
             ));
 
-        let deadline = Instant::now() + COOKIE_BANNER_TIMEOUT;
+        let start = Instant::now();
+        let deadline = start + COOKIE_BANNER_TIMEOUT;
         loop {
             if Instant::now() >= deadline {
                 return Err("timed out waiting for element click".into());
             }
             match receiver.try_recv_timeout(Duration::from_millis(50)) {
-                Ok(Ok(_)) => return Ok(()),
+                Ok(Ok(_)) => {
+                    return Ok(());
+                }
                 Ok(Err(status)) => {
                     return Err(format!("element click failed: {status:?}"));
                 }
@@ -389,7 +395,8 @@ fn wait_for_navigation(
     target: &Url,
     timeout: Duration,
 ) -> Result<(), String> {
-    let deadline = Instant::now() + timeout;
+    let start = Instant::now();
+    let deadline = start + timeout;
     while Instant::now() < deadline {
         if webview.load_status() == LoadStatus::Complete
             && navigation_reached_target(webview, target)
@@ -402,17 +409,12 @@ fn wait_for_navigation(
     Err("timed out waiting for page load".into())
 }
 
-fn navigation_reached_target(webview: &WebView, target: &Url) -> bool {
+fn navigation_reached_target(webview: &WebView, _target: &Url) -> bool {
     let Some(current) = webview.url() else {
         return false;
     };
-    if current == *target {
-        return true;
-    }
-    match (current.host_str(), target.host_str()) {
-        (Some(current_host), Some(target_host)) => current_host == target_host,
-        _ => false,
-    }
+    // Ensure we have left the about:blank screen and are on a usable page
+    is_usable_document_url(&current.to_string())
 }
 
 fn wait_until<F>(
@@ -425,7 +427,8 @@ fn wait_until<F>(
 where
     F: FnMut() -> bool,
 {
-    let deadline = Instant::now() + timeout;
+    let start = Instant::now();
+    let deadline = start + timeout;
     while !condition() {
         if Instant::now() >= deadline {
             return Err(error.into());
@@ -453,6 +456,7 @@ fn pump_event_loop(servo: &Servo, waker: &Receiver<()>, timeout: Duration) {
             return;
         }
         Err(crossbeam::channel::RecvTimeoutError::Disconnected) => {
+            log::warn!("pump_event_loop: waker channel disconnected");
             return;
         }
     }
@@ -543,15 +547,18 @@ fn run_servo_worker(request_rx: Receiver<ScrapeRequest>) {
         }
     };
 
+    log::info!("servo worker: entering event loop");
     loop {
         select! {
             recv(event_waker) -> _ => {
+                log::trace!("servo worker: waker signal, spinning event loop");
                 engine.servo.spin_event_loop();
             },
             recv(request_rx) -> request => {
                 let request = if let Ok(request) = request {
                     request
                 } else {
+                    log::info!("servo worker: request channel closed, exiting");
                     break;
                 };
                 let ScrapeRequest {
@@ -560,15 +567,27 @@ fn run_servo_worker(request_rx: Receiver<ScrapeRequest>) {
                     reply,
                 } = request;
 
+                log::info!("servo worker: received scrape request #{command_id} for {url}");
+                let scrape_start = Instant::now();
                 let response = match panic::catch_unwind(panic::AssertUnwindSafe(|| {
                     engine.scrape(url, &event_waker)
                 })) {
                     Ok(Ok((source_url, content, rendered_html))) => {
+                        log::info!(
+                            "servo worker: scrape #{command_id} succeeded in {:.2}s",
+                            scrape_start.elapsed().as_secs_f64()
+                        );
                         website_ok_response(command_id, source_url, content, rendered_html)
                     }
-                    Ok(Err(err)) => website_scrape_error_response(command_id, err),
+                    Ok(Err(err)) => {
+                        log::error!(
+                            "servo worker: scrape #{command_id} failed in {:.2}s: {err}",
+                            scrape_start.elapsed().as_secs_f64()
+                        );
+                        website_scrape_error_response(command_id, err)
+                    }
                     Err(_) => {
-                        log::error!("servo worker panicked during scrape");
+                        log::error!("servo worker panicked during scrape #{command_id}");
                         website_scrape_error_response(
                             command_id,
                             "servo worker panicked during scrape".into(),

@@ -133,10 +133,19 @@ var intelDB *gorm.DB
 
 func StartIntelIngestWorker(db *gorm.DB) {
 	intelDB = db
+	throttleChannel := make(chan struct{}, 1)
+	go func() {
+		for {
+			time.Sleep(time.Second / 2)
+			throttleChannel <- struct{}{}
+
+		}
+	}()
 	go func() {
 		ctx := context.Background()
 		slog.Info("p_seer_intel: async ingest worker started")
 		for req := range IntelChannel {
+			<-throttleChannel
 			if req.Kind == nil || intelDB == nil {
 				continue
 			}
