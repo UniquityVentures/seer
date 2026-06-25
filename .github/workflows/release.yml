@@ -36,6 +36,13 @@ jobs:
         run: |
           cd nodescraper-rs
           cargo build --release 
+          cp target/release/nodescraper-rs nodescraper-linux-amd64
+          cd ..
+      - name: Build nodescraper local for amd64
+        run: |
+          cd nodescraper-rs
+          cargo build --release 
+          cp target/release/nodescraper-rs nodescraper-local-linux-amd64
           cd ..
       - name: Build nodescraper for arm64
         env:
@@ -47,11 +54,8 @@ jobs:
         run: |
           cd nodescraper-rs
           cargo build --release --target=aarch64-unknown-linux-gnu
+          cp target/aarch64-unknown-linux-gnu/release/nodescraper-rs nodescraper-linux-aarch64
           cd ..
-      - name: Prepare binaries for upload to release
-        run: |
-          cp nodescraper-rs/target/aarch64-unknown-linux-gnu/release/nodescraper-rs nodescraper-linux-aarch64
-          cp nodescraper-rs/target/release/nodescraper-rs nodescraper-linux-amd64
 
       - name: Create release
         uses: softprops/action-gh-release@v2
@@ -60,4 +64,5 @@ jobs:
             main
             nodescraper-linux-aarch64
             nodescraper-linux-amd64
+            nodescraper-local-linux-amd64
           generate_release_notes: true
