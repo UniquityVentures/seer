@@ -22,9 +22,8 @@ jobs:
         env:
           REMOTE_URL: "wss://seer.lariv.in/fleet/websocket"
         run: |
-          sudo apt update && sudo apt upgrade -y
-          sudo apt install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu fontconfig
-          sudo apt install -y protobuf-compiler
+          sudo apt update
+          sudo apt install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu fontconfig protobuf-compiler
           rustup target add aarch64-unknown-linux-gnu
           go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
           go build -ldflags "-s -w" -o "main"
