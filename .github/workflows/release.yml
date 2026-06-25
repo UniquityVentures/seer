@@ -34,7 +34,11 @@ jobs:
           rustup target add aarch64-unknown-linux-gnu
           go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
           go build -ldflags "-s -w" -o "main"
-          cd nodescraper-rs && cargo build --release && cargo build --release --target=aarch64-unknown-linux-gnu
+          cd nodescraper-rs 
+          cargo clean
+          cargo build --release 
+          cargo clean
+          cargo build --release --target=aarch64-unknown-linux-gnu
           cp nodescraper-rs/target/aarch64-unknown-linux-gnu/release/nodescraper-rs nodescraper-linux-aarch64
           cp nodescraper-rs/target/release/nodescraper-rs nodescraper-linux-amd64
 
