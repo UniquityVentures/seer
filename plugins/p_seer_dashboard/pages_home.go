@@ -14,6 +14,7 @@ import (
 	"github.com/UniquityVentures/seer/plugins/p_seer_intel"
 	"github.com/UniquityVentures/seer/plugins/p_seer_workerregistry"
 	. "maragu.dev/gomponents"
+	html "maragu.dev/gomponents/html"
 )
 
 // seerDashboardWorkerTabs renders [components.ClientTabs] from [RegistryActiveWorkersProvider].
@@ -48,12 +49,12 @@ func (e seerDashboardWorkerTabs) Build(ctx context.Context) Node {
 			},
 		})
 	}
-	// Vertical tab ribbon (stacked labels) above worker panel content — see [components.ClientTabsLayoutVertical].
+	// Responsive tab ribbon — see [components.ClientTabsLayoutResponsive].
 	return components.ClientTabs{
 		Page:     components.Page{Key: e.Key + ".clientTabs"},
 		Tabs:     tabEntries,
 		StateKey: "seerDashWorkerTab",
-		Layout:   components.ClientTabsLayoutVertical,
+		Layout:   components.ClientTabsLayoutResponsive,
 	}.Build(ctx)
 }
 
@@ -222,6 +223,43 @@ func (e seerDashboardIntelFeed) Build(ctx context.Context) Node {
 	}).Build(ctx)
 }
 
+type responsiveCollapse struct {
+	components.Page
+	Title    string
+	Classes  string
+	Children []components.PageInterface
+}
+
+func (e responsiveCollapse) GetKey() string                         { return e.Key }
+func (e responsiveCollapse) GetRoles() []string                     { return e.Roles }
+func (e responsiveCollapse) GetChildren() []components.PageInterface { return e.Children }
+func (e *responsiveCollapse) SetChildren(children []components.PageInterface) {
+	e.Children = children
+}
+
+func (e responsiveCollapse) Build(ctx context.Context) Node {
+	var childNodes []Node
+	for _, child := range e.Children {
+		childNodes = append(childNodes, components.Render(child, ctx))
+	}
+
+	return html.Div(
+		html.Class("w-full "+e.Classes),
+		// Mobile Collapse View
+		El("details",
+			html.Class("collapse collapse-arrow bg-base-100 border border-base-300 rounded-box xl:hidden mb-4"),
+			El("summary", html.Class("collapse-title text-sm font-bold"), Text(e.Title)),
+			html.Div(html.Class("collapse-content flex flex-col gap-2"), Group(childNodes)),
+		),
+		// Desktop Normal View
+		html.Div(
+			html.Class("hidden xl:flex flex-col gap-2"),
+			components.Render(&components.FieldTitle{Getter: getters.Static(e.Title)}, ctx),
+			Group(childNodes),
+		),
+	)
+}
+
 func registerSeerDashboardHomePagePatch() {
 	patchPluginPage("dashboard.AppsPage", func(page components.PageInterface) components.PageInterface {
 		scaffold, ok := page.(*components.ShellTopbarScaffold)
@@ -239,41 +277,48 @@ func registerSeerDashboardHomePagePatch() {
 			if _, ok = appsGrid.(*p_dashboard_components.AppsGrid); !ok {
 				return layout
 			}
+
+			leftCol := &responsiveCollapse{
+				Page:    components.Page{Key: "seer_dashboard.LeftCol"},
+				Title:   "Intel",
+				Classes: "w-full xl:w-80 xl:shrink-0 order-1 xl:order-1",
+				Children: []components.PageInterface{
+					&seerDashboardIntelFeed{Page: components.Page{Key: "seer_dashboard.IntelFeed"}},
+				},
+			}
+
+			rightCol := &responsiveCollapse{
+				Page:    components.Page{Key: "seer_dashboard.RightCol"},
+				Title:   "Workers",
+				Classes: "w-full xl:w-80 xl:shrink-0 order-2 xl:order-3",
+				Children: []components.PageInterface{
+					&seerDashboardWorkerTabs{Page: components.Page{Key: "seer_dashboard.WorkerTabs"}},
+				},
+			}
+
+			centerCol := &components.ContainerColumn{
+				Page:    components.Page{Key: "seer_dashboard.CenterCol"},
+				Classes: "w-full xl:flex-1 min-w-0 order-3 xl:order-2 gap-4",
+				Children: []components.PageInterface{
+					&SeerDashboardMap{
+						Page:    components.Page{Key: "seer_dashboard.DashboardMap"},
+						DataURL: lamu.RoutePath("seer_dashboard.MapDataRoute", nil),
+						Classes: "w-full h-[50vh] min-h-64 rounded-box border border-base-300 relative z-[1]",
+					},
+					appsGrid,
+				},
+			}
+
 			return &components.LayoutSimple{
 				Page: layout.Page,
 				Children: []components.PageInterface{
-					&components.ContainerRow{
-						Page:    components.Page{Key: "seer_dashboard.HomeRow"},
-						Classes: "flex flex-col xl:flex-row gap-4 w-full max-w-[1600px] mx-auto items-start",
+					&components.ContainerColumn{
+						Page:    components.Page{Key: "seer_dashboard.HomeCol"},
+						Classes: "flex flex-col xl:flex-row gap-4 w-full max-w-[1600px] mx-auto items-stretch xl:items-start",
 						Children: []components.PageInterface{
-							&components.ContainerColumn{
-								Page:    components.Page{Key: "seer_dashboard.LeftCol"},
-								Classes: "w-full xl:w-80 shrink-0",
-								Children: []components.PageInterface{
-									&components.FieldTitle{Getter: getters.Static("Intel")},
-									&seerDashboardIntelFeed{Page: components.Page{Key: "seer_dashboard.IntelFeed"}},
-								},
-							},
-							&components.ContainerColumn{
-								Page:    components.Page{Key: "seer_dashboard.CenterCol"},
-								Classes: "flex-1 min-w-0 gap-4",
-								Children: []components.PageInterface{
-									&SeerDashboardMap{
-										Page:    components.Page{Key: "seer_dashboard.DashboardMap"},
-										DataURL: lamu.RoutePath("seer_dashboard.MapDataRoute", nil),
-										Classes: "w-full h-[50vh] min-h-64 rounded-box border border-base-300 relative z-[1]",
-									},
-									appsGrid,
-								},
-							},
-							&components.ContainerColumn{
-								Page:    components.Page{Key: "seer_dashboard.RightCol"},
-								Classes: "w-full xl:w-72 shrink-0",
-								Children: []components.PageInterface{
-									&components.FieldTitle{Getter: getters.Static("Workers")},
-									&seerDashboardWorkerTabs{Page: components.Page{Key: "seer_dashboard.WorkerTabs"}},
-								},
-							},
+							leftCol,
+							centerCol,
+							rightCol,
 						},
 					},
 				},

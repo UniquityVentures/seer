@@ -58,7 +58,7 @@ func (e *assistantChatRoot) Build(ctx context.Context) Node {
 	rootClass := "max-w-3xl mx-auto p-4 flex flex-col gap-4 min-h-[60vh]"
 	transcriptClass := "flex flex-col gap-2 flex-1 overflow-y-auto border border-base-300 rounded-lg p-3 bg-base-200/40 min-h-[200px]"
 	if e.Key == "assistant.SidebarChatInner" {
-		rootClass = "max-w-3xl mx-auto p-4 flex flex-col gap-4 h-full overflow-hidden"
+		rootClass = "max-w-3xl mx-auto p-0 flex flex-col gap-4 h-full overflow-hidden"
 		transcriptClass = "flex flex-col gap-2 flex-1 overflow-y-auto border border-base-300 rounded-lg p-3 bg-base-200/40 min-h-0"
 	}
 
@@ -223,9 +223,13 @@ func assistantBubbleAssistantHTML(inner string) Node {
 
 func assistantBubbleToolHTML(inner string) Node {
 	return Div(
-		Class("chat chat-start mb-2"),
+		Class("chat chat-start mb-2 w-full"),
 		Div(Class("chat-header text-xs opacity-70"), Text("Tool")),
-		Div(Class("chat-bubble chat-bubble-accent text-sm"), Raw(inner)),
+		El("details",
+			Class("collapse collapse-arrow bg-base-200 border border-base-300 rounded-lg text-sm max-w-full"),
+			El("summary", Class("collapse-title font-medium cursor-pointer pr-12"), Text("Tool Execution")),
+			Div(Class("collapse-content p-3 pt-0 overflow-x-auto"), Raw(inner)),
+		),
 	)
 }
 
@@ -269,9 +273,9 @@ func (e *historySidebarPanel) Build(ctx context.Context) Node {
 
 	currentSessionID := assistantOpenSessionID(ctx)
 	var initialChatContent Node = Group{}
+	var activeSessionName string
 
 	if currentSessionID != 0 {
-		var activeSessionName string
 		for _, s := range sessions {
 			if s.ID == currentSessionID {
 				activeSessionName = strings.TrimSpace(s.Title)
@@ -286,18 +290,13 @@ func (e *historySidebarPanel) Build(ctx context.Context) Node {
 			Page: components.Page{Key: "assistant.SidebarChatInner"},
 		}, ctx)
 
-		initialChatContent = Group{
-			Div(
-				Class("text-sm font-semibold text-center border border-dashed border-base-300 p-2 rounded bg-base-200/50 flex-none"),
-				Text(activeSessionName),
-			),
-			Div(
-				Class("flex-1 overflow-hidden min-h-0"),
-				chatInterface,
-			),
-		}
+		initialChatContent = Div(
+			Class("flex-1 overflow-hidden min-h-0"),
+			chatInterface,
+		)
 	} else {
 		initialChatContent = Div(
+			Class("flex-1 overflow-hidden min-h-0"),
 			Attr("hx-push-url", "false"),
 		)
 	}
@@ -329,23 +328,34 @@ func (e *historySidebarPanel) Build(ctx context.Context) Node {
 	return Div(
 		Attr("x-data", xData),
 		Attr("@new-session-created.window", "activeSessionId = $event.detail.id; showModal = false; htmx.ajax('GET', '/seer-assistant/sidebar-chat/' + activeSessionId + '/', {target: '#sidebar-chat-container', swap: 'innerHTML', source: $el})"),
-		Class("flex flex-col gap-4 p-2 h-full overflow-hidden"),
+		Class("flex flex-col gap-0 p-2 h-full overflow-hidden"),
 		Attr("hx-push-url", "false"),
 
-		// History Button
-		Button(
-			Class("btn btn-primary w-full flex-none"),
-			Attr("@click", "showModal = true"),
-			Text("History"),
-		),
-
-		// New Chat Button
-		Button(
-			Class("btn btn-secondary w-full flex-none"),
-			Attr("hx-post", "/seer-assistant/new-session/"),
-			Attr("hx-swap", "none"),
-			Attr("hx-push-url", "false"),
-			Text("New Chat"),
+		// Header Row: Session name on left, buttons (History, New Chat) on right
+		Div(
+			Class("flex justify-between items-center flex-none border-b border-base-300 pb-2 px-1"),
+			Div(
+				ID("session-name-container"),
+				Class("text-sm font-semibold truncate max-w-[70%]"),
+				Text(activeSessionName),
+			),
+			Div(
+				Class("flex gap-1 flex-none"),
+				// History Button
+				Button(
+					Class("btn btn-sm btn-ghost btn-circle"),
+					Attr("@click", "showModal = true"),
+					components.Render(components.Icon{Name: "clock"}, ctx),
+				),
+				// New Chat Button
+				Button(
+					Class("btn btn-sm btn-ghost btn-circle"),
+					Attr("hx-post", "/seer-assistant/new-session/"),
+					Attr("hx-swap", "none"),
+					Attr("hx-push-url", "false"),
+					components.Render(components.Icon{Name: "plus"}, ctx),
+				),
+			),
 		),
 
 		// Selected Session Name & Chat under the button (swapped dynamically)
@@ -421,7 +431,9 @@ func (e *sidebarChatPage) Build(ctx context.Context) Node {
 
 	return Group{
 		Div(
-			Class("text-sm font-semibold text-center border border-dashed border-base-300 p-2 rounded bg-base-200/50 flex-none"),
+			ID("session-name-container"),
+			Attr("hx-swap-oob", "true"),
+			Class("text-sm font-semibold truncate max-w-[70%]"),
 			Text(title),
 		),
 		Div(

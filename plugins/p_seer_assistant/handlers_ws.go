@@ -283,7 +283,7 @@ func assistantToolHTML(content *genai.Content) string {
 		inner = `<span class="opacity-50 text-sm">(empty)</span>`
 	}
 	return fmt.Sprintf(
-		`<div id="seer_assistant_transcript" hx-swap-oob="beforeend"><div class="chat chat-start mb-2"><div class="chat-header text-xs opacity-70">Tool</div><div class="chat-bubble chat-bubble-accent text-sm">%s</div></div></div>`,
+		`<div id="seer_assistant_transcript" hx-swap-oob="beforeend"><div class="chat chat-start mb-2 w-full"><div class="chat-header text-xs opacity-70">Tool</div><details class="collapse collapse-arrow bg-base-200 border border-base-300 rounded-lg text-sm max-w-full"><summary class="collapse-title font-medium cursor-pointer pr-12">Tool Execution</summary><div class="collapse-content p-3 pt-0 overflow-x-auto">%s</div></details></div></div>`,
 		inner,
 	)
 }
@@ -402,14 +402,14 @@ func assistantFunctionCallHTML(fc *genai.FunctionCall) string {
 		return ""
 	}
 	var b strings.Builder
-	b.WriteString(`<div class="assistant-part assistant-part-fn-call text-sm space-y-2">`)
-	b.WriteString(`<div class="mb-2 font-semibold text-base-content">Function call`)
+	title := "Function call"
 	if fc.Name != "" {
-		b.WriteString(`: <span class="font-mono">`)
-		b.WriteString(html.EscapeString(fc.Name))
-		b.WriteString(`</span>`)
+		title = fmt.Sprintf("Function call: %s", html.EscapeString(fc.Name))
 	}
-	b.WriteString(`</div>`)
+	b.WriteString(fmt.Sprintf(`<details class="collapse collapse-arrow bg-base-200 border border-base-300 rounded-lg text-sm max-w-full my-2">`+
+		`<summary class="collapse-title font-medium cursor-pointer pr-12">%s</summary>`+
+		`<div class="collapse-content p-3 pt-0 overflow-x-auto">`+
+		`<div class="assistant-part assistant-part-fn-call text-sm space-y-2 mt-2">`, title))
 	if fc.ID != "" {
 		b.WriteString(`<div class="mb-1 text-xs opacity-70">ID <code>`)
 		b.WriteString(html.EscapeString(fc.ID))
@@ -428,7 +428,7 @@ func assistantFunctionCallHTML(fc *genai.FunctionCall) string {
 		b.WriteString(`<div class="mt-2 text-xs font-medium opacity-70">Streaming arguments</div>`)
 		b.WriteString(assistantPartialArgsHTML(fc.PartialArgs))
 	}
-	b.WriteString(`</div>`)
+	b.WriteString(`</div></div></details>`)
 	return b.String()
 }
 
@@ -469,14 +469,14 @@ func assistantFunctionResponseHTML(fr *genai.FunctionResponse) string {
 		return ""
 	}
 	var b strings.Builder
-	b.WriteString(`<div class="assistant-part assistant-part-fn-resp text-sm space-y-2">`)
-	b.WriteString(`<div class="mb-2 font-semibold text-base-content">Function response`)
+	title := "Function response"
 	if fr.Name != "" {
-		b.WriteString(`: <span class="font-mono">`)
-		b.WriteString(html.EscapeString(fr.Name))
-		b.WriteString(`</span>`)
+		title = fmt.Sprintf("Function response: %s", html.EscapeString(fr.Name))
 	}
-	b.WriteString(`</div>`)
+	b.WriteString(fmt.Sprintf(`<details class="collapse collapse-arrow bg-base-200 border border-base-300 rounded-lg text-sm max-w-full my-2">`+
+		`<summary class="collapse-title font-medium cursor-pointer pr-12">%s</summary>`+
+		`<div class="collapse-content p-3 pt-0 overflow-x-auto">`+
+		`<div class="assistant-part assistant-part-fn-resp text-sm space-y-2 mt-2">`, title))
 	if fr.ID != "" {
 		b.WriteString(`<div class="mb-1 text-xs opacity-70">Call ID <code>`)
 		b.WriteString(html.EscapeString(fr.ID))
@@ -508,7 +508,7 @@ func assistantFunctionResponseHTML(fr *genai.FunctionResponse) string {
 			}
 		}
 	}
-	b.WriteString(`</div>`)
+	b.WriteString(`</div></div></details>`)
 	return b.String()
 }
 
@@ -547,14 +547,14 @@ func assistantToolCallHTML(tc *genai.ToolCall) string {
 		return ""
 	}
 	var b strings.Builder
-	b.WriteString(`<div class="assistant-part assistant-part-tool-call text-sm space-y-2">`)
-	b.WriteString(`<div class="mb-2 font-semibold text-base-content">Tool call`)
+	title := "Tool call"
 	if tc.ToolType != "" {
-		b.WriteString(`: <span class="font-mono">`)
-		b.WriteString(html.EscapeString(string(tc.ToolType)))
-		b.WriteString(`</span>`)
+		title = fmt.Sprintf("Tool call: %s", html.EscapeString(string(tc.ToolType)))
 	}
-	b.WriteString(`</div>`)
+	b.WriteString(fmt.Sprintf(`<details class="collapse collapse-arrow bg-base-200 border border-base-300 rounded-lg text-sm max-w-full my-2">`+
+		`<summary class="collapse-title font-medium cursor-pointer pr-12">%s</summary>`+
+		`<div class="collapse-content p-3 pt-0 overflow-x-auto">`+
+		`<div class="assistant-part assistant-part-tool-call text-sm space-y-2 mt-2">`, title))
 	if tc.ID != "" {
 		b.WriteString(`<div class="mb-1 text-xs opacity-70">ID <code>`)
 		b.WriteString(html.EscapeString(tc.ID))
@@ -566,7 +566,7 @@ func assistantToolCallHTML(tc *genai.ToolCall) string {
 	} else {
 		b.WriteString(`<div class="text-xs opacity-50">No arguments</div>`)
 	}
-	b.WriteString(`</div>`)
+	b.WriteString(`</div></div></details>`)
 	return b.String()
 }
 
@@ -575,14 +575,14 @@ func assistantToolResponseHTML(tr *genai.ToolResponse) string {
 		return ""
 	}
 	var b strings.Builder
-	b.WriteString(`<div class="assistant-part assistant-part-tool-resp text-sm space-y-2">`)
-	b.WriteString(`<div class="mb-2 font-semibold text-base-content">Tool response`)
+	title := "Tool response"
 	if tr.ToolType != "" {
-		b.WriteString(`: <span class="font-mono">`)
-		b.WriteString(html.EscapeString(string(tr.ToolType)))
-		b.WriteString(`</span>`)
+		title = fmt.Sprintf("Tool response: %s", html.EscapeString(string(tr.ToolType)))
 	}
-	b.WriteString(`</div>`)
+	b.WriteString(fmt.Sprintf(`<details class="collapse collapse-arrow bg-base-200 border border-base-300 rounded-lg text-sm max-w-full my-2">`+
+		`<summary class="collapse-title font-medium cursor-pointer pr-12">%s</summary>`+
+		`<div class="collapse-content p-3 pt-0 overflow-x-auto">`+
+		`<div class="assistant-part assistant-part-tool-resp text-sm space-y-2 mt-2">`, title))
 	if tr.ID != "" {
 		b.WriteString(`<div class="mb-1 text-xs opacity-70">Call ID <code>`)
 		b.WriteString(html.EscapeString(tr.ID))
@@ -594,7 +594,7 @@ func assistantToolResponseHTML(tr *genai.ToolResponse) string {
 	} else {
 		b.WriteString(`<div class="text-xs opacity-50">Empty response object</div>`)
 	}
-	b.WriteString(`</div>`)
+	b.WriteString(`</div></div></details>`)
 	return b.String()
 }
 
@@ -609,8 +609,14 @@ func assistantExecutableCodeHTML(ec *genai.ExecutableCode) string {
 		meta.WriteString(html.EscapeString(ec.ID))
 		meta.WriteString(`</code></div>`)
 	}
+	title := fmt.Sprintf("Executable Code (%s)", html.EscapeString(lang))
 	return fmt.Sprintf(
-		`<div class="assistant-part assistant-part-code rounded-box border border-base-300 p-2 text-sm">%s<div class="mb-1 text-xs font-medium opacity-70">Language: <code>%s</code></div><pre class="mt-1 max-h-64 overflow-auto rounded bg-base-300/50 p-2 text-xs"><code class="language-%s">%s</code></pre></div>`,
+		`<details class="collapse collapse-arrow bg-base-200 border border-base-300 rounded-lg text-sm max-w-full my-2">`+
+			`<summary class="collapse-title font-medium cursor-pointer pr-12">%s</summary>`+
+			`<div class="collapse-content p-3 pt-0 overflow-x-auto">`+
+			`<div class="assistant-part assistant-part-code rounded-box border border-base-300 p-2 text-sm mt-2">%s<div class="mb-1 text-xs font-medium opacity-70">Language: <code>%s</code></div><pre class="mt-1 max-h-64 overflow-auto rounded bg-base-300/50 p-2 text-xs"><code class="language-%s">%s</code></pre></div>`+
+			`</div></details>`,
+		title,
 		meta.String(),
 		html.EscapeString(lang),
 		html.EscapeString(lang),
@@ -627,8 +633,14 @@ func assistantCodeExecutionResultHTML(cer *genai.CodeExecutionResult) string {
 	if cer.ID != "" {
 		idLine = `<div class="mb-1 text-xs opacity-70">Executable ID <code>` + html.EscapeString(cer.ID) + `</code></div>`
 	}
+	title := fmt.Sprintf("Code Execution Result (%s)", html.EscapeString(outcome))
 	return fmt.Sprintf(
-		`<div class="assistant-part assistant-part-code-result rounded-box border border-base-300 p-2 text-sm">%s<div class="mb-2"><span class="rounded bg-neutral px-2 py-0.5 text-xs font-mono">%s</span></div><pre class="max-h-64 overflow-auto whitespace-pre-wrap rounded bg-base-300/50 p-2 text-xs">%s</pre></div>`,
+		`<details class="collapse collapse-arrow bg-base-200 border border-base-300 rounded-lg text-sm max-w-full my-2">`+
+			`<summary class="collapse-title font-medium cursor-pointer pr-12">%s</summary>`+
+			`<div class="collapse-content p-3 pt-0 overflow-x-auto">`+
+			`<div class="assistant-part assistant-part-code-result rounded-box border border-base-300 p-2 text-sm mt-2">%s<div class="mb-2"><span class="rounded bg-neutral px-2 py-0.5 text-xs font-mono">%s</span></div><pre class="max-h-64 overflow-auto whitespace-pre-wrap rounded bg-base-300/50 p-2 text-xs">%s</pre></div>`+
+			`</div></details>`,
+		title,
 		idLine,
 		html.EscapeString(outcome),
 		html.EscapeString(cer.Output),
