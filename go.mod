@@ -3,12 +3,12 @@ module github.com/UniquityVentures/seer
 go 1.26.1
 
 require (
-	github.com/UniquityVentures/lamu v0.4.11
-	github.com/UniquityVentures/lamu/plugins/p_dashboard v0.4.11
-	github.com/UniquityVentures/lamu/plugins/p_filesystem v0.4.11
-	github.com/UniquityVentures/lamu/plugins/p_google_genai v0.4.11
-	github.com/UniquityVentures/lamu/plugins/p_pwa v0.4.11
-	github.com/UniquityVentures/lamu/plugins/p_users v0.4.11
+	github.com/UniquityVentures/lamu v0.5.0
+	github.com/UniquityVentures/lamu/plugins/p_dashboard v0.5.0
+	github.com/UniquityVentures/lamu/plugins/p_filesystem v0.5.0
+	github.com/UniquityVentures/lamu/plugins/p_google_genai v0.5.0
+	github.com/UniquityVentures/lamu/plugins/p_pwa v0.5.0
+	github.com/UniquityVentures/lamu/plugins/p_users v0.5.0
 )
 
 require (

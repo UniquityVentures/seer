@@ -22,6 +22,11 @@ func init() {
 		Handler: lamu.NewDynamicView("seer_assistant.ChatSessionView"),
 	})
 
+	registerPluginRoute("seer_assistant.SidebarChatRoute", lamu.Route{
+		Path:    AppUrl + "sidebar-chat/{id}/",
+		Handler: lamu.NewDynamicView("seer_assistant.SidebarChatView"),
+	})
+
 	registerPluginRoute("seer_assistant.WSRoute", lamu.Route{
 		Path: AppUrl + "ws/",
 		Handler: p_users.RequireAuth(websocket.Server{

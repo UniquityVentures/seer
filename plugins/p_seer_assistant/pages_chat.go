@@ -222,7 +222,217 @@ func assistantBubbleToolHTML(inner string) Node {
 	)
 }
 
+type historySidebarPanel struct {
+	components.Page
+}
+
+func (e *historySidebarPanel) Build(ctx context.Context) Node {
+	db, err := getters.DBFromContext(ctx)
+	if err != nil {
+		return Div(Class("text-error"), Text("Error: no database context"))
+	}
+
+	var sessions []SeerAssistantSession
+	if err := db.Order("updated_at desc").Find(&sessions).Error; err != nil {
+		return Div(Class("text-error"), Text("Error loading sessions"))
+	}
+
+	var sessionItems []Node
+	for _, s := range sessions {
+		title := strings.TrimSpace(s.Title)
+		if title == "" {
+			title = fmt.Sprintf("Session #%d", s.ID)
+		}
+		sessionItems = append(sessionItems, Div(
+			Class("p-3 hover:bg-base-300 rounded cursor-pointer transition border-b border-base-300 last:border-b-0 text-sm block no-underline text-base-content"),
+			Attr("hx-get", fmt.Sprintf("/seer-assistant/sidebar-chat/%d/", s.ID)),
+			Attr("hx-target", "#sidebar-chat-container"),
+			Attr("hx-swap", "innerHTML"),
+			Attr("hx-push-url", "false"),
+			Attr("@click", fmt.Sprintf("activeSessionId = %d; showModal = false", s.ID)),
+			Text(title),
+		))
+	}
+
+	if len(sessionItems) == 0 {
+		sessionItems = []Node{
+			Div(Class("p-4 text-center text-sm opacity-50"), Text("No sessions found")),
+		}
+	}
+
+	currentSessionID := assistantOpenSessionID(ctx)
+	var initialChatContent Node = Group{}
+
+	if currentSessionID != 0 {
+		var activeSessionName string
+		for _, s := range sessions {
+			if s.ID == currentSessionID {
+				activeSessionName = strings.TrimSpace(s.Title)
+				break
+			}
+		}
+		if activeSessionName == "" {
+			activeSessionName = fmt.Sprintf("Session #%d", currentSessionID)
+		}
+
+		chatInterface := components.Render(&assistantChatRoot{
+			Page: components.Page{Key: "assistant.SidebarChatInner"},
+		}, ctx)
+
+		initialChatContent = Group{
+			Div(
+				Class("text-sm font-semibold text-center border border-dashed border-base-300 p-2 rounded bg-base-200/50 flex-none"),
+				Text(activeSessionName),
+			),
+			Div(
+				Class("flex-1 overflow-hidden min-h-0"),
+				chatInterface,
+			),
+		}
+	} else {
+		initialChatContent = Div(
+			Attr("hx-push-url", "false"),
+		)
+	}
+
+	xData := fmt.Sprintf(`{
+		showModal: false,
+		activeSessionId: $persist(0).as('assistant-sidebar-active-session-id'),
+		init() {
+			const serverSessionId = %d;
+			if (serverSessionId !== 0) {
+				this.activeSessionId = serverSessionId;
+			} else {
+				this.$nextTick(() => {
+					if (this.activeSessionId !== 0) {
+						const targetEl = document.getElementById('sidebar-chat-container');
+						if (targetEl) {
+							htmx.ajax('GET', '/seer-assistant/sidebar-chat/' + this.activeSessionId + '/', {
+								target: targetEl,
+								swap: 'innerHTML',
+								source: targetEl
+							});
+						}
+					}
+				});
+			}
+		}
+	}`, currentSessionID)
+
+	return Div(
+		Attr("x-data", xData),
+		Class("flex flex-col gap-4 p-2 h-full overflow-hidden"),
+		Attr("hx-push-url", "false"),
+
+		// History Button
+		Button(
+			Class("btn btn-primary w-full flex-none"),
+			Attr("@click", "showModal = true"),
+			Text("History"),
+		),
+
+		// Selected Session Name & Chat under the button (swapped dynamically)
+		Div(
+			ID("sidebar-chat-container"),
+			Class("flex-1 flex flex-col gap-4 overflow-hidden min-h-0"),
+			Attr("hx-push-url", "false"),
+			initialChatContent,
+		),
+
+		// Custom Modal using standard dialog element, controlled by Alpine
+		El("dialog",
+			Attr("x-show", "showModal"),
+			Attr(":class", "showModal ? 'modal modal-open' : 'modal'"),
+			Div(
+				Class("modal-box bg-base-100 max-w-lg border border-base-300 p-6 relative"),
+				// Close button
+				Button(
+					Type("button"),
+					Class("btn btn-sm btn-circle btn-ghost absolute right-3 top-3"),
+					Attr("@click", "showModal = false"),
+					components.Render(components.Icon{Name: "x-mark"}, ctx),
+				),
+				// Modal Title
+				H3(Class("text-lg font-bold mb-4"), Text("Conversations")),
+				// Sessions List
+				Div(
+					Class("max-h-60 overflow-y-auto flex flex-col bg-base-200 rounded border border-base-300"),
+					Group(sessionItems),
+				),
+			),
+			// Backdrop clicking closes the modal
+			FormEl(
+				Method("dialog"),
+				Class("modal-backdrop"),
+				Button(Attr("@click", "showModal = false"), Text("close")),
+			),
+		),
+	)
+}
+
+func (e *historySidebarPanel) GetKey() string     { return e.Key }
+func (e *historySidebarPanel) GetRoles() []string { return e.Roles }
+
+// sidebarChatPage is rendered dynamically inside the sidebar container when a session is switched.
+type sidebarChatPage struct {
+	components.Page
+}
+
+func (e *sidebarChatPage) Build(ctx context.Context) Node {
+	db, err := getters.DBFromContext(ctx)
+	if err != nil {
+		return Div(Class("text-error"), Text("Error: no database context"))
+	}
+	currentSessionID := assistantOpenSessionID(ctx)
+	if currentSessionID == 0 {
+		return Div(Class("text-error"), Text("No session selected"))
+	}
+	var session SeerAssistantSession
+	if err := db.First(&session, currentSessionID).Error; err != nil {
+		return Div(Class("text-error"), Text("Session not found"))
+	}
+
+	title := strings.TrimSpace(session.Title)
+	if title == "" {
+		title = fmt.Sprintf("Session #%d", session.ID)
+	}
+
+	chatInterface := components.Render(&assistantChatRoot{
+		Page: components.Page{Key: "assistant.SidebarChatInner"},
+	}, ctx)
+
+	return Group{
+		Div(
+			Class("text-sm font-semibold text-center border border-dashed border-base-300 p-2 rounded bg-base-200/50 flex-none"),
+			Text(title),
+		),
+		Div(
+			Class("flex-1 overflow-hidden min-h-0"),
+			chatInterface,
+		),
+	}
+}
+
+func (e *sidebarChatPage) GetKey() string     { return e.Key }
+func (e *sidebarChatPage) GetRoles() []string { return e.Roles }
+
+func sidebarChatPageLookup(name string) (components.PageInterface, bool) {
+	if name == "seer_assistant.SidebarChatPage" {
+		return &sidebarChatPage{
+			Page: components.Page{Key: "seer_assistant.SidebarChatPage"},
+		}, true
+	}
+	return nil, false
+}
+
 func init() {
 	registerAssistantMenuPages()
 	registerAssistantChatPage()
+
+	components.RegistryRightSidebar.Register("assistant.history_panel", components.SidebarItem{
+		Icon: "clock",
+		Content: &historySidebarPanel{
+			Page: components.Page{Key: "assistant.history_panel"},
+		},
+	})
 }

@@ -4,6 +4,7 @@ import (
 	"github.com/UniquityVentures/lamu/getters"
 	"github.com/UniquityVentures/lamu/lamu"
 	"github.com/UniquityVentures/lamu/plugins/p_users"
+	"github.com/UniquityVentures/lamu/registry"
 	"github.com/UniquityVentures/lamu/views"
 )
 
@@ -36,4 +37,18 @@ func init() {
 				PathParamKey:  getters.Static("id"),
 				QueryPatchers: sessionDetailPatchers,
 			}))
+
+	registerPluginView("seer_assistant.SidebarChatView",
+		&views.View{
+			PageName:   "seer_assistant.SidebarChatPage",
+			PageLookup: sidebarChatPageLookup,
+			Layers: []registry.Pair[string, views.Layer]{
+				{Key: "p_users.auth", Value: p_users.AuthenticationLayer{}},
+				{Key: "seer_assistant.session.detail", Value: views.LayerDetail[SeerAssistantSession]{
+					Key:           getters.Static("assistantSession"),
+					PathParamKey:  getters.Static("id"),
+					QueryPatchers: sessionDetailPatchers,
+				}},
+			},
+		})
 }
