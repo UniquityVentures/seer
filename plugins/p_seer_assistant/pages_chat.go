@@ -435,4 +435,6 @@ func init() {
 			Page: components.Page{Key: "assistant.history_panel"},
 		},
 	})
+	// Trigger air rebuild to compile with newly added replace directives
 }
+
