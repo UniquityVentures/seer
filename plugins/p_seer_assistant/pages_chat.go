@@ -9,6 +9,7 @@ import (
 	"github.com/UniquityVentures/lamu/getters"
 	"github.com/UniquityVentures/lamu/lamu"
 	. "maragu.dev/gomponents"
+	"maragu.dev/gomponents/html"
 	. "maragu.dev/gomponents/html"
 )
 
@@ -119,31 +120,7 @@ document.body.addEventListener("htmx:wsAfterSend", function(event) {
 			ID("seer_assistant_stream"),
 			Class("min-h-[1.5rem] border border-dashed border-base-300 rounded p-2 text-sm"),
 		),
-		FormEl(
-			ID("seer_assistant_chat_form"),
-			Class("flex flex-col gap-2"),
-			Attr("ws-send", ""),
-			Input(
-				ID("seer_assistant_session_id"),
-				Type("hidden"),
-				Name("session_id"),
-				Value(hiddenVal),
-			),
-			Textarea(
-				ID("seer_assistant_chat_message"),
-				Name("message"),
-				Class("textarea textarea-bordered w-full"),
-				Rows("3"),
-				Placeholder("Message…"),
-				Required(),
-			),
-			Button(
-				ID("seer_assistant_chat_send"),
-				Type("submit"),
-				Class("btn btn-primary self-end"),
-				Text("Send"),
-			),
-		),
+		html.Form(ID("seer_assistant_chat_form"), Class("flex flex-col gap-2"), Attr("ws-send", ""), Input(ID("seer_assistant_session_id"), Type("hidden"), Name("session_id"), Value(hiddenVal)), Textarea(ID("seer_assistant_chat_message"), Name("message"), Class("textarea textarea-bordered w-full"), Rows("3"), Placeholder("Message…"), Required()), Button(ID("seer_assistant_chat_send"), Type("submit"), Class("btn btn-primary self-end"), Text("Send"))),
 	)
 }
 
@@ -209,7 +186,7 @@ func assistantBubbleUserHTML(inner string) Node {
 	return Div(
 		Class("chat chat-end mb-2"),
 		Div(Class("chat-header text-xs opacity-70"), Text("You")),
-		Div(Class("chat-bubble chat-bubble-primary"), Raw(inner)),
+		Div(Class("chat-bubble text-sm chat-bubble-primary"), Raw(inner)),
 	)
 }
 
@@ -217,7 +194,7 @@ func assistantBubbleAssistantHTML(inner string) Node {
 	return Div(
 		Class("chat chat-start mb-2"),
 		Div(Class("chat-header text-xs opacity-70"), Text("Assistant")),
-		Div(Class("chat-bubble chat-bubble-secondary"), Raw(inner)),
+		Div(Class("chat-bubble text-sm chat-bubble-secondary"), Raw(inner)),
 	)
 }
 
@@ -467,4 +444,3 @@ func init() {
 	})
 	// Trigger air rebuild to compile with newly added replace directives
 }
-
