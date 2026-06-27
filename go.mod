@@ -3,12 +3,12 @@ module github.com/UniquityVentures/seer
 go 1.26.1
 
 require (
-	github.com/UniquityVentures/lamu v0.5.1
-	github.com/UniquityVentures/lamu/plugins/p_dashboard v0.5.1
-	github.com/UniquityVentures/lamu/plugins/p_filesystem v0.5.1
-	github.com/UniquityVentures/lamu/plugins/p_google_genai v0.5.1
-	github.com/UniquityVentures/lamu/plugins/p_pwa v0.5.1
-	github.com/UniquityVentures/lamu/plugins/p_users v0.5.1
+	github.com/UniquityVentures/lamu v0.5.2
+	github.com/UniquityVentures/lamu/plugins/p_dashboard v0.5.2
+	github.com/UniquityVentures/lamu/plugins/p_filesystem v0.5.2
+	github.com/UniquityVentures/lamu/plugins/p_google_genai v0.5.2
+	github.com/UniquityVentures/lamu/plugins/p_pwa v0.5.2
+	github.com/UniquityVentures/lamu/plugins/p_users v0.5.2
 )
 
 require (
@@ -121,14 +121,5 @@ require (
 	gorm.io/driver/sqlite v1.6.0 // indirect
 	gorm.io/gorm v1.31.1 // indirect
 	maragu.dev/gomponents v1.3.0 // indirect
-)
-
-replace (
-	github.com/UniquityVentures/lamu => ../../lamu
-	github.com/UniquityVentures/lamu/plugins/p_dashboard => ../../lamu/plugins/p_dashboard
-	github.com/UniquityVentures/lamu/plugins/p_filesystem => ../../lamu/plugins/p_filesystem
-	github.com/UniquityVentures/lamu/plugins/p_google_genai => ../../lamu/plugins/p_google_genai
-	github.com/UniquityVentures/lamu/plugins/p_pwa => ../../lamu/plugins/p_pwa
-	github.com/UniquityVentures/lamu/plugins/p_users => ../../lamu/plugins/p_users
 )
 
