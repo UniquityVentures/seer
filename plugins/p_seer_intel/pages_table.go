@@ -30,10 +30,9 @@ func intelDateGetter(field string) getters.Getter[time.Time] {
 
 func registerTablePages() {
 	registerPluginPage("seer_intel.IntelFilter", &components.FormComponent[map[string]any]{
-		Page:     components.Page{Key: "seer_intel.FilterForm"},
-		Attr:     getters.FormBoostedGet(lamu.RoutePath("seer_intel.DefaultRoute", nil)),
-		Title:    "Filter Intel",
-		Classes:  "@container rounded-box border border-base-300 bg-base-100 p-2",
+		Page:  components.Page{Key: "seer_intel.FilterForm"},
+		Attr:  getters.FormBoostedGet(lamu.RoutePath("seer_intel.DefaultRoute", nil)),
+		Title: "Filter Intel",
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
 				Page:    components.Page{Key: "seer_intel.FilterForm.Title"},
