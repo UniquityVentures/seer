@@ -3,7 +3,6 @@ package p_seer_opensky
 import (
 	"encoding/json"
 	"github.com/UniquityVentures/lamu/fields"
-	"github.com/UniquityVentures/seer/plugins/p_seer_intel"
 
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
@@ -105,59 +104,6 @@ func openskyValidLatLng(lat, lng float64) bool {
 }
 
 func (m *OpenSkyState) AfterCreate(tx *gorm.DB) error {
-	if m == nil || m.OnGround == nil {
-		return nil
-	}
-	var prev OpenSkyState
-	err := tx.Where("icao24 = ? AND id < ?", m.Icao24, m.ID).
-		Order("last_contact DESC, id DESC").
-		First(&prev).Error
-	if err != nil {
-		// No previous state, or error.
-		return nil
-	}
-	if prev.OnGround != nil && *prev.OnGround != *m.OnGround {
-		state := "takeoff"
-		if *m.OnGround {
-			state = "landed"
-		}
-		callsign := ""
-		if m.Callsign != nil {
-			callsign = *m.Callsign
-		}
-		cat := 0
-		if m.Category != nil {
-			cat = *m.Category
-		}
-		ps := 0
-		if m.PositionSource != nil {
-			ps = *m.PositionSource
-		}
-		
-		var lat, lng float64
-		if m.Position.Valid {
-			lng = m.Position.P.X
-			lat = m.Position.P.Y
-		}
-
-		select {
-		case p_seer_intel.IntelChannel <- p_seer_intel.IngestRequest{
-			Kind: &OpenSkyFlightTransition{
-				ID:             m.ID,
-				Icao24:         m.Icao24,
-				Callsign:       callsign,
-				Latitude:       lat,
-				Longitude:      lng,
-				LastContact:    m.LastContact,
-				Category:       cat,
-				PositionSource: ps,
-				FlightState:    state,
-			},
-		}:
-		default:
-			// Queue is full or not ready
-		}
-	}
 	return nil
 }
 
