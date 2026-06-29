@@ -7,11 +7,12 @@ import (
 	"github.com/UniquityVentures/lamu/plugins/p_dashboard"
 	"github.com/UniquityVentures/lamu/plugins/p_filesystem"
 	"github.com/UniquityVentures/lamu/plugins/p_google_genai"
+	"github.com/UniquityVentures/lamu/plugins/p_llm_assistant"
 	"github.com/UniquityVentures/lamu/plugins/p_pwa"
 	"github.com/UniquityVentures/lamu/plugins/p_users"
 	"github.com/UniquityVentures/lamu/registry"
 	"github.com/UniquityVentures/seer/plugins/p_seer_aisstream"
-	"github.com/UniquityVentures/seer/plugins/p_seer_assistant"
+	_ "github.com/UniquityVentures/seer/plugins/p_seer_assistant"
 	"github.com/UniquityVentures/seer/plugins/p_seer_dashboard"
 	"github.com/UniquityVentures/seer/plugins/p_seer_deepsearch"
 	"github.com/UniquityVentures/seer/plugins/p_seer_gdelt"
@@ -39,7 +40,7 @@ func main() {
 		p_seer_opensky.GetPlugin(),
 		p_seer_aisstream.GetPlugin(),
 		p_seer_deepsearch.GetPlugin(),
-		p_seer_assistant.GetPlugin(),
+		p_llm_assistant.GetPlugin(),
 		p_seer_node_fleet.GetPlugin(),
 	}
 	p_seer_workerregistry.BuildAllRegistries()

@@ -106,8 +106,50 @@ type gdeltBigQueryRow struct {
 	SourceURL string `bigquery:"SOURCEURL"`
 }
 
+var gdeltDisabled = false
+
+func checkBigQueryBillingUsage(ctx context.Context, client *bigquery.Client) (bool, error) {
+	if gdeltDisabled {
+		return true, nil
+	}
+	region := strings.ToLower(strings.TrimSpace(Config.Location))
+	if region == "" {
+		region = "us"
+	}
+	sql := fmt.Sprintf("SELECT COALESCE(SUM(total_bytes_billed), 0) FROM `region-%s`.INFORMATION_SCHEMA.JOBS_BY_PROJECT", region)
+	q := client.Query(sql)
+	q.UseStandardSQL = true
+	it, err := q.Read(ctx)
+	if err != nil {
+		slog.Error("p_seer_gdelt: billing check query failed", "error", err)
+		return false, err
+	}
+	var row []bigquery.Value
+	err = it.Next(&row)
+	if err != nil {
+		return false, err
+	}
+	if len(row) == 0 || row[0] == nil {
+		return false, nil
+	}
+	totalBytes, ok := row[0].(int64)
+	if !ok {
+		return false, nil
+	}
+	costUSD := (float64(totalBytes) / 1e12) * 5.0
+	costINR := costUSD * 83.5
+	if costINR > 1000 {
+		gdeltDisabled = true
+		return true, nil
+	}
+	return false, nil
+}
+
 // gdeltSourceID when non-nil is stored on each upserted [Event]; ad-hoc UI search passes nil.
 func FetchAndStoreGDELTEvents(ctx context.Context, db *gorm.DB, search GDELTSearchRequest, gdeltSourceID *uint) ([]Event, error) {
+	if gdeltDisabled {
+		return nil, fmt.Errorf("limits for demo version of seer have been exceeded")
+	}
 	if strings.TrimSpace(Config.ProjectID) == "" {
 		return nil, fmt.Errorf("configure [Plugins.p_seer_gdelt].projectID to run BigQuery searches")
 	}
@@ -121,6 +163,13 @@ func FetchAndStoreGDELTEvents(ctx context.Context, db *gorm.DB, search GDELTSear
 		return nil, err
 	}
 	defer client.Close()
+
+	if billingExceeded, err := checkBigQueryBillingUsage(ctx, client); err != nil {
+		slog.Error("p_seer_gdelt: failed checking billing usage", "error", err)
+	} else if billingExceeded {
+		return nil, fmt.Errorf("limits for demo version of seer have been exceeded")
+	}
+
 
 	sql, params, err := buildGDELTBigQuery(search)
 	if err != nil {

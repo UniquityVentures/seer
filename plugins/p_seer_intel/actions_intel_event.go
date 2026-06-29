@@ -235,54 +235,164 @@ func geocodeGoogleMaps(ctx context.Context, apiKey, address string) (lat, lng fl
 	return 0, 0, fmt.Errorf("p_seer_intel: geocode: unreachable")
 }
 
-func CreateIntelWithEvent(ctx context.Context, db *gorm.DB, intel *Intel, evenKind IntelEventKind) error {
+func CreateIntelWithEvent(ctx context.Context, db *gorm.DB, intels []Intel, eventKinds []IntelEventKind) error {
 	if db == nil {
 		return fmt.Errorf("p_seer_intel: CreateIntelWithEvent: db is nil")
 	}
-	if intel == nil {
-		return fmt.Errorf("p_seer_intel: CreateIntelWithEvent: intel is nil")
+	if len(intels) != len(eventKinds) {
+		return fmt.Errorf("p_seer_intel: CreateIntelWithEvent: slice length mismatch")
 	}
-	if err := db.WithContext(ctx).Create(intel).Error; err != nil {
-		return err
-	}
-	events, err := evenKind.GetEvent(*intel)
-	if err != nil {
-		return err
-	}
-	for i := range events {
-		events[i].IntelID = intel.ID
-		events[i].Intel = intel
-		if err := db.WithContext(ctx).Create(&events[i]).Error; err != nil {
-			slog.Warn("p_seer_intel: intel event persist failed", "intel_id", intel.ID, "error", err)
+	return db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		for i := range intels {
+			intel := &intels[i]
+			if err := tx.Create(intel).Error; err != nil {
+				return err
+			}
+			if eventKinds[i] == nil {
+				continue
+			}
+			events, err := eventKinds[i].GetEvent(*intel)
+			if err != nil {
+				return err
+			}
+			for j := range events {
+				events[j].IntelID = intel.ID
+				events[j].Intel = intel
+				if err := tx.Create(&events[j]).Error; err != nil {
+					slog.Warn("p_seer_intel: intel event persist failed", "intel_id", intel.ID, "error", err)
+				}
+			}
 		}
-	}
-	return nil
+		return nil
+	})
 }
 
-// CreateIntelAndEvent persists intel, then best-effort creates [IntelEvent] from [Intel.Summary] (LLM + geocode on insert).
+func extractIntelEventsFromSummaries(ctx context.Context, summaries []string) ([]string, []time.Time, error) {
+	if len(summaries) == 0 {
+		return nil, nil, nil
+	}
+
+	client, err := p_google_genai.NewClient(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	inlinedReqs := make([]*genai.InlinedRequest, len(summaries))
+	utcNowStr := time.Now().UTC().Format(time.RFC3339)
+	for i, summary := range summaries {
+		prompt := fmt.Sprintf("Current UTC time: %s\n\nSummary:\n%s", utcNowStr, strings.TrimSpace(summary))
+		inlinedReqs[i] = &genai.InlinedRequest{
+			Model: IntelConfigValue.SummaryModel,
+			Contents: []*genai.Content{
+				genai.NewContentFromText(prompt, genai.RoleUser),
+			},
+			Config: &genai.GenerateContentConfig{
+				SystemInstruction:  genai.NewContentFromText(intelEventExtractSystemPrompt, genai.RoleUser),
+				ResponseMIMEType:   "application/json",
+				ResponseJsonSchema: intelEventExtractResponseJSONSchema,
+				MaxOutputTokens:    256,
+			},
+		}
+	}
+
+	src := &genai.BatchJobSource{
+		InlinedRequests: inlinedReqs,
+	}
+
+	model := strings.TrimSpace(IntelConfigValue.SummaryModel)
+	if model == "" {
+		return nil, nil, fmt.Errorf("p_seer_intel: event extract: summaryModel is empty")
+	}
+
+	job, err := client.Batches.Create(ctx, model, src, nil)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create batch job: %w", err)
+	}
+
+	completedStates := map[genai.JobState]bool{
+		genai.JobStateSucceeded: true,
+		genai.JobStateFailed:    true,
+		genai.JobStateCancelled: true,
+	}
+
+	for {
+		time.Sleep(10 * time.Second)
+		j, err := client.Batches.Get(ctx, job.Name, nil)
+		if err != nil {
+			return nil, nil, err
+		}
+		if completedStates[j.State] {
+			if j.State != genai.JobStateSucceeded {
+				return nil, nil, fmt.Errorf("batch event prediction job failed with state: %s", j.State)
+			}
+			job = j
+			break
+		}
+	}
+
+	addresses := make([]string, len(summaries))
+	times := make([]time.Time, len(summaries))
+
+	for i := range inlinedReqs {
+		if job.Dest != nil && i < len(job.Dest.InlinedResponses) && job.Dest.InlinedResponses[i].Response != nil {
+			raw := job.Dest.InlinedResponses[i].Response.Text()
+			var out intelEventLLMOut
+			if err := json.Unmarshal([]byte(raw), &out); err != nil {
+				continue
+			}
+			eventTime, err := time.Parse(time.RFC3339, strings.TrimSpace(out.Datetime))
+			if err != nil {
+				continue
+			}
+			addresses[i] = strings.TrimSpace(out.Address)
+			times[i] = eventTime.UTC()
+		}
+	}
+
+	return addresses, times, nil
+}
+
+// CreateIntelAndEvent persists a slice of intels, then best-effort creates [IntelEvent] from [Intel.Summary] (LLM + geocode on insert) concurrently.
 // Returns an error only if saving [Intel] fails.
-func CreateIntelAndEvent(ctx context.Context, db *gorm.DB, intel *Intel) error {
+func CreateIntelAndEvent(ctx context.Context, db *gorm.DB, intels []Intel) error {
 	if db == nil {
 		return fmt.Errorf("p_seer_intel: CreateIntelAndEvent: db is nil")
 	}
-	if intel == nil {
-		return fmt.Errorf("p_seer_intel: CreateIntelAndEvent: intel is nil")
-	}
-	if err := db.WithContext(ctx).Create(intel).Error; err != nil {
+	err := db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		for i := range intels {
+			if err := tx.Create(&intels[i]).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil {
 		return err
 	}
-	addr, eventTime, err := extractIntelEventFromSummary(ctx, intel.Summary)
+
+	summaries := make([]string, len(intels))
+	for i, intel := range intels {
+		summaries[i] = intel.Summary
+	}
+
+	addresses, times, err := extractIntelEventsFromSummaries(ctx, summaries)
 	if err != nil {
-		slog.Warn("p_seer_intel: intel event extract skipped", "intel_id", intel.ID, "error", err)
+		slog.Warn("p_seer_intel: intel events extract failed", "error", err)
 		return nil
 	}
-	ev := IntelEvent{
-		IntelID:  intel.ID,
-		Address:  addr,
-		Datetime: eventTime,
-	}
-	if err := db.WithContext(ctx).Create(&ev).Error; err != nil {
-		slog.Warn("p_seer_intel: intel event persist failed", "intel_id", intel.ID, "error", err)
+
+	for i, intel := range intels {
+		if addresses[i] == "" && times[i].IsZero() {
+			continue
+		}
+		ev := IntelEvent{
+			IntelID:  intel.ID,
+			Address:  addresses[i],
+			Datetime: times[i],
+		}
+		if err := db.WithContext(ctx).Create(&ev).Error; err != nil {
+			slog.Warn("p_seer_intel: intel event persist failed", "intel_id", intel.ID, "error", err)
+		}
 	}
 	return nil
 }
