@@ -9,7 +9,25 @@ permissions:
   contents: write
 
 jobs:
-  build-and-release:
+  release-go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+
+      - name: Build Seer Binary
+        run: |
+          go build -ldflags "-s -w" -o "main"
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            main
+          generate_release_notes: true
+
+  release-rust:
+    needs: release-go
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,9 +43,6 @@ jobs:
           sudo apt install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libfontconfig1-dev pkg-config fontconfig protobuf-compiler libfontconfig1-dev:arm64
           rustup target add aarch64-unknown-linux-gnu
           go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-      - name: Build Seer Binary
-        run: |
-          go build -ldflags "-s -w" -o "main"
       - name: Build nodescraper for amd64
         env:
           REMOTE_URL: "wss://seer.lariv.in/fleet/websocket"
@@ -55,12 +70,10 @@ jobs:
           cp target/aarch64-unknown-linux-gnu/release/nodescraper-rs ../nodescraper-linux-aarch64
           cd ..
 
-      - name: Create release
+      - name: Add Rust binaries to release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            main
             nodescraper-linux-aarch64
             nodescraper-linux-amd64
             nodescraper-local-linux-amd64
-          generate_release_notes: true
