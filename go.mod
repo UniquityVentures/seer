@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go/bigquery v1.77.0
 	codeberg.org/readeck/go-readability/v2 v2.1.1
 	github.com/JohannesKaufmann/html-to-markdown/v2 v2.5.0
-	github.com/UniquityVentures/lamu v0.6.4
+	github.com/UniquityVentures/lamu v0.6.5
 	github.com/aisstream/ais-message-models/golang/aisStream v0.0.0-20230628154343-8650fc5bf8c3
 	github.com/fxamacker/cbor/v2 v2.9.1
 	github.com/gomarkdown/markdown v0.0.0-20260417124207-7d523f7318df
