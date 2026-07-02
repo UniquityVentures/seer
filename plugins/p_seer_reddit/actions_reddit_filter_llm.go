@@ -88,8 +88,8 @@ Output valid JSON only with key "pass" (boolean), no other keys.`
 	var out redditFilterLLMResult
 	cfg := &genai.GenerateContentConfig{
 		SystemInstruction: genai.NewContentFromText(sys, genai.RoleUser),
-		ResponseMIMEType:  "application/json",
-		ResponseSchema:    p_google_genai.NewSchema[redditFilterLLMResult](),
+		ResponseMIMEType:   "application/json",
+		ResponseJsonSchema: p_google_genai.NewSchema[redditFilterLLMResult](),
 		MaxOutputTokens:   redditFilterLlmMaxOutputTokens(),
 		Temperature:       &temp,
 	}
@@ -101,6 +101,7 @@ Output valid JSON only with key "pass" (boolean), no other keys.`
 		return false, userStr, fmt.Errorf("p_seer_reddit: nil filter model response")
 	}
 	raw := strings.TrimSpace(resp.Text())
+	fmt.Println(raw)
 	if raw == "" {
 		return false, userStr, fmt.Errorf("p_seer_reddit: empty filter model response")
 	}

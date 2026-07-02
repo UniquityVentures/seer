@@ -8,6 +8,7 @@ import (
 	"github.com/UniquityVentures/lamu/components"
 	"github.com/UniquityVentures/lamu/getters"
 	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/registry"
 )
 
 func intelDateGetter(field string) getters.Getter[time.Time] {
@@ -26,6 +27,37 @@ func intelDateGetter(field string) getters.Getter[time.Time] {
 		}
 		return t, nil
 	}
+}
+
+func intelKindChoices(ctx context.Context) ([]registry.Pair[string, string], error) {
+	pairs := RegistryIntelKind.AllStable(registry.AlphabeticalByKey[IntelKindLoader]{})
+	var choices []registry.Pair[string, string]
+	for _, p := range *pairs {
+		val := p.Key
+		if len(val) > 0 {
+			val = strings.ToUpper(val[:1]) + val[1:]
+		}
+		choices = append(choices, registry.Pair[string, string]{
+			Key:   p.Key,
+			Value: val,
+		})
+	}
+	return choices, nil
+}
+
+func intelKindGetter(ctx context.Context) (registry.Pair[string, string], error) {
+	val, err := getters.Key[string]("$get.Kind")(ctx)
+	if err != nil || val == "" {
+		return registry.Pair[string, string]{}, nil
+	}
+	display := val
+	if len(display) > 0 {
+		display = strings.ToUpper(display[:1]) + display[1:]
+	}
+	return registry.Pair[string, string]{
+		Key:   val,
+		Value: display,
+	}, nil
 }
 
 func registerTablePages() {
@@ -47,6 +79,15 @@ func registerTablePages() {
 				Name:    "Summary",
 				Getter:  getters.Key[string]("$get.Summary"),
 				Classes: "w-full",
+			},
+			&components.InputSelect[string]{
+				Page:     components.Page{Key: "seer_intel.FilterForm.Kind"},
+				Label:    "Kind",
+				Name:     "Kind",
+				Required: false,
+				Choices:  intelKindChoices,
+				Getter:   intelKindGetter,
+				Classes:  "w-full",
 			},
 			&components.InputDate{
 				Page:    components.Page{Key: "seer_intel.FilterForm.CreateDateStart"},
