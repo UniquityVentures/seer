@@ -15,7 +15,7 @@ type nodeChannels = registry.Pair[chan *messages.Command, chan *messages.Respons
 
 var (
 	nodeConnectionsMu sync.RWMutex
-	nodeConnections   = map[uint64]nodeConnection{}
+	nodeConnections   = map[uint64]*nodeConnection{}
 )
 
 // ConnectedNode is one live scraper websocket registered on this server.
@@ -27,26 +27,30 @@ type ConnectedNode struct {
 type nodeConnection struct {
 	channels nodeChannels
 	version  *messages.VersionResponse
+	done     chan struct{}
+	once     sync.Once
 }
 
-func registerNodeConnection(id uint64, channels nodeChannels, version *messages.VersionResponse) {
+func (c *nodeConnection) Close() {
+	c.once.Do(func() {
+		close(c.done)
+	})
+}
+
+func registerNodeConnection(id uint64, conn *nodeConnection) {
 	nodeConnectionsMu.Lock()
 	defer nodeConnectionsMu.Unlock()
 	if existing, ok := nodeConnections[id]; ok {
-		close(existing.channels.Key)
-		close(existing.channels.Value)
+		existing.Close()
 	}
-	nodeConnections[id] = nodeConnection{
-		channels: channels,
-		version:  version,
-	}
+	nodeConnections[id] = conn
 }
 
-func unregisterNodeConnection(id uint64, channels nodeChannels) {
+func unregisterNodeConnection(id uint64, conn *nodeConnection) {
 	nodeConnectionsMu.Lock()
 	defer nodeConnectionsMu.Unlock()
 	current, ok := nodeConnections[id]
-	if !ok || current.channels.Key != channels.Key {
+	if !ok || current != conn {
 		return
 	}
 	delete(nodeConnections, id)
@@ -72,23 +76,39 @@ func ConnectedNodes() []ConnectedNode {
 // DispatchCommand sends cmd to a randomly selected connected fleet node and returns its response.
 // Spinlocks when no node connections available
 func DispatchCommand(cmd *messages.Command) (*messages.Response, error) {
-	for len(nodeConnections) == 0 {
+	for {
+		nodeConnectionsMu.RLock()
+		hasNodes := len(nodeConnections) > 0
+		nodeConnectionsMu.RUnlock()
+		if hasNodes {
+			break
+		}
 		time.Sleep(time.Second)
 	}
-	nodeConnectionsMu.RLock()
 
+	nodeConnectionsMu.RLock()
 	ids := make([]uint64, 0, len(nodeConnections))
 	for id := range nodeConnections {
 		ids = append(ids, id)
 	}
+	if len(ids) == 0 {
+		nodeConnectionsMu.RUnlock()
+		return nil, fmt.Errorf("fleet node disconnected before command send")
+	}
 	nodeID := ids[rand.IntN(len(ids))]
-	channels := nodeConnections[nodeID].channels
+	conn := nodeConnections[nodeID]
 	nodeConnectionsMu.RUnlock()
 
-	channels.Key <- cmd
-	resp, ok := <-channels.Value
-	if !ok {
+	select {
+	case conn.channels.Key <- cmd:
+	case <-conn.done:
+		return nil, fmt.Errorf("fleet node %d disconnected before command send", nodeID)
+	}
+
+	select {
+	case resp := <-conn.channels.Value:
+		return resp, nil
+	case <-conn.done:
 		return nil, fmt.Errorf("fleet node %d disconnected before response", nodeID)
 	}
-	return resp, nil
 }

@@ -2,7 +2,6 @@ package p_seer_reddit
 
 import (
 	"strings"
-
 )
 
 // SeerRedditPlugin is TOML config for [p_seer_reddit] (e.g. Reddit source LLM filter).
@@ -16,7 +15,7 @@ type SeerRedditPlugin struct {
 // RedditPlugin is the app config for this plugin. Registered in init.
 var RedditPlugin = &SeerRedditPlugin{}
 
-const defaultFilterLlmModel = "gemini-2.5-flash"
+const defaultFilterLlmModel = "gemini-3.1-flash-lite"
 
 const defaultFilterLlmMaxOutputTokens int32 = 256
 

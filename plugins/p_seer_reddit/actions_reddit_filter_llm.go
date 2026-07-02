@@ -18,6 +18,17 @@ type redditFilterLLMResult struct {
 	Pass bool `json:"pass"`
 }
 
+var redditFilterResponseJSONSchema = map[string]any{
+	"type": "object",
+	"properties": map[string]any{
+		"pass": map[string]any{
+			"type": "boolean",
+		},
+	},
+	"required":             []string{"pass"},
+	"additionalProperties": false,
+}
+
 const redditFilterUserPromptMaxRunes = 12000
 
 func trimRunes(s string, max int) string {
@@ -87,11 +98,11 @@ Output valid JSON only with key "pass" (boolean), no other keys.`
 	temp := float32(0.1)
 	var out redditFilterLLMResult
 	cfg := &genai.GenerateContentConfig{
-		SystemInstruction: genai.NewContentFromText(sys, genai.RoleUser),
+		SystemInstruction:  genai.NewContentFromText(sys, genai.RoleUser),
 		ResponseMIMEType:   "application/json",
-		ResponseJsonSchema: p_google_genai.NewSchema[redditFilterLLMResult](),
-		MaxOutputTokens:   redditFilterLlmMaxOutputTokens(),
-		Temperature:       &temp,
+		ResponseJsonSchema: redditFilterResponseJSONSchema,
+		MaxOutputTokens:    redditFilterLlmMaxOutputTokens(),
+		Temperature:        &temp,
 	}
 	resp, err := client.Models.GenerateContent(ctx, redditFilterLlmModel(), []*genai.Content{genai.NewContentFromText(userStr, genai.RoleUser)}, cfg)
 	if err != nil {
@@ -105,10 +116,29 @@ Output valid JSON only with key "pass" (boolean), no other keys.`
 	if raw == "" {
 		return false, userStr, fmt.Errorf("p_seer_reddit: empty filter model response")
 	}
-	if err := json.Unmarshal([]byte(raw), &out); err != nil {
-		return false, raw, fmt.Errorf("p_seer_reddit: filter model json: %w", err)
+	cleaned := cleanJSONString(raw)
+	if cleaned == "" {
+		return false, raw, fmt.Errorf("p_seer_reddit: filter model response has no JSON block")
+	}
+	if err := json.Unmarshal([]byte(cleaned), &out); err != nil {
+		return false, cleaned, fmt.Errorf("p_seer_reddit: filter model json: %w (raw response: %q)", err, raw)
 	}
 	return out.Pass, raw, nil
+}
+
+func cleanJSONString(s string) string {
+	s = strings.TrimSpace(s)
+	if start := strings.Index(s, "{"); start != -1 {
+		if end := strings.LastIndex(s, "}"); end != -1 && end > start {
+			return s[start : end+1]
+		}
+	}
+	if start := strings.Index(s, "["); start != -1 {
+		if end := strings.LastIndex(s, "]"); end != -1 && end > start {
+			return s[start : end+1]
+		}
+	}
+	return s
 }
 
 // createRedditPostFilterRejectedTomb inserts a soft-deleted row with only [RedditPost.PostID] set

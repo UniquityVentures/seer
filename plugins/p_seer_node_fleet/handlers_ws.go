@@ -61,28 +61,40 @@ func fleetWebSocketConn(ws *websocket.Conn) {
 
 	commandCh := make(chan *messages.Command)
 	responseCh := make(chan *messages.Response)
-	channels := nodeChannels{Key: commandCh, Value: responseCh}
-	registerNodeConnection(nodeID, channels, versionInfo)
+	conn := &nodeConnection{
+		channels: nodeChannels{Key: commandCh, Value: responseCh},
+		version:  versionInfo,
+		done:     make(chan struct{}),
+	}
+	registerNodeConnection(nodeID, conn)
 	defer func() {
-		close(commandCh)
-		close(responseCh)
-		unregisterNodeConnection(nodeID, channels)
+		conn.Close()
+		unregisterNodeConnection(nodeID, conn)
 	}()
 
 	slog.Info("p_seer_node_fleet: node connected", "node_id", nodeID, "version", version)
 
-	for cmd := range commandCh {
-		if err := ScraperCodec.Send(ws, cmd); err != nil {
-			slog.Warn("p_seer_node_fleet: command send failed", "node_id", nodeID, "error", err)
-			return
-		}
+	for {
+		select {
+		case cmd := <-commandCh:
+			if err := ScraperCodec.Send(ws, cmd); err != nil {
+				slog.Warn("p_seer_node_fleet: command send failed", "node_id", nodeID, "error", err)
+				return
+			}
 
-		var resp messages.Response
-		if err := ScraperCodec.Receive(ws, &resp); err != nil {
-			slog.Warn("p_seer_node_fleet: response receive failed", "node_id", nodeID, "error", err)
+			var resp messages.Response
+			if err := ScraperCodec.Receive(ws, &resp); err != nil {
+				slog.Warn("p_seer_node_fleet: response receive failed", "node_id", nodeID, "error", err)
+				return
+			}
+			respCopy := resp
+			select {
+			case responseCh <- &respCopy:
+			case <-conn.done:
+				return
+			}
+		case <-conn.done:
 			return
 		}
-		respCopy := resp
-		responseCh <- &respCopy
 	}
 }
